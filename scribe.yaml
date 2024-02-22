@@ -790,7 +790,9 @@ Resources:
                 },
                 "ListSchedules": {
                   "Type": "Task",
-                  "Parameters": {},
+                  "Parameters": {
+                    "GroupName": "${ScheduleGroup}"
+                  },
                   "Resource": "arn:aws:states:::aws-sdk:scheduler:listSchedules",
                   "Next": "Map"
                 },
@@ -806,7 +808,7 @@ Resources:
                         "Type": "Task",
                         "End": true,
                         "Parameters": {
-                          "GroupName": "${ScheduleGroup}",
+                          "GroupName.$": "$.GroupName",
                           "Name.$": "$.Name"
                         },
                         "Resource": "arn:aws:states:::aws-sdk:scheduler:getSchedule",
