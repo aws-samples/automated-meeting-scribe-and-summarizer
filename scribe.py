@@ -19,9 +19,9 @@ from email.mime.application import MIMEApplication
 import requests
 
 options = Options()
-options.add_argument("headless=new") # comment out for local testing
+options.add_argument("headless=new")
 options.add_argument("window-size=7680,4320")
-options.add_argument("use-fake-ui-for-media-stream=1")
+options.add_argument("use-fake-ui-for-media-stream")
 options.add_argument("disable-notifications")
 options.add_argument("disable-extensions")
 options.add_argument("no-sandbox")
@@ -61,15 +61,7 @@ def send_message(message):
 def initialize():
 
     print("Getting meeting link.")
-    driver.get("https://app.chime.aws/meetings")
-
-    print("Typing meeting ID.")
-    wait.until(EC.element_to_be_clickable((By.ID, "meetingid"))).send_keys(
-        os.environ["MEETING_ID"]
-    )
-
-    print("Clicking next button.")
-    wait.until(EC.element_to_be_clickable((By.CLASS_NAME, "Button__primary"))).click()
+    driver.get(f"https://app.chime.aws/meetings/{os.environ["MEETING_ID"]}")
 
     print("Typing scribe name.")
     wait.until(EC.element_to_be_clickable((By.ID, "name"))).send_keys(scribe_identity)

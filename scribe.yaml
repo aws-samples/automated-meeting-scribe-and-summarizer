@@ -212,28 +212,30 @@ Resources:
 
           def handler(event, context):
 
-              request_type = event['RequestType']
-              print(request_type)
+            request_type = event['RequestType']
+            print(request_type)
 
-              if request_type in ['Create', 'Update']:
-                client = boto3.client("codebuild")
-                status = 'STARTING'
+            if request_type in ['Create', 'Update']:
+              client = boto3.client("codebuild")
 
-                while status not in ['SUCCEEDED', 'FAILED', 'STOPPED']:
-                  if status in ['STARTING', 'TIMED_OUT', 'FAULT']:
-                    build_id = client.start_build(projectName=event['ResourceProperties']['PROJECT'])['build']['id']
-                    print(build_id)
-                  sleep(15)
-                  status = client.batch_get_builds(ids=[build_id])['builds'][0]['buildStatus']
-                  print(status)
+              build_id = client.start_build(
+                projectName=event['ResourceProperties']['PROJECT']
+              )['build']['id']
+              status = 'STARTING'
 
-              elif request_type == 'Delete':
-                  logging_bucket = boto3.resource("s3").Bucket(event['ResourceProperties']['LOGGING_BUCKET'])
-                  logging_bucket.objects.delete()
-                  website_bucket = boto3.resource("s3").Bucket(event['ResourceProperties']['WEBSITE_BUCKET'])
-                  website_bucket.objects.delete()
+              while status != 'SUCCEEDED':
+                if status in ['FAILED', 'FAULT', 'TIMED_OUT', 'STOPPED']:
+                  cfnresponse.send(event, context, cfnresponse.FAILED, {})
+                sleep(15)
+                status = client.batch_get_builds(ids=[build_id])['builds'][0]['buildStatus']
+                print(status)
 
-              cfnresponse.send(event, context, cfnresponse.SUCCESS, {})
+            elif request_type == 'Delete':
+              resource = boto3.resource("s3")
+              resource.Bucket(event['ResourceProperties']['LOGGING_BUCKET']).objects.delete()
+              resource.Bucket(event['ResourceProperties']['WEBSITE_BUCKET']).objects.delete()
+
+            cfnresponse.send(event, context, cfnresponse.SUCCESS, {})
 
   BuildCustomResource:
     Type: Custom::BuildCode
@@ -287,27 +289,27 @@ Resources:
 
           def handler(event, context):
               
-              request_type = event['RequestType']
-              print(request_type)
+            request_type = event['RequestType']
+            print(request_type)
 
-              if request_type == 'Create':
-                desired_role_name = "AWSServiceRoleForECS"
-                iam_client = boto3.client('iam')
+            if request_type == 'Create':
+              desired_role_name = "AWSServiceRoleForECS"
+              iam_client = boto3.client('iam')
 
-                try:
-                  iam_client.get_role(RoleName=desired_role_name)
-                  role_exists = True
-                except ClientError as e:
-                  if e.response['Error']['Code'] == 'NoSuchEntity':
-                    role_exists = False
-                  else:
-                    raise
+              try:
+                iam_client.get_role(RoleName=desired_role_name)
+                role_exists = True
+              except ClientError as e:
+                if e.response['Error']['Code'] == 'NoSuchEntity':
+                  role_exists = False
+                else:
+                  raise
 
-                print(role_exists)
-                if not role_exists:
-                  iam_client.create_service_linked_role(AWSServiceName="ecs.amazonaws.com")
+              print(role_exists)
+              if not role_exists:
+                iam_client.create_service_linked_role(AWSServiceName="ecs.amazonaws.com")
 
-              cfnresponse.send(event, context, cfnresponse.SUCCESS, {})
+            cfnresponse.send(event, context, cfnresponse.SUCCESS, {})
 
   ECSRoleCustomResource:
     Type: Custom::ECSRole
@@ -592,6 +594,9 @@ Resources:
 
 ### Scheduler Resources ###
 
+  ScheduleGroup:
+    Type: AWS::Scheduler::ScheduleGroup
+
   StartTaskRole:
     Type: AWS::IAM::Role
     Properties:
@@ -730,6 +735,7 @@ Resources:
                     "FlexibleTimeWindow": {
                       "Mode": "OFF"
                     },
+                    "GroupName": "${ScheduleGroup}",
                     "Name.$": "States.Format('{}_{}', $.data.meetingID, $.data.botID)",
                     "ScheduleExpression.$": "States.Format('at({})', $.data.meetingTime)",
                     "ScheduleExpressionTimezone": "UTC",
@@ -800,7 +806,7 @@ Resources:
                         "Type": "Task",
                         "End": true,
                         "Parameters": {
-                          "GroupName.$": "$.GroupName",
+                          "GroupName": "${ScheduleGroup}",
                           "Name.$": "$.Name"
                         },
                         "Resource": "arn:aws:states:::aws-sdk:scheduler:getSchedule",
@@ -821,6 +827,7 @@ Resources:
                 "DeleteSchedule": {
                   "Type": "Task",
                   "Parameters": {
+                    "GroupName": "${ScheduleGroup}",
                     "Name.$": "$.data.source.meetingName"
                   },
                   "Resource": "arn:aws:states:::aws-sdk:scheduler:deleteSchedule",
