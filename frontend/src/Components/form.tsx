@@ -1,7 +1,6 @@
 
 import { Meeting } from "./layout"
 import { useState } from "react"
-import { v4 as uuidv4 } from 'uuid'
 import Form from "@cloudscape-design/components/form"
 import SpaceBetween from "@cloudscape-design/components/space-between"
 import FormField from "@cloudscape-design/components/form-field"
@@ -59,13 +58,10 @@ export default ({ createInvite }: Props) => {
     var meetingDateTime = new Date(meetingDate + "T" + meetingTime)
     meetingDateTime.setMinutes(meetingDateTime.getMinutes() - 2)
 
-    const botId: string = uuidv4().slice(-4).toUpperCase()
-
     const meeting = {
       meetingID: meetingId.replace(/ /g, ''),
       meetingName: meetingName,
-      meetingTime: meetingDateTime.toISOString().slice(0, -5),
-      botID: botId
+      meetingTime: meetingDateTime.toISOString().slice(0, -5)
     }
 
     createInvite(meeting)

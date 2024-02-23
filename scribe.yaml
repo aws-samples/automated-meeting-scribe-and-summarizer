@@ -230,6 +230,7 @@ Resources:
               while status != 'SUCCEEDED':
                 if status in ['FAILED', 'FAULT', 'TIMED_OUT', 'STOPPED']:
                   cfnresponse.send(event, context, cfnresponse.FAILED, {})
+                  return
                 sleep(15)
                 status = client.batch_get_builds(ids=[build_id])['builds'][0]['buildStatus']
                 print(status)
@@ -761,7 +762,7 @@ Resources:
                       "Mode": "OFF"
                     },
                     "GroupName": "${ScheduleGroup}",
-                    "Name.$": "States.Format('{}_{}', $.data.meetingID, $.data.botID)",
+                    "Name.$": "States.Format('{}_{}', $.data.meetingID, States.UUID())",
                     "ScheduleExpression.$": "States.Format('at({})', $.data.meetingTime)",
                     "ScheduleExpressionTimezone": "UTC",
                     "State": "ENABLED",

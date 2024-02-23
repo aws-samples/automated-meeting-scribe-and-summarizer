@@ -20,8 +20,7 @@ import {
 export type Meeting = {
   meetingID: string,
   meetingName: string,
-  meetingTime: string,
-  botID: string
+  meetingTime: string
 }
 
 interface CustomError {

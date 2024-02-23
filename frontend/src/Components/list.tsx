@@ -22,11 +22,6 @@ export default ({ schedules, deleteInvites }: Props) => {
             cardDefinition={{
                 sections: [
                     {
-                        id: "bot_id",
-                        header: "Bot ID",
-                        content: schedule => schedule.Name.split("_")[1]
-                    },
-                    {
                         id: "meeting_id",
                         header: "Meeting ID",
                         content: schedule => (
