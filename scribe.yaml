@@ -533,7 +533,7 @@ Resources:
               - Effect: Allow
                 Action:
                   - 'bedrock:InvokeModel'
-                Resource: !Sub 'arn:aws:bedrock:${AWS::Region}::foundation-model/anthropic.claude-v2'
+                Resource: !Sub 'arn:aws:bedrock:${AWS::Region}::foundation-model/anthropic.claude-3-sonnet-20240229-v1:0'
         - PolicyName: SendRawEmailPolicy
           PolicyDocument:
             Version: "2012-10-17"
@@ -573,9 +573,7 @@ Resources:
     Type: "AWS::ECS::TaskDefinition"
     Properties:
       ContainerDefinitions:
-        - Command:
-            - "1111111111 77777777"
-          Essential: true
+        - Essential: true
           Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ImageRepo}:latest"
           LogConfiguration:
             LogDriver: "awslogs"
@@ -591,8 +589,8 @@ Resources:
       NetworkMode: "awsvpc"
       RequiresCompatibilities:
         - "FARGATE"
-      Cpu: "1024"
-      Memory: "3072"
+      Cpu: ".5 vCPU"
+      Memory: "4 GB"
     DependsOn:
       - Cluster
       - BuildCustomResource

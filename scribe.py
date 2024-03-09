@@ -48,29 +48,22 @@ captions = []
 
 def send_message(message):
 
-    wait.until(EC.element_to_be_clickable((
+    message_element = wait.until(EC.element_to_be_clickable((
         By.CSS_SELECTOR,
-        'textarea[data-testid="textarea"][placeholder="Message all attendees"]',
-    ))).send_keys(message)
-
-    wait.until(EC.element_to_be_clickable((
-        By.CSS_SELECTOR,
-        'button[data-testid="button"][aria-label="Send message (enter/return)"]',
-    ))).click()
+        'textarea[placeholder="Message all attendees"]',
+    )))
+    message_element.send_keys(message)
+    message_element.submit()
 
 def initialize():
 
     print("Getting meeting link.")
     driver.get(f"https://app.chime.aws/meetings/{os.environ["MEETING_ID"]}")
 
-    print("Typing scribe name.")
-    wait.until(EC.element_to_be_clickable((By.ID, "name"))).send_keys(scribe_identity)
-
-    print("Clicking join meeting button.")
-    wait.until(EC.element_to_be_clickable((
-        By.CSS_SELECTOR, 
-        ".Button--enabled > span:nth-child(1)"
-    ))).click()
+    print("Entering scribe name.")
+    identity_element = wait.until(EC.element_to_be_clickable((By.ID, "name")))
+    identity_element.send_keys(scribe_identity)
+    identity_element.submit()
 
     print("Clicking second join meeting button.")
     wait.until(EC.element_to_be_clickable((
@@ -94,12 +87,12 @@ def initialize():
     send_message(
         'Hello! I am an AI-assisted meeting scribe. To learn more about me,' \
             + ' visit https://github.com/aws-samples/automated-meeting-scribe-and-summarizer.' \
-            + ' If all attendees consent to having this meeting processed through Amazon Web Services,' \
-            + f' type "{start_command}" to capture new messages and machine-generated captions.' \
+            + ' If all attendees consent to my use,' \
+            + f' send "{start_command}" in the chat to save new messages and machine-generated captions.' \
             + ' I redact sensitive personally identifiable information by default,' \
             + ' however, if you would like further anonymity,' \
-            + f' type "{anonymize_command}" to also redact emails, addresses, phone numbers, and names.' \
-            + f' Type "{end_command}" to remove me from this meeting at any point.'
+            + f' send "{anonymize_command}" in the chat to also redact emails, addresses, phone numbers, and names.' \
+            + f' Send "{end_command}" to remove me from this meeting at any point.'
     )
 
     print("Opening attendees panel.")
@@ -223,7 +216,7 @@ def scrape_messages():
         if text == start_command:
             initialize_captions()
             start = True
-            start_message = "Capturing new messages and machine-generated captions."
+            start_message = "Saving new messages and machine-generated captions."
             send_message(start_message)
             print(start_message)
         elif text == anonymize_command:
@@ -274,9 +267,18 @@ def scrape_captions():
 
     speaker_elements = driver.find_elements(By.CLASS_NAME, "_3512TwqLzPaGGAWp_8W1se")
     text_elements = driver.find_elements(By.CLASS_NAME, "_1XM7bRv8y86tbk7HmDvoj7")
-    cutoff = min(len(attendees), 4)
 
-    for speaker_element, text_element in list(zip(speaker_elements, text_elements))[:-cutoff]:
+    speaker_name = driver.find_element(
+        By.CLASS_NAME, 'activeSpeakerCell'
+    ).find_element(
+        By.CLASS_NAME, 'ppi5x8cvVEQgbl_hLeiRW'
+    ).text
+    if speaker_name == "No one":
+        caption_elements = list(zip(speaker_elements, text_elements))
+    else:
+        caption_elements = list(zip(speaker_elements, text_elements))[:-min(len(attendees), 4)]
+
+    for speaker_element, text_element in caption_elements:
         speaker = speaker_element.text
         if speaker:
             text = text_element.text
@@ -350,12 +352,13 @@ def deliver():
     <transcript>{transcript}</transcript>
     Please output the title in <title></title> tags, the summary in <summary></summary> tags, and the action items in <action items></action items> tags."""
     body = json.dumps({
-        "prompt": f"\n\nHuman: {prompt}\n\nAssistant:",
-        "max_tokens_to_sample": 4096,
+        "max_tokens": 4096,
+        "messages": [{"role": "user", "content": prompt}],
+        "anthropic_version": "bedrock-2023-05-31"
     })
     try: 
-        response = boto3.client('bedrock-runtime').invoke_model(body=body, modelId="anthropic.claude-v2")
-        bedrock_completion = json.loads(response.get("body").read()).get("completion")
+        response = boto3.client("bedrock-runtime").invoke_model(body=body, modelId="anthropic.claude-3-sonnet-20240229-v1:0")
+        bedrock_completion = json.loads(response.get("body").read())["content"][0]["text"]
     except Exception as ex:
         print(f"Error while invoking model: {ex}")
         bedrock_completion = ""

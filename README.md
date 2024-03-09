@@ -16,7 +16,7 @@ Using this application's website, you can invite an AI-assisted scribe bot to yo
 - Web authentication is provided by AWS Amplify Authentication, powered by Amazon Cognito.
 - AWS Web Application Firewall (WAF) also protects the CloudFront distribution and Amazon API Gateway*.
 - API Gateway invokes an AWS Step Functions synchronous express workflow that schedules an Amazon Elastic Container Service (ECS) task through Amazon EventBridge Scheduler. 
-- The ECS application uses Selenium within Chrome to capture attendees, messages, and machine-generated captions from Amazon Chime's web application. Amazon Comprehend is then used to detect/redact PII before Anthropic's Claude 2.0 on Amazon Bedrock generates the summaries. The summary and action items, along with the other deliverables, are emailed using Amazon Simple Email Service (SES).
+- The ECS application uses Selenium within Chrome to save attendees, messages, and machine-generated captions from Amazon Chime's web application. Amazon Comprehend is then used to detect/redact PII before Anthropic's Claude 2.0 on Amazon Bedrock generates the summaries. The summary and action items, along with the other deliverables, are emailed using Amazon Simple Email Service (SES).
 
 <br>\* This application uses the following AWS-managed WAF rules on each Web ACL: AWSManagedRulesAmazonIpReputationList, AWSManagedRulesCommonRuleSet, and AWSManagedRulesKnownBadInputsRuleSet. If you would like to add additional rules, you can do so in the [WAF console](https://us-east-1.console.aws.amazon.com/wafv2/homev2?region=us-east-1#/).<br />
 
@@ -57,9 +57,11 @@ To interact with Claude 2.0 on Bedrock, you need to [request access to the model
 - To log out, click **Logout**.
 
 ### Using Amazon Chime
-- At the specified meeting time, a scribe bot will join your meeting's waiting room. It will wait up to five minutes in the waiting room before exiting.
-- Once admitted into the meeting, the scribe bot will introduce itself with a message in the chat.
-- At any point, you can send the scribe bot(s) command messages in the chat to start capturing new messages and machine-generated captions, redact additional PII, and/or remove the scribe bot(s) from the meeting.
+- At the specified meeting time, your scribe bot will join the meeting's waiting room. 
+    - It will wait up to five minutes in the waiting room before exiting.
+- Verify the linked email then admit the scribe bot into the meeting.
+- Once admitted, the scribe bot will introduce itself with a message in the chat.
+- At any point, you can send the scribe bot(s) command messages in the chat to start saving new messages and machine-generated captions, redact additional PII, and/or remove the scribe bot(s) from the meeting.
 
 <br>\* The application stack will not deploy outside US East (North Virginia) because, to use an Amazon Certificate Manager (ACM) certificate with CloudFront, the certificate must be requested in that region.<br />
 
