@@ -589,7 +589,7 @@ Resources:
       NetworkMode: "awsvpc"
       RequiresCompatibilities:
         - "FARGATE"
-      Cpu: ".5 vCPU"
+      Cpu: "1 vCPU"
       Memory: "4 GB"
     DependsOn:
       - Cluster

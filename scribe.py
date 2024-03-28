@@ -9,10 +9,10 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import StaleElementReferenceException
 import os
 from time import sleep
+import re
 from datetime import datetime
 import boto3
 import json
-import re
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
@@ -28,19 +28,17 @@ options.add_argument("no-sandbox")
 driver = Chrome(options=options)
 wait = WebDriverWait(driver, 10)
 
-scribe_name = "Scribe Bot"
+scribe_name = "Scribe"
 email_address = os.environ['EMAIL']
 scribe_identity = f"{scribe_name} ({email_address})"
 
-start_command = "SCRIBE START"
-anonymize_command = "SCRIBE ANONYMIZE"
-end_command = "SCRIBE END"
-skipped_messages = 0
-prev_sender = ""
+start_command = "START"
+anonymize_command = "ANONYMIZE"
+end_command = "END"
 start = False
 anonymize = False
 
-# Deliverables
+# Details
 attendees = []
 messages = []
 attachments = {}
@@ -60,8 +58,14 @@ def initialize():
     print("Getting meeting link.")
     driver.get(f"https://app.chime.aws/meetings/{os.environ["MEETING_ID"]}")
 
-    print("Entering scribe name.")
-    identity_element = wait.until(EC.element_to_be_clickable((By.ID, "name")))
+    try:
+        identity_element = wait.until(EC.element_to_be_clickable((By.ID, "name")))
+    except TimeoutException:
+        deliver(driver.find_element(
+            By.CLASS_NAME, 'AnonymousJoinContainer__error'
+        ).text.split("\n")[0]) 
+
+    print("Entering scribe name.")       
     identity_element.send_keys(scribe_identity)
     identity_element.submit()
 
@@ -71,28 +75,33 @@ def initialize():
         'button[data-testid="button"][aria-label="Join"]'
     ))).click()
 
-    wait_time = 300
-    print(f"Waiting {wait_time} seconds to open chat panel.")
-    try:
-        WebDriverWait(driver, wait_time).until(EC.element_to_be_clickable((
-            By.CSS_SELECTOR, 
-            'button[data-testid="button"][aria-label^="Open chat panel"]'
-        ))).click()
-    except:
-        print("Unable to join meeting.")
-        driver.quit()
-        exit()
+    print(f"Waiting to open chat panel.")
+    while True:
+        try:
+            WebDriverWait(driver, 1).until(EC.element_to_be_clickable((
+                By.CSS_SELECTOR, 
+                'button[data-testid="button"][aria-label^="Open chat panel"]'
+            ))).click()
+        except TimeoutException:
+            try:
+                dialogue = driver.find_element(
+                    By.CSS_SELECTOR, 'div[data-testid="modal-body"]'
+                ).text.split("\n")[0]
+            except NoSuchElementException:
+                continue
+            if "The organizer has been notified that you are waiting." in dialogue:
+                continue
+            else:
+                deliver(dialogue)
+        break
 
-    print("Sending introduction message.")
+    print("Sending introduction messages.")
     send_message(
-        'Hello! I am an AI-assisted meeting scribe. To learn more about me,' \
-            + ' visit https://github.com/aws-samples/automated-meeting-scribe-and-summarizer.' \
-            + ' If all attendees consent to my use,' \
-            + f' send "{start_command}" in the chat to save new messages and machine-generated captions.' \
-            + ' I redact sensitive personally identifiable information by default,' \
-            + ' however, if you would like further anonymity,' \
-            + f' send "{anonymize_command}" in the chat to also redact emails, addresses, phone numbers, and names.' \
-            + f' Send "{end_command}" to remove me from this meeting at any point.'
+        'Hello! I am an AI-assisted scribe for Amazon Chime. To learn more about me,'
+        ' visit https://github.com/aws-samples/automated-meeting-scribe-and-summarizer.'
+        f'\nIf all attendees consent, send "{start_command}" in the chat'
+        ' to save attendance, new messages and machine-generated captions.'
+        f'\nOtherwise, send "{end_command}" in the chat to remove me from this meeting.'
     )
 
     print("Opening attendees panel.")
@@ -113,6 +122,9 @@ def initialize():
         '//span[text()="Hide all available video"]'
     ))).click()
 
+    global skipped_messages
+    skipped_messages = len(driver.find_elements(By.CLASS_NAME, "chatMessage"))
+
 def scrape_attendees():
 
     container_elements = driver.find_element(
@@ -128,7 +140,7 @@ def scrape_attendees():
         cell_elements = container_element.find_elements(By.CLASS_NAME, "_1_UUAcglOhxMMdQS4BcyLq")
 
         if status == "Present" and len(cell_elements) == 1:
-            deliver()
+            deliver("Your scribe left because the meeting was empty.")
 
         for cell_element in cell_elements:
             name_element = cell_element.find_element(
@@ -136,26 +148,30 @@ def scrape_attendees():
             )
             name = name_element.text
 
-            cell_element.find_element(
-                By.CSS_SELECTOR, 
-                "button[data-testid='popover-toggle']"
-            ).click()
-            try:
-                email = WebDriverWait(driver, .1).until(
-                    EC.presence_of_element_located((
-                        By.CLASS_NAME, '_3ZBWxY2tbvCqtfl0RHn0d'
-                    ))
-                ).text
-            except TimeoutException:
+            if re.match(r"^‹.*›$", name):
                 email = ""
-            name_element.click()
+            else: 
+                cell_element.find_element(
+                    By.CSS_SELECTOR, 
+                    "button[data-testid='popover-toggle']"
+                ).click()
+                try:
+                    email = WebDriverWait(driver, .1).until(
+                        EC.presence_of_element_located((
+                            By.CLASS_NAME, '_3ZBWxY2tbvCqtfl0RHn0d'
+                        ))
+                    ).text
+                except TimeoutException:
+                    email = ""
+                name_element.click()
 
             attendee = next(
-                (attendee for attendee in attendees if attendee["Name"] == name and attendee["Email"] == email), 
+                (attendee for attendee in attendees 
+                    if attendee["Name"] == name and attendee["Email"] == email), 
                 None
             )
             if not attendee:
-                if name != f"‹{scribe_identity}›":
+                if scribe_name not in name:
                     if status == "Present":
                         join_time = datetime.now()
                     else: 
@@ -213,21 +229,30 @@ def scrape_messages():
 
         text = message_element.find_element(By.CLASS_NAME, "Linkify").text
 
-        if text == start_command:
+        if not start and text == start_command:
             initialize_captions()
             start = True
-            start_message = "Saving new messages and machine-generated captions."
-            send_message(start_message)
+            start_message = 'Saving attendance, new messages and machine-generated captions.'
             print(start_message)
-        elif text == anonymize_command:
+            send_message(start_message)
+            send_message(
+                'Sensitive personally identifiable information is redacted by default.'
+                f' For further anonymity, send "{anonymize_command}" in the chat'
+                f' to additionally redact emails, addresses, phone numbers, and names.'
+            )
+        elif not anonymize and text == anonymize_command:
             anonymize = True
             anonymize_message = "Redacting emails, addresses, phone numbers, and names."
-            send_message(anonymize_message)
             print(anonymize_message)
+            send_message(anonymize_message)
         elif text == end_command:
-            end = True
+            deliver("Your scribe has been removed from the meeting.")
 
-        if not start:
+        if (
+            not start or 
+            sender not in [attendee['Name'] for attendee in attendees] or
+            text in [start_command, anonymize_command]
+        ):
             skipped_messages += 1
         else: 
             try:
@@ -248,9 +273,6 @@ def scrape_messages():
                 message = f"{sender}: {text}"
 
             messages.append(message)
-
-        if end: 
-            deliver()
 
 def scrape_captions():
 
@@ -303,109 +325,123 @@ def redact_pii(text, pii_exceptions):
 
     return text
 
-def deliver():
+def deliver(message):
 
-    try:
-        driver.find_element(
-            By.CSS_SELECTOR, 
-            'button[data-testid="button"][aria-label^="Leave meeting"]'
-        ).click()
-    except NoSuchElementException:
-        pass
+    driver.close()
+    driver.quit()
 
-    print("Meeting ended or scribe was removed.")
-
-    attendance = ""
-    chat = '\n'.join(messages)
-    transcript = '\n\n'.join(captions)
-    time_now = datetime.now()
-
-    for index, attendee in enumerate(sorted(attendees, key=lambda k: k['Name'])):
-        attendee_name = attendee["Name"]
-        if anonymize:
-            attendee_label = f"Attendee {index + 1}"
-            attendance += attendee_label
-            chat = chat.replace(attendee_name, attendee_label)
-            transcript = transcript.replace(attendee_name, attendee_label)    
-        else: 
-            attendance += attendee_name
-            if attendee["Email"]:
-                attendance += f" ({attendee['Email']})"
-
-        if attendee["Joined"]:
-            if not attendee["Left"]:
-                attendee["Left"] = time_now
-            difference = attendee["Left"] - attendee["Joined"]
-            attendance += f" | {round(difference.total_seconds()/60)} minutes\n"
-        else: 
-            attendance += f" | Invited\n"
-
-    if not anonymize:
-        pii_exceptions = ['EMAIL', 'ADDRESS', 'NAME', 'PHONE', 'DATE_TIME', 'URL', 'AGE', 'USERNAME']
-    else:
-        pii_exceptions = ['DATE_TIME', 'URL', 'AGE']
-
-    chat = redact_pii(chat, pii_exceptions)
-    transcript = redact_pii(transcript, pii_exceptions)
-
-    prompt = f"""Please create a title, summary, and list of action items from the following transcript:
-    <transcript>{transcript}</transcript>
-    Please output the title in <title></title> tags, the summary in <summary></summary> tags, and the action items in <action items></action items> tags."""
-    body = json.dumps({
-        "max_tokens": 4096,
-        "messages": [{"role": "user", "content": prompt}],
-        "anthropic_version": "bedrock-2023-05-31"
-    })
-    try: 
-        response = boto3.client("bedrock-runtime").invoke_model(body=body, modelId="anthropic.claude-3-sonnet-20240229-v1:0")
-        bedrock_completion = json.loads(response.get("body").read())["content"][0]["text"]
-    except Exception as ex:
-        print(f"Error while invoking model: {ex}")
-        bedrock_completion = ""
-        
-    title = re.findall(r'<title>(.*?)</title>|$', bedrock_completion, re.DOTALL)[0].strip()
-    summary = re.findall(r'<summary>(.*?)</summary>|$', bedrock_completion, re.DOTALL)[0].strip()
-    action_items = re.findall(r'<action items>(.*?)</action items>|$', bedrock_completion, re.DOTALL)[0].strip()   
+    print(message)
 
     email_source = f"{scribe_name} <{'+scribe@'.join(email_address.split('@'))}>"
     email_destinations = [email_address]
 
-    body_text = "Attendees:\n" + attendance + "\nSummary:\n" + summary \
-        + "\n\nAction Items:\n" + action_items + "\n\nChat:\n" + chat
-    body_html = f"""
-    <html>
-        <body>
-            <h4>Attendees</h4>
-                <p>{attendance.replace('\n', '<br>')}</p>
-            <h4>Summary</h4>
-                <p>{summary.replace('\n', '<br>')}</p>
-            <h4>Action Items</h4>
-                <p>{action_items.replace('\n', '<br>')}</p>
-            <h4>Chat</h4>
-                <p>{chat.replace('\n', '<br>')}</p>
-        </body>
-    </html>
-    """
-    charset = "utf-8"
-
     msg = MIMEMultipart('mixed')
     msg['From'] = email_source
     msg['To'] = ', '.join(email_destinations)
-    msg['Subject'] = f"{os.environ['MEETING_NAME']} | {title}"
+
+    if not start:
+        msg['Subject'] = os.environ['MEETING_NAME']
+        body_html = body_text = message + " No meeting details were saved."
+    else:
+        attendance = ""
+        chat = '\n'.join(messages)
+        transcript = '\n\n'.join(captions)
+        time_now = datetime.now()
+
+        for index, attendee in enumerate(sorted(attendees, key=lambda k: k['Name'])):
+            attendee_name = attendee["Name"]
+            if anonymize:
+                attendee_label = f"Attendee {index + 1}"
+                attendance += attendee_label
+                chat = chat.replace(attendee_name, attendee_label)
+                transcript = transcript.replace(attendee_name, attendee_label)    
+            else: 
+                attendance += attendee_name
+                if attendee["Email"]:
+                    attendance += f" ({attendee['Email']})"
+
+            if attendee["Joined"]:
+                if not attendee["Left"]:
+                    attendee["Left"] = time_now
+                difference = attendee["Left"] - attendee["Joined"]
+                attendance += f" | {round(difference.total_seconds()/60)} minutes\n"
+            else: 
+                attendance += f" | Invited\n"
+
+        if not anonymize:
+            pii_exceptions = ['EMAIL', 'ADDRESS', 'NAME', 'PHONE', 'DATE_TIME', 'URL', 'AGE', 'USERNAME']
+        else:
+            pii_exceptions = ['DATE_TIME', 'URL', 'AGE']
+
+        chat = redact_pii(chat, pii_exceptions)
+        transcript = redact_pii(transcript, pii_exceptions)
+
+        prompt = (
+            "Please create a title, summary, and list of action items from the following transcript:"
+            f"\n<transcript>{transcript}</transcript>"
+            "\nPlease output the title in <title></title> tags, the summary in <summary></summary> tags,"
+            " and the action items in <action items></action items> tags."
+        )
+        print(prompt)
+        body = json.dumps({
+            "max_tokens": 4096,
+            "messages": [{"role": "user", "content": prompt}],
+            "anthropic_version": "bedrock-2023-05-31"
+        })
+        try: 
+            response = boto3.client("bedrock-runtime").invoke_model(
+                body=body, modelId="anthropic.claude-3-sonnet-20240229-v1:0"
+            )
+            bedrock_completion = json.loads(response.get("body").read())["content"][0]["text"]
+        except Exception as ex:
+            print(f"Error while invoking model: {ex}")
+            bedrock_completion = ""
+
+        print(bedrock_completion)
+            
+        title = re.findall(r'<title>(.*?)</title>|$', bedrock_completion, re.DOTALL)[0].strip()
+        summary = re.findall(r'<summary>(.*?)</summary>|$', bedrock_completion, re.DOTALL)[0].strip()
+        action_items = re.findall(
+            r'<action items>(.*?)</action items>|$', bedrock_completion, re.DOTALL
+        )[0].strip()   
+
+        msg['Subject'] = f"{os.environ['MEETING_NAME']} | {title}"
+
+        body_text = message + "\n\nAttendees:\n" + attendance + "\nSummary:\n" + summary \
+            + "\n\nAction Items:\n" + action_items
+        body_html = f"""
+        <html>
+            <body>
+                <p>{message}</p>
+                <h4>Attendees</h4>
+                <p>{attendance.replace('\n', '<br>')}</p>
+                <h4>Summary</h4>
+                <p>{summary.replace('\n', '<br>')}</p>
+                <h4>Action Items</h4>
+                <p>{action_items.replace('\n', '<br>')}</p>
+            </body>
+        </html>
+        """
+
+        attachment = MIMEApplication(transcript)
+        attachment.add_header('Content-Disposition','attachment',filename="transcript.txt")
+        msg.attach(attachment)
+
+        attachment = MIMEApplication(chat)
+        attachment.add_header('Content-Disposition','attachment',filename="chat.txt")
+        msg.attach(attachment)
+
+        for file_name, link in attachments.items():
+            attachment = MIMEApplication(requests.get(link).content)
+            attachment.add_header('Content-Disposition','attachment',filename=file_name)
+            msg.attach(attachment)
+
+    charset = "utf-8"
 
     msg_body = MIMEMultipart('alternative')
     msg_body.attach(MIMEText(body_text.encode(charset), 'plain', charset))
     msg_body.attach(MIMEText(body_html.encode(charset), 'html', charset))
     msg.attach(msg_body)
-
-    attachment = MIMEApplication(transcript)
-    attachment.add_header('Content-Disposition','attachment',filename="transcript.txt")
-    msg.attach(attachment)
-
-    for file_name, link in attachments.items():
-        attachment = MIMEApplication(requests.get(link).content)
-        attachment.add_header('Content-Disposition','attachment',filename=file_name)
-        msg.attach(attachment)
     
     try:
         boto3.client("ses").send_raw_email(
@@ -415,11 +451,10 @@ def deliver():
                 'Data':msg.as_string(),
             }
         )
-        print("Deliverables sent.")
+        print("Email sent.")
     except Exception as ex:
-        print(f"Error while sending deliverables: {ex}")
+        print(f"Error while sending email: {ex}")
 
-    driver.quit()
     exit()
 
 initialize()
@@ -427,20 +462,25 @@ initialize()
 print("Scraping...")
 iteration_count = 0
 while True:
-    if driver.find_elements(By.XPATH, '//span[text()="Your meeting has ended."] | //span[text()="You have been removed from this meeting."]'):
-        deliver()
-
-    sleep(3)
-    
     try:
-        if iteration_count % 10  == 0:
-            scrape_attendees()
-        scrape_messages()
-        if start:
-            scrape_captions()
-    except StaleElementReferenceException:
-        pass
-    except Exception as ex:
-        print(f"Error while scraping: {ex}")
+        deliver(driver.find_element(
+            By.CSS_SELECTOR, 
+            '.MeetingEndContainer__subTitle, .Hq90rPeHQDqoB-F07ML2t'
+        ).text)
+    except NoSuchElementException:
+        sleep(1)
+
+        try:
+            if iteration_count % 10  == 0:
+                scrape_attendees()
+            scrape_messages()
+            if start:
+                scrape_captions()
+        except (TimeoutException, NoSuchElementException):
+            continue
+        except StaleElementReferenceException:
+            pass
+        except Exception as ex:
+            print(f"Error while scraping: {ex}")
 
     iteration_count += 1
