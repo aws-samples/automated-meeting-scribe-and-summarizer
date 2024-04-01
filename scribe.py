@@ -76,6 +76,7 @@ def initialize():
     ))).click()
 
     print(f"Waiting to open chat panel.")
+    ran = iter([False, True])
     while True:
         try:
             WebDriverWait(driver, 1).until(EC.element_to_be_clickable((
@@ -87,13 +88,13 @@ def initialize():
                 dialogue = driver.find_element(
                     By.CSS_SELECTOR, 'div[data-testid="modal-body"]'
                 ).text.split("\n")[0]
-            except NoSuchElementException:
-                continue
-            if "The organizer has been notified that you are waiting." in dialogue:
-                continue
+            except NoSuchElementException as e:
+                if next(ran): raise e
             else:
-                deliver(dialogue)
-        break
+                if "The organizer has been notified that you are waiting." not in dialogue:
+                    deliver(dialogue)
+        else: 
+            break
 
     print("Sending introduction messages.")
     send_message(
@@ -218,6 +219,7 @@ def scrape_messages():
     message_elements = driver.find_elements(By.CLASS_NAME, "chatMessage")
     chat_length = skipped_messages + len(messages)
 
+    timestamp = datetime.now().strftime('%H:%M')
     for message_element in message_elements[chat_length:]:
         try:
             sender = message_element.find_element(
@@ -250,11 +252,14 @@ def scrape_messages():
 
         if (
             not start or 
-            sender not in [attendee['Name'] for attendee in attendees] or
+            sender == "Amazon Chime" or
+            scribe_name in sender or
             text in [start_command, anonymize_command]
         ):
             skipped_messages += 1
         else: 
+            message = f"[{timestamp}] {sender}: "
+
             try:
                 attachment_element = message_element.find_element(
                     By.CLASS_NAME, "SLFfm3Dwo5MfFzks4uM11"
@@ -266,11 +271,11 @@ def scrape_messages():
                 file_name = attachment_element.get_attribute("title")
                 attachments[file_name] = attachment_element.get_attribute("href")
                 if text:
-                    message = f"{sender}: {text} | {file_name}"
+                    message += f"{text} | {file_name}"
                 else:
-                    message = f"{sender}: {file_name}"
+                    message += file_name
             else:
-                message = f"{sender}: {text}"
+                message += text
 
             messages.append(message)
 
@@ -300,17 +305,17 @@ def scrape_captions():
     else:
         caption_elements = list(zip(speaker_elements, text_elements))[:-min(len(attendees), 4)]
 
+    timestamp = datetime.now().strftime('%H:%M')
     for speaker_element, text_element in caption_elements:
         speaker = speaker_element.text
         if speaker:
             text = text_element.text
             if text not in '\n'.join(captions[-20:]):
                 if captions:
-                    previous_speaker, previous_text = captions[-1].split(': ', 1)
-                    if speaker == previous_speaker:
-                        captions[-1] = f"{previous_speaker}: {previous_text} {text}"
+                    if speaker in captions[-1].split(': ')[0]:
+                        captions[-1] += f" {text}"
                         continue
-                captions.append(f"{speaker}: {text}")
+                captions.append(f"[{timestamp}] {speaker}: {text}")
 
 def redact_pii(text, pii_exceptions):
 
@@ -345,7 +350,7 @@ def deliver(message):
     else:
         attendance = ""
         chat = '\n'.join(messages)
-        transcript = '\n\n'.join(captions)
+        transcript = '\n\n'.join(captions[1:])
         time_now = datetime.now()
 
         for index, attendee in enumerate(sorted(attendees, key=lambda k: k['Name'])):
@@ -393,12 +398,10 @@ def deliver(message):
                 body=body, modelId="anthropic.claude-3-sonnet-20240229-v1:0"
             )
             bedrock_completion = json.loads(response.get("body").read())["content"][0]["text"]
-        except Exception as ex:
-            print(f"Error while invoking model: {ex}")
+        except Exception as e:
+            print(f"Error while invoking model: {e}")
             bedrock_completion = ""
 
-        print(bedrock_completion)
-            
         title = re.findall(r'<title>(.*?)</title>|$', bedrock_completion, re.DOTALL)[0].strip()
         summary = re.findall(r'<summary>(.*?)</summary>|$', bedrock_completion, re.DOTALL)[0].strip()
         action_items = re.findall(
@@ -443,23 +446,21 @@ def deliver(message):
     msg_body.attach(MIMEText(body_html.encode(charset), 'html', charset))
     msg.attach(msg_body)
     
-    try:
-        boto3.client("ses").send_raw_email(
-            Source=email_source,
-            Destinations=email_destinations,
-            RawMessage={
-                'Data':msg.as_string(),
-            }
-        )
-        print("Email sent.")
-    except Exception as ex:
-        print(f"Error while sending email: {ex}")
+    boto3.client("ses").send_raw_email(
+        Source=email_source,
+        Destinations=email_destinations,
+        RawMessage={
+            'Data':msg.as_string(),
+        }
+    )
+    print("Email sent!")
 
     exit()
 
 initialize()
 
 print("Scraping...")
+ran = iter([False, True])
 iteration_count = 0
 while True:
     try:
@@ -476,11 +477,9 @@ while True:
             scrape_messages()
             if start:
                 scrape_captions()
-        except (TimeoutException, NoSuchElementException):
-            continue
+        except (TimeoutException, NoSuchElementException) as e:
+            if next(ran): raise e
         except StaleElementReferenceException:
             pass
-        except Exception as ex:
-            print(f"Error while scraping: {ex}")
 
-    iteration_count += 1
+        iteration_count += 1
