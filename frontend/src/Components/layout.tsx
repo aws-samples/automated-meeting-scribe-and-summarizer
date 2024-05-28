@@ -19,6 +19,7 @@ import {
 
 export type Meeting = {
   meetingID: string,
+  meetingPassword: string,
   meetingName: string,
   meetingTime: string
 }

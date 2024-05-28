@@ -16,22 +16,12 @@ interface Props {
 
 export default ({ createInvite }: Props) => {
   const [meetingId, setMeetingId] = useState("")
+  const [meetingPassword, setMeetingPassword] = useState("")
   const [meetingName, setMeetingName] = useState("")
   const [meetingDate, setMeetingDate] = useState("")
   const [meetingTime, setMeetingTime] = useState("")
 
-  const [meetingIdError, setMeetingIdError] = useState("")
   const [meetingTimeError, setMeetingTimeError] = useState("")
-
-  const validateMeetingId = (id: string) => {
-    const pattern = /^\s*\d\s*\d\s*\d\s*\d\s*\d\s*\d\s*\d\s*\d\s*\d\s*\d\s*$/
-
-    if (!id || pattern.test(id)) {
-      setMeetingIdError('')
-    } else {
-      setMeetingIdError('Meeting ID must be ten digits.')
-    }
-  }
 
   const validateMeetingTime = (time: string) => {
     if (!time) {
@@ -60,6 +50,7 @@ export default ({ createInvite }: Props) => {
 
     const meeting = {
       meetingID: meetingId.replace(/ /g, ''),
+      meetingPassword: meetingPassword,
       meetingName: meetingName,
       meetingTime: meetingDateTime.toISOString().slice(0, -5)
     }
@@ -67,6 +58,7 @@ export default ({ createInvite }: Props) => {
     createInvite(meeting)
 
     setMeetingId("")
+    setMeetingPassword("")
     setMeetingName("")
     setMeetingDate("")
     setMeetingTime("")
@@ -80,14 +72,16 @@ export default ({ createInvite }: Props) => {
           <FormField label="Meeting ID">
             <Input
               onChange={({ detail }) => setMeetingId(detail.value)}
-              onBlur={() => validateMeetingId(meetingId)}
               value={meetingId}
             />
-            {meetingIdError && <Alert
-              type="error"
-            >
-              {meetingIdError}
-            </Alert>}
+          </FormField>
+
+          <FormField label="Meeting Password">
+            <Input
+              onChange={({ detail }) => setMeetingPassword(detail.value)}
+              value={meetingPassword}
+              type="password"
+            />
           </FormField>
 
           <FormField label="Meeting Name">
@@ -135,7 +129,7 @@ export default ({ createInvite }: Props) => {
             <Button
               variant="primary"
               form="meetingForm"
-              disabled={!meetingId || !!meetingIdError || !meetingName || !meetingTime || !!meetingTimeError}
+              disabled={!meetingId || !meetingPassword || !meetingName || !meetingTime || !!meetingTimeError}
             >
               Submit
             </Button>
