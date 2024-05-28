@@ -11,4 +11,5 @@ RUN pip3 install -r requirements.txt
 RUN playwright install --with-deps
 RUN apt install pulseaudio -y
 
+RUN chmod +x entrypoint.sh
 ENTRYPOINT ["entrypoint.sh"]

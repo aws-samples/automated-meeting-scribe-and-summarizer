@@ -150,10 +150,10 @@ Resources:
                 RestApi: !Ref RestApi,
                 WebsiteBucket: !Ref WebsiteBucket
               }
-      # SourceVersion: branch
+      SourceVersion: transcribe
       Environment:
         Type: LINUX_CONTAINER
-        Image: aws/codebuild/standard:5.0
+        Image: aws/codebuild/amazonlinux2-x86_64-standard:5.0
         ComputeType: BUILD_GENERAL1_SMALL
       ServiceRole: !GetAtt BuildRole.Arn
       Artifacts:
@@ -1227,7 +1227,7 @@ Resources:
       Type: "AWS::CloudFront::OriginAccessControl"
       Properties:
           OriginAccessControlConfig: 
-              Name: !Join [ '', ['frontendwebaccess', !Select [0, !Split [-, !Select [2, !Split [/, !Ref AWS::StackId ]]]]]]
+              Name: !Join [ '', ['FrontendWebAccess-', !Select [2, !Split [/, !Ref AWS::StackId ]]]]
               OriginAccessControlOriginType: "s3"
               SigningBehavior: "always"
               SigningProtocol: "sigv4"
