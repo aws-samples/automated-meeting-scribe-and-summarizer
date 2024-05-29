@@ -608,7 +608,7 @@ Resources:
   ScheduleGroup:
     Type: AWS::Scheduler::ScheduleGroup
 
-  RunTaskPolicy:
+  ECSPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
       PolicyDocument:
@@ -618,8 +618,14 @@ Resources:
             Action:
               - 'ecs:RunTask'
             Resource: '*'
+          - Effect: Allow
+            Action: iam:PassRole
+            Resource: "*"
+            Condition:
+              StringLike:
+                iam:PassedToService: ecs-tasks.amazonaws.com
 
-  StartTaskRole:
+  TargetECSRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -634,18 +640,12 @@ Resources:
             Action: sts:AssumeRole
       ManagedPolicyArns:
         - !GetAtt LogsPolicy.PolicyArn
-        - !GetAtt RunTaskPolicy.PolicyArn
+        - !GetAtt ECSPolicy.PolicyArn
       Policies:
-        - PolicyName: PassRolesTagsPolicy
+        - PolicyName: TagPolicy
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
-              - Effect: Allow
-                Action: iam:PassRole
-                Resource: "*"
-                Condition:
-                  StringLike:
-                    iam:PassedToService: ecs-tasks.amazonaws.com
               - Effect: Allow
                 Action: ecs:TagResource
                 Resource: "*"
@@ -672,7 +672,7 @@ Resources:
             Action: "sts:AssumeRole"
       Path: "/"
       ManagedPolicyArns:
-        - !GetAtt RunTaskPolicy.PolicyArn
+        - !GetAtt ECSPolicy.PolicyArn
       Policies:
         - PolicyName: ExpandedLogsPolicy
           PolicyDocument:
@@ -722,7 +722,7 @@ Resources:
             Statement:
               - Effect: Allow
                 Action: iam:PassRole
-                Resource: !GetAtt StartTaskRole.Arn
+                Resource: !GetAtt TargetECSRole.Arn
                 Condition:
                   StringLike:
                     iam:PassedToService: scheduler.amazonaws.com
@@ -844,7 +844,7 @@ Resources:
                     "State": "ENABLED",
                     "Target": {
                       "Arn": "${ClusterArn}",
-                      "RoleArn": "${StartTaskRoleArn}",
+                      "RoleArn": "${TargetECSRoleArn}",
                       "EcsParameters": {
                         "EnableECSManagedTags": false,
                         "EnableExecuteCommand": false,
@@ -949,7 +949,7 @@ Resources:
             }
           - {
               ClusterArn: !GetAtt [ Cluster, Arn ],
-              StartTaskRoleArn: !GetAtt [ StartTaskRole, Arn ]
+              TargetECSRoleArn: !GetAtt [ TargetECSRole, Arn ]
             }
 
 ### API Resources ###
