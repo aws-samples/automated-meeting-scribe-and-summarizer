@@ -1,5 +1,0 @@
-
-pytest-playwright 
-amazon_transcribe 
-sounddevice 
-boto3

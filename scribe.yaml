@@ -133,7 +133,7 @@ Resources:
                     - aws ecr get-login-password --region ${AWS::Region} | docker login --username AWS --password-stdin ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com
                 build:
                   commands:    
-                    - docker build -t ${ImageRepo} .
+                    - docker build -t ${ImageRepo} backend
                     - docker tag ${ImageRepo}:latest ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ImageRepo}:latest
                     - cd frontend
                     - echo -e "VITE_USER_POOL_ID=${UserPool}\nVITE_USER_POOL_CLIENT_ID=${UserPoolClient}\nVITE_API_ENDPOINT=https://${RestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod\nVITE_REGION=${AWS::Region}" > .env
@@ -1297,7 +1297,7 @@ Resources:
       Type: "AWS::CloudFront::OriginAccessControl"
       Properties:
           OriginAccessControlConfig: 
-              Name: !Join [ '', ['FrontendWebAccess-', !Select [2, !Split [/, !Ref AWS::StackId ]]]]
+              Name: !Sub "OriginAccessControl-${AWS::StackId}"
               OriginAccessControlOriginType: "s3"
               SigningBehavior: "always"
               SigningProtocol: "sigv4"
