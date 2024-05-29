@@ -744,7 +744,7 @@ Resources:
                     {
                       "Variable": "$.apiInfo.httpMethod",
                       "StringEquals": "POST",
-                      "Next": "CreateSchedule"
+                      "Next": "Time Choice"
                     },
                     {
                       "Variable": "$.apiInfo.httpMethod",
@@ -758,6 +758,64 @@ Resources:
                     }
                   ],
                   "Default": "Pass"
+                },
+                "Time Choice": {
+                  "Type": "Choice",
+                  "Choices": [
+                    {
+                      "Variable": "$.data.meetingTime",
+                      "IsPresent": true,
+                      "Next": "CreateSchedule"
+                    }
+                  ],
+                  "Default": "RunTask"
+                },
+                "RunTask": {
+                  "Type": "Task",
+                  "Resource": "arn:aws:states:::ecs:runTask",
+                  "Parameters": {
+                    "Cluster": "${ClusterArn}",
+                    "TaskDefinition": "${TaskDefinition}",
+                    "LaunchType": "FARGATE",
+                    "NetworkConfiguration": {
+                      "AwsvpcConfiguration": {
+                        "AssignPublicIp": "DISABLED",
+                        "SecurityGroups": [
+                          "${SecurityGroup}"
+                        ],
+                        "Subnets": [
+                          "${PrivateSubnetOne}",
+                          "${PrivateSubnetTwo}"
+                        ]
+                      }
+                    },
+                    "Overrides": {
+                      "ContainerOverrides": [
+                        {
+                          "Name": "scribe",
+                          "Environment": [
+                            {
+                              "Name": "MEETING_ID",
+                              "Value.$": "$.data.meetingID"
+                            },
+                            {
+                              "Name": "MEETING_PASSWORD",
+                              "Value.$": "$.data.meetingPassword"
+                            },
+                            {
+                              "Name": "EMAIL",
+                              "Value": "${Email}"
+                            },
+                            {
+                              "Name": "MEETING_NAME",
+                              "Value.$": "$.data.meetingName"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  "End": true
                 },
                 "CreateSchedule": {
                   "Type": "Task",

@@ -45,14 +45,18 @@ export default ({ createInvite }: Props) => {
   }
 
   const submitMeetingForm = () => {
-    var meetingDateTime = new Date(meetingDate + "T" + meetingTime)
-    meetingDateTime.setMinutes(meetingDateTime.getMinutes() - 2)
+    var meetingDateTimeFormatted = ""
+    if (meetingTime) {
+      var meetingDateTime = new Date(meetingDate + "T" + meetingTime)
+      meetingDateTime.setMinutes(meetingDateTime.getMinutes() - 2)
+      meetingDateTimeFormatted = meetingDateTime.toISOString().slice(0, -5)
+    }
 
     const meeting = {
       meetingID: meetingId.replace(/ /g, ''),
       meetingPassword: meetingPassword,
       meetingName: meetingName,
-      meetingTime: meetingDateTime.toISOString().slice(0, -5)
+      meetingTime: meetingDateTimeFormatted
     }
 
     createInvite(meeting)
@@ -126,13 +130,22 @@ export default ({ createInvite }: Props) => {
           </FormField>
 
           <FormField>
-            <Button
-              variant="primary"
-              form="meetingForm"
-              disabled={!meetingId || !meetingName || !meetingTime || !!meetingTimeError}
-            >
-              Submit
-            </Button>
+            <SpaceBetween direction="horizontal" size="l">
+              <Button
+                variant="normal"
+                form="meetingForm"
+                disabled={!meetingId || !meetingName}
+              >
+                Invite Now
+              </Button>
+              <Button
+                variant="primary"
+                form="meetingForm"
+                disabled={!meetingId || !meetingName || !meetingTime || !!meetingTimeError}
+              >
+                Invite Later
+              </Button>
+            </SpaceBetween>
           </FormField>
 
         </SpaceBetween>
