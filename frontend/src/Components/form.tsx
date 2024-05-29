@@ -129,7 +129,7 @@ export default ({ createInvite }: Props) => {
             <Button
               variant="primary"
               form="meetingForm"
-              disabled={!meetingId || !meetingPassword || !meetingName || !meetingTime || !!meetingTimeError}
+              disabled={!meetingId || !meetingName || !meetingTime || !!meetingTimeError}
             >
               Submit
             </Button>

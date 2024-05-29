@@ -29,8 +29,8 @@ meeting_end = False
 
 start = False
 
-def remove_punctuation(text: str):
-    return text.translate(str.maketrans('', '', string.punctuation))
+def baseline_text(text: str):
+    return text.lower().translate(str.maketrans('', '', string.punctuation))
 
 class MyEventHandler(TranscriptResultStreamHandler):
     async def handle_transcript_event(self, transcript_event: TranscriptEvent):
@@ -42,7 +42,7 @@ class MyEventHandler(TranscriptResultStreamHandler):
                 line = alt.transcript
                 print(line)
                 if captions:
-                    if remove_punctuation(captions[-1]) in remove_punctuation(line):
+                    if baseline_text(captions[-1]) in baseline_text(line):
                         captions[-1] = line
                         continue
                 captions.append(line)
