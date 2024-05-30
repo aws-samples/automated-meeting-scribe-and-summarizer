@@ -104,22 +104,19 @@ async def initialize(page):
             observer.observe(targetNode, config)
         ''')
 
-        async def meeting_end():
-            try:
-                done, pending = await asyncio.wait(
-                    fs=[
-                        asyncio.create_task(page.wait_for_selector('button[aria-label="Leave"]', state="detached", timeout=0)),
-                        asyncio.create_task(page.wait_for_selector('div[class="zm-modal zm-modal-legacy"]', timeout=0))
-                    ],
-                    return_when=asyncio.FIRST_COMPLETED,
-                    timeout=43200000
-                )
-                [task.cancel() for task in pending]
-                print("Meeting ended.")
-            except:
-                print("Meeting timed out or something.")
-            finally:
-                scribe.start = False
-        
-        print("Waiting for meeting end.")
-        await meeting_end()
+async def deinitialize(page):
+    try:
+        done, pending = await asyncio.wait(
+            fs=[
+                asyncio.create_task(page.wait_for_selector('button[aria-label="Leave"]', state="detached", timeout=0)),
+                asyncio.create_task(page.wait_for_selector('div[class="zm-modal zm-modal-legacy"]', timeout=0))
+            ],
+            return_when=asyncio.FIRST_COMPLETED,
+            timeout=43200000
+        )
+        [task.cancel() for task in pending]
+        print("Meeting ended.")
+    except:
+        print("Meeting timed out.")
+    finally:
+        scribe.start = False

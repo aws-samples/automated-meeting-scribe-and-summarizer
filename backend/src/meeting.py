@@ -4,14 +4,14 @@ import asyncio
 from playwright.async_api import async_playwright
 
 if scribe.meeting_platform == "Chime":
-    from chime import initialize
+    from chime import initialize, deinitialize
 elif scribe.meeting_platform == "Zoom":
-    from zoom import initialize
+    from zoom import initialize, deinitialize
 
 async def meeting():
     async with async_playwright() as p:
         browser = await p.chromium.launch(
-            headless=False, 
+            headless=True, 
             ignore_default_args=['--mute-audio'],
             args=[
                 "--window-size=1000,1000",
@@ -28,7 +28,11 @@ async def meeting():
         page.set_default_timeout(20000)
 
         await initialize(page)
+
+        print("Waiting for meeting end.")
+        await deinitialize(page)
         await browser.close()
+
         await scribe.deliver()
 
 asyncio.run(meeting())

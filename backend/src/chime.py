@@ -123,16 +123,11 @@ async def initialize(page):
             observer.observe(targetNode, config)
         ''')
 
-        async def meeting_end():
-            global start
-            try:
-                await page.wait_for_selector('button[id="endMeeting"]', state="detached", timeout=43200000)
-                print("Meeting ended.")
-            except TimeoutError:
-                print("Meeting timed out.")
-            finally:
-                scribe.start = False
-                # stop audio things
-        
-        print("Waiting for meeting end.")
-        await meeting_end()
+async def deinitialize(page):
+    try:
+        await page.wait_for_selector('button[id="endMeeting"]', state="detached", timeout=43200000)
+        print("Meeting ended.")
+    except TimeoutError:
+        print("Meeting timed out.")
+    finally:
+        scribe.start = False
