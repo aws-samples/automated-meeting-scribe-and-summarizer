@@ -1,6 +1,5 @@
 
 import asyncio
-from playwright.async_api import async_playwright
 import scribe
 from datetime import datetime
 
@@ -28,7 +27,7 @@ async def initialize(page):
         print("Opening chat panel.")
         chat_panel_element = await page.wait_for_selector(
             'button[data-testid="button"][aria-label^="Open chat panel"]',
-            timeout=3000000
+            timeout=scribe.waiting_timeout
         )
         await chat_panel_element.click()
 
@@ -71,20 +70,16 @@ async def initialize(page):
                 sender = prev_sender
             prev_sender = sender
             if text == scribe.end_command:
-                leave_button_element = await page.wait_for_selector('button[id="endMeeting"]')
-                await leave_button_element.click()
+                await page.goto("about:blank")
             elif scribe.start and text == scribe.pause_command:
                 scribe.start = False
-                start_message = 'Not saving attendance, new messages or transcriptions.'
-                print(start_message)
-                await send_message(start_message)
+                print(scribe.pause_message)
+                await send_message(scribe.pause_message)
             elif not scribe.start and text == scribe.start_command:
                 scribe.start = True
-                start_message = 'Saving attendance, new messages and transcriptions.'
-                print(start_message)
-                await send_message(start_message)
-                global transcribe_task
-                transcribe_task = asyncio.create_task(scribe.transcribe())
+                print(scribe.start_message)
+                await send_message(scribe.start_message)
+                asyncio.create_task(scribe.transcribe())
             elif scribe.start and not (sender == "Amazon Chime" or scribe.scribe_name in sender):
                 timestamp = datetime.now().strftime('%H:%M')
                 message = f"[{timestamp}] {sender}: "
@@ -96,7 +91,7 @@ async def initialize(page):
                         message += attachment_title
                 else:
                     message += text
-                print('New Message:', message)
+                # print('New Message:', message)
                 scribe.messages.append(message)                
 
         await page.expose_function("messageChange", message_change)
@@ -125,7 +120,7 @@ async def initialize(page):
 
 async def deinitialize(page):
     try:
-        await page.wait_for_selector('button[id="endMeeting"]', state="detached", timeout=43200000)
+        await page.wait_for_selector('button[id="endMeeting"]', state="detached", timeout=scribe.meeting_timeout)
         print("Meeting ended.")
     except TimeoutError:
         print("Meeting timed out.")

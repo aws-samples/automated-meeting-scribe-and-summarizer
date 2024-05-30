@@ -1,6 +1,5 @@
 
 import asyncio
-from playwright.async_api import async_playwright
 import scribe
 
 async def initialize(page):
@@ -20,7 +19,7 @@ async def initialize(page):
         print("Adding audio.")
         audio_button_element = await page.wait_for_selector(
             "text=Join Audio by Computer",
-            timeout=3000000
+            timeout=scribe.waiting_timeout
         )
         await audio_button_element.click()
 
@@ -65,21 +64,18 @@ async def initialize(page):
         ''')
 
         async def message_change(message):
-            print('New Message:', message)
+            # print('New Message:', message)
             if scribe.end_command in message:
                 await page.goto("about:blank")
             elif scribe.start and scribe.pause_command in message:
                 scribe.start = False
-                pause_message = 'Not saving attendance, new messages or machine-generated captions.'
-                print(pause_message)
-                await send_message(pause_message)
+                print(scribe.pause_message)
+                await send_message(scribe.pause_message)
             elif not scribe.start and scribe.start_command in message:
                 scribe.start = True
-                start_message = 'Saving attendance, new messages and machine-generated captions.'
-                print(start_message)
-                await send_message(start_message)
-                global transcribe_task
-                transcribe_task = asyncio.create_task(scribe.transcribe())
+                print(scribe.start_message)
+                await send_message(scribe.start_message)
+                asyncio.create_task(scribe.transcribe())
             elif scribe.start:
                 scribe.messages.append(message)   
 
@@ -112,7 +108,7 @@ async def deinitialize(page):
                 asyncio.create_task(page.wait_for_selector('div[class="zm-modal zm-modal-legacy"]', timeout=0))
             ],
             return_when=asyncio.FIRST_COMPLETED,
-            timeout=43200000
+            timeout=scribe.meeting_timeout
         )
         [task.cancel() for task in pending]
         print("Meeting ended.")

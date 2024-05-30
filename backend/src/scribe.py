@@ -24,13 +24,15 @@ scribe_name = "Scribe"
 email_address = os.environ['EMAIL']
 scribe_identity = f"{scribe_name} ({email_address})"
 
+waiting_timeout = 3000000
+meeting_timeout = 43200000
+
 start_command = "START"
 pause_command = "PAUSE"
 end_command = "END"
-start = False
 
 intro_messages = [
-    ('Hello! I am an AI-assisted scribe for Amazon Chime. To learn more about me,'
+    ('Hello! I am an AI-assisted scribe. To learn more about me,'
     ' visit https://github.com/aws-samples/automated-meeting-scribe-and-summarizer.'),
     (f'If all attendees consent to my use, send "{start_command}" in the chat'
     ' to start saving attendance, new messages and machine-generated captions.'),
@@ -38,6 +40,11 @@ intro_messages = [
     (f'If you do not consent to my use, send "{end_command}" in the chat'
     ' to remove me from this meeting.')
 ]
+
+start = False
+
+start_message = 'Saving attendance, new messages and machine-generated captions.'
+pause_message = 'Not saving attendance, new messages or machine-generated captions.'
 
 attendees = []
 messages = []
@@ -56,7 +63,7 @@ class MyEventHandler(TranscriptResultStreamHandler):
         for result in results:
             for alt in result.alternatives:
                 caption = alt.transcript
-                print('New Caption:', caption)
+                # print('New Caption:', caption)
                 if captions:
                     if baseline_text(captions[-1]) in baseline_text(caption):
                         captions[-1] = caption
@@ -99,7 +106,7 @@ async def transcribe():
     )      
 
 async def speaker_change(speaker):
-    print('New Speaker:', speaker)
+    # print('New Speaker:', speaker)
     global current_speaker
     current_speaker = speaker
     if speaker not in attendees:
