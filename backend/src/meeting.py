@@ -2,6 +2,7 @@
 import scribe
 import asyncio
 from playwright.async_api import async_playwright
+import sys
 
 if scribe.meeting_platform == "Chime":
     from chime import initialize, deinitialize
@@ -36,3 +37,4 @@ async def meeting():
         await scribe.deliver()
 
 asyncio.run(meeting())
+sys.exit()

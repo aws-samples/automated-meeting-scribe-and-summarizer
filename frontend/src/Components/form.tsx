@@ -15,13 +15,19 @@ interface Props {
   createInvite: (meeting: Meeting) => void,
 }
 
+interface MeetingPlatform {
+  label: string;
+  disabled: boolean;
+  value: string;
+}
+
 export default ({ createInvite }: Props) => {
 
   const meetingPlatforms = [
-    { label: "Amazon Chime", id: "1", disabled: false, value: "Chime" },
-    { label: "Zoom", id: "2", disabled: false, value: "Zoom" },
-    { label: "Google Meet", id: "3", disabled: true, value: "Meet" },
-    { label: "Microsoft Teams", id: "4", disabled: true, value: "Teams" }
+    { label: "Amazon Chime", disabled: false, value: "Chime" },
+    { label: "Zoom", disabled: false, value: "Zoom" },
+    { label: "Google Meet", disabled: true, value: "Meet" },
+    { label: "Microsoft Teams", disabled: true, value: "Teams" }
   ]
   const [meetingPlatform, setMeetingPlatform] = useState(meetingPlatforms[0])
   const [meetingId, setMeetingId] = useState("")
@@ -85,7 +91,7 @@ export default ({ createInvite }: Props) => {
 
           <FormField label="Meeting Platform">
             <Select
-              onChange={({ detail }) => setMeetingPlatform(detail.selectedOption)}
+              onChange={({ detail }) => setMeetingPlatform(detail.selectedOption as MeetingPlatform)}
               options={meetingPlatforms}
               selectedOption={meetingPlatform}
             />
