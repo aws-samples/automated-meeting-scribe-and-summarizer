@@ -62,7 +62,7 @@ class MyEventHandler(TranscriptResultStreamHandler):
         for result in results:
             for alt in result.alternatives:
                 caption = alt.transcript
-                print('New Caption:', caption)
+                # print('New Caption:', caption)
                 if captions:
                     if baseline_text(captions[-1]) in baseline_text(caption):
                         captions[-1] = caption
@@ -113,11 +113,11 @@ async def speaker_change(speaker):
 
 def deliver():
 
-    print(attendees)
-    print(messages)
-    print(attachments)
-    print(captions)
-    print(speakers)
+    # print(attendees)
+    # print(messages)
+    # print(attachments)
+    # print(captions)
+    # print(speakers)
 
     email_source = f"{scribe_name} <{'+scribe@'.join(email_address.split('@'))}>"
     email_destinations = [email_address]
@@ -126,9 +126,11 @@ def deliver():
     msg['From'] = email_source
     msg['To'] = ', '.join(email_destinations)
 
-    if not (captions and messages):
+    if not (captions or messages):
         msg['Subject'] = meeting_name
-        body_html = body_text = "No meeting details were saved."
+        end_message = "No meeting details were saved."
+        print(end_message)
+        body_html = body_text = end_message
     else:
         attendance = '\n'.join(attendees)
         chat = '\n'.join(messages)
