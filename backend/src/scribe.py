@@ -28,6 +28,16 @@ pause_command = "PAUSE"
 end_command = "END"
 start = False
 
+intro_messages = [
+    ('Hello! I am an AI-assisted scribe for Amazon Chime. To learn more about me,'
+    ' visit https://github.com/aws-samples/automated-meeting-scribe-and-summarizer.'),
+    (f'If all attendees consent to my use, send "{start_command}" in the chat'
+    ' to start saving attendance, new messages and machine-generated captions.'),
+    f'Send "{pause_command}" in the chat to pause saving meeting details.',
+    (f'If you do not consent to my use, send "{end_command}" in the chat'
+    ' to remove me from this meeting.')
+]
+
 attendees = []
 messages = []
 captions = []

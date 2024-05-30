@@ -56,17 +56,8 @@ async def initialize():
         await chat_button_element.click()
 
         print("Sending introduction messages.")
-        await send_message(
-            'Hello! I am an AI-assisted scribe for Amazon Chime. To learn more about me,'
-            ' visit https://github.com/aws-samples/automated-meeting-scribe-and-summarizer.'
-        )
-        await send_message(
-            f'If all attendees consent, send "{scribe.start_command}" in the chat'
-            ' to save attendance, new messages and transcriptions.'
-        )
-        await send_message(
-            f'Otherwise, send "{scribe.end_command}" in the chat to remove me from this meeting.'
-        )
+        for message in scribe.intro_messages:
+            await send_message(message)
 
         await page.expose_function("speakerChange", scribe.speaker_change)
 
@@ -96,12 +87,12 @@ async def initialize():
                 await page.goto("about:blank")
             elif scribe.start and scribe.pause_command in message:
                 scribe.start = False
-                pause_message = 'Not saving attendance, new messages or transcriptions.'
+                pause_message = 'Not saving attendance, new messages or machine-generated captions.'
                 print(pause_message)
                 await send_message(pause_message)
             elif not scribe.start and scribe.start_command in message:
                 scribe.start = True
-                start_message = 'Saving attendance, new messages and transcriptions.'
+                start_message = 'Saving attendance, new messages and machine-generated captions.'
                 print(start_message)
                 await send_message(start_message)
                 global transcribe_task
