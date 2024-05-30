@@ -1,5 +1,6 @@
 
 import { Meeting } from "./layout"
+import { meetingPlatforms, MeetingPlatform } from '../services/details'
 import { useState } from "react"
 import Form from "@cloudscape-design/components/form"
 import SpaceBetween from "@cloudscape-design/components/space-between"
@@ -15,20 +16,7 @@ interface Props {
   createInvite: (meeting: Meeting) => void,
 }
 
-interface MeetingPlatform {
-  label: string;
-  disabled: boolean;
-  value: string;
-}
-
 export default ({ createInvite }: Props) => {
-
-  const meetingPlatforms = [
-    { label: "Amazon Chime", disabled: false, value: "Chime" },
-    { label: "Zoom", disabled: false, value: "Zoom" },
-    { label: "Microsoft Teams", disabled: true, value: "Teams" },
-    { label: "Google Meet", disabled: true, value: "Meet" }
-  ]
   const [meetingPlatform, setMeetingPlatform] = useState(meetingPlatforms[0])
   const [meetingId, setMeetingId] = useState("")
   const [meetingPassword, setMeetingPassword] = useState("")

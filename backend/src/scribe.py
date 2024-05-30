@@ -62,7 +62,7 @@ class MyEventHandler(TranscriptResultStreamHandler):
         for result in results:
             for alt in result.alternatives:
                 caption = alt.transcript
-                # print('New Caption:', caption)
+                print('New Caption:', caption)
                 if captions:
                     if baseline_text(captions[-1]) in baseline_text(caption):
                         captions[-1] = caption
@@ -112,6 +112,12 @@ async def speaker_change(speaker):
         attendees.append(speaker) 
 
 def deliver():
+
+    print(attendees)
+    print(messages)
+    print(attachments)
+    print(captions)
+    print(speakers)
 
     email_source = f"{scribe_name} <{'+scribe@'.join(email_address.split('@'))}>"
     email_destinations = [email_address]

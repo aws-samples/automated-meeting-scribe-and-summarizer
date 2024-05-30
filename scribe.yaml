@@ -837,7 +837,7 @@ Resources:
                   "Type": "Task",
                   "Parameters": {
                     "ActionAfterCompletion": "DELETE",
-                    "Description.$": "$.data.meetingName",
+                    "Description.$": "States.Format('{}_{}', $.data.meetingPlatform, $.data.meetingName)",
                     "FlexibleTimeWindow": {
                       "Mode": "OFF"
                     },
@@ -874,8 +874,8 @@ Resources:
                             "name": "scribe",
                             "environment": [
                               {
-                                "Name": "MEETING_PLATFORM",
-                                "Value.$": "$.data.meetingPlatform"
+                                "name": "MEETING_PLATFORM",
+                                "value.$": "$.data.meetingPlatform"
                               },
                               {
                                 "name": "MEETING_ID",

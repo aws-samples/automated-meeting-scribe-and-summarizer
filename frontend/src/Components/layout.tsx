@@ -1,5 +1,5 @@
 
-import scheduleService, { Schedule } from '../services/schedule'
+import scheduleService, { Schedule } from '../services/details'
 import { HttpService } from '../services/http'
 import { CanceledError } from '../services/client'
 import MeetingForm from './form'
