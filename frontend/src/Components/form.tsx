@@ -4,6 +4,7 @@ import { useState } from "react"
 import Form from "@cloudscape-design/components/form"
 import SpaceBetween from "@cloudscape-design/components/space-between"
 import FormField from "@cloudscape-design/components/form-field"
+import Select from "@cloudscape-design/components/select"
 import Input from "@cloudscape-design/components/input"
 import Alert from "@cloudscape-design/components/alert"
 import DatePicker from "@cloudscape-design/components/date-picker"
@@ -15,6 +16,14 @@ interface Props {
 }
 
 export default ({ createInvite }: Props) => {
+
+  const meetingPlatforms = [
+    { label: "Amazon Chime", id: "1", disabled: false, value: "Chime" },
+    { label: "Zoom", id: "2", disabled: false, value: "Zoom" },
+    { label: "Google Meet", id: "3", disabled: true, value: "Meet" },
+    { label: "Microsoft Teams", id: "4", disabled: true, value: "Teams" }
+  ]
+  const [meetingPlatform, setMeetingPlatform] = useState(meetingPlatforms[0])
   const [meetingId, setMeetingId] = useState("")
   const [meetingPassword, setMeetingPassword] = useState("")
   const [meetingName, setMeetingName] = useState("")
@@ -53,6 +62,7 @@ export default ({ createInvite }: Props) => {
     }
 
     const meeting = {
+      meetingPlatform: meetingPlatform.value,
       meetingID: meetingId.replace(/ /g, ''),
       meetingPassword: meetingPassword,
       meetingName: meetingName,
@@ -72,6 +82,14 @@ export default ({ createInvite }: Props) => {
     <form id="meetingForm" onSubmit={(e) => { e.preventDefault(); submitMeetingForm() }}>
       <Form variant="embedded">
         <SpaceBetween direction="vertical" size="l">
+
+          <FormField label="Meeting Platform">
+            <Select
+              onChange={({ detail }) => setMeetingPlatform(detail.selectedOption)}
+              options={meetingPlatforms}
+              selectedOption={meetingPlatform}
+            />
+          </FormField>
 
           <FormField label="Meeting ID">
             <Input

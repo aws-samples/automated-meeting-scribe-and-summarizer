@@ -18,6 +18,7 @@ import {
 } from '@cloudscape-design/components'
 
 export type Meeting = {
+  meetingPlatform: string,
   meetingID: string,
   meetingPassword: string,
   meetingName: string,

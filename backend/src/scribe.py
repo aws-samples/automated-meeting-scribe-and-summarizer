@@ -122,7 +122,7 @@ def deliver():
     msg['To'] = ', '.join(email_destinations)
 
     if not (captions and messages):
-        msg['Subject'] = os.environ['MEETING_NAME']
+        msg['Subject'] = meeting_name
         body_html = body_text = "No meeting details were saved."
     else:
         attendance = '\n'.join(attendees)
@@ -156,7 +156,7 @@ def deliver():
             r'<action items>(.*?)</action items>|$', bedrock_completion, re.DOTALL
         )[0].strip()   
 
-        msg['Subject'] = f"{os.environ['MEETING_NAME']} | {title}"
+        msg['Subject'] = f"{meeting_name} | {title}"
 
         body_text = "Attendees:\n" + attendance + "\nSummary:\n" + summary \
             + "\n\nAction Items:\n" + action_items
@@ -197,5 +197,3 @@ def deliver():
         }
     )
     print("Email sent!")
-
-    sys.exit()

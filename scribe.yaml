@@ -807,6 +807,10 @@ Resources:
                           "Name": "scribe",
                           "Environment": [
                             {
+                              "Name": "MEETING_PLATFORM",
+                              "Value.$": "$.data.meetingPlatform"
+                            },
+                            {
                               "Name": "MEETING_ID",
                               "Value.$": "$.data.meetingID"
                             },
@@ -869,6 +873,10 @@ Resources:
                           {
                             "name": "scribe",
                             "environment": [
+                              {
+                                "Name": "MEETING_PLATFORM",
+                                "Value.$": "$.data.meetingPlatform"
+                              },
                               {
                                 "name": "MEETING_ID",
                                 "value.$": "$.data.meetingID"
