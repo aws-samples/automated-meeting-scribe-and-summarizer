@@ -34,7 +34,6 @@ async def meeting():
         await deinitialize(page)
         await browser.close()
 
-        await scribe.deliver()
-
 asyncio.run(meeting())
-sys.exit()
+scribe.deliver()
+sys.exit

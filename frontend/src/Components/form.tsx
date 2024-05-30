@@ -26,8 +26,8 @@ export default ({ createInvite }: Props) => {
   const meetingPlatforms = [
     { label: "Amazon Chime", disabled: false, value: "Chime" },
     { label: "Zoom", disabled: false, value: "Zoom" },
-    { label: "Google Meet", disabled: true, value: "Meet" },
-    { label: "Microsoft Teams", disabled: true, value: "Teams" }
+    { label: "Microsoft Teams", disabled: true, value: "Teams" },
+    { label: "Google Meet", disabled: true, value: "Meet" }
   ]
   const [meetingPlatform, setMeetingPlatform] = useState(meetingPlatforms[0])
   const [meetingId, setMeetingId] = useState("")
