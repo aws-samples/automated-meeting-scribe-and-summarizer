@@ -3,11 +3,6 @@ import asyncio
 from playwright.async_api import async_playwright
 import scribe
 
-async def leave():
-    leave_button_element = await page.wait_for_selector('button[aria-label="Leave"]')
-    await leave_button_element.hover()
-    await leave_button_element.click()
-
 async def send_message(message):
     message_element = await page.wait_for_selector(
         'div[aria-placeholder="Type message here..."]'
@@ -98,7 +93,7 @@ async def initialize():
         async def message_change(message):
             print('New Message:', message)
             if scribe.end_command in message:
-                leave()
+                await page.goto("about:blank")
             elif scribe.start and scribe.pause_command in message:
                 scribe.start = False
                 pause_message = 'Not saving attendance, new messages or transcriptions.'
