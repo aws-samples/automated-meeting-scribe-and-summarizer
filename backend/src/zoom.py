@@ -3,31 +3,7 @@ import asyncio
 from playwright.async_api import async_playwright
 import scribe
 
-async def send_message(message):
-    message_element = await page.wait_for_selector(
-        'div[aria-placeholder="Type message here..."]'
-    )
-    await message_element.fill(message)
-    await message_element.press('Enter')   
-
-async def initialize():
-    async with async_playwright() as p:
-        browser = await p.chromium.launch(
-            headless=True, 
-            ignore_default_args=['--mute-audio'],
-            args=[
-                "--window-size=1000,1000",
-                "--use-fake-ui-for-media-stream",
-                "--disable-notifications",
-                "--disable-extensions",
-                "--disable-crash-reporter",
-                "--disable-dev-shm-usage",
-                "--no-sandbox"
-            ]
-        )
-        global page
-        page = await browser.new_page()
-        page.set_default_timeout(20000)
+async def initialize(page):
 
         print("Getting meeting link.")
         await page.goto(f"https://zoom.us/wc/{scribe.meeting_id}/join")
@@ -54,6 +30,13 @@ async def initialize():
         )
         await chat_button_element.hover()
         await chat_button_element.click()
+
+        async def send_message(message):
+            message_element = await page.wait_for_selector(
+                'div[aria-placeholder="Type message here..."]'
+            )
+            await message_element.fill(message)
+            await message_element.press('Enter')   
 
         print("Sending introduction messages.")
         for message in scribe.intro_messages:
@@ -140,4 +123,3 @@ async def initialize():
         
         print("Waiting for meeting end.")
         await meeting_end()
-        await browser.close()

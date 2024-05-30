@@ -15,6 +15,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import sys
 
+meeting_platform = os.environ['MEETING_PLATFORM']
 meeting_id = os.environ['MEETING_ID']
 meeting_password = os.environ['MEETING_PASSWORD']
 meeting_name = os.environ['MEETING_NAME']
@@ -40,6 +41,7 @@ intro_messages = [
 
 attendees = []
 messages = []
+attachments = {}
 captions = []
 speakers = []
 
