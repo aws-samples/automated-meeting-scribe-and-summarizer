@@ -73,6 +73,7 @@ async def initialize(page):
                 sender = prev_sender
             prev_sender = sender
             if text == scribe.end_command:
+                print("Your scribe has been removed from the meeting.")
                 await page.goto("about:blank")
             elif scribe.start and text == scribe.pause_command:
                 scribe.start = False

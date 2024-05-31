@@ -44,7 +44,6 @@ async def initialize(page):
         await page.expose_function("speakerChange", scribe.speaker_change)
 
         await page.evaluate('''
-            console.log("Hello there")
             const targetNode = document.querySelector(
                 '.speaker-active-container__video-frame .video-avatar__avatar .video-avatar__avatar-title'
             )
@@ -66,17 +65,18 @@ async def initialize(page):
         async def message_change(message):
             # print('New Message:', message)
             if scribe.end_command in message:
+                print("Your scribe has been removed from the meeting.")
                 await page.goto("about:blank")
-            elif scribe.start and scribe.pause_command in message and scribe.start_messages[1] not in message:
+            elif scribe.start and scribe.pause_command in message:
                 scribe.start = False
                 print(scribe.pause_messages[0])
                 await send_messages(scribe.pause_messages)
-            elif not scribe.start and scribe.start_command in message and scribe.pause_messages[1] not in message:
+            elif not scribe.start and scribe.start_command in message:
                 scribe.start = True
                 print(scribe.start_messages[0])
                 await send_messages(scribe.start_messages)
                 asyncio.create_task(scribe.transcribe())
-            elif scribe.start and "You to Everyone," not in message:
+            elif scribe.start:
                 scribe.messages.append(message)   
 
         await page.expose_function("messageChange", message_change)
@@ -86,12 +86,11 @@ async def initialize(page):
             const config = { childList: true, subtree: true }
 
             const callback = (mutationList, observer) => {
-                for (const mutation of mutationList) {
-                    const addedNode = mutation.addedNodes[0]
-                    if (addedNode) {
-                        messageChange(
-                            addedNode.querySelector('div[id^="chat-message-content"]').getAttribute('aria-label')
-                        )  
+                const addedNode = mutationList[mutationList.length - 1].addedNodes[0]
+                if (addedNode) {
+                    message = addedNode.querySelector('div[id^="chat-message-content"]')?.getAttribute('aria-label')
+                    if (message && !message.startsWith("You to Everyone")) {
+                        messageChange(message)
                     }
                 }
             }

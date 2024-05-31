@@ -15,7 +15,7 @@ async def meeting():
             headless=True, 
             ignore_default_args=['--mute-audio'],
             args=[
-                "--window-size=1000,1000",
+                "--window-size=1920,1080",
                 "--use-fake-ui-for-media-stream",
                 "--use-fake-device-for-media-stream",
                 "--disable-notifications",
