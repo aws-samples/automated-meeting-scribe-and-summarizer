@@ -73,7 +73,7 @@ export default ({ schedules, deleteInvites }: Props) => {
                     textAlign="center"
                     color="inherit"
                 >
-                    No invitations
+                    No upcoming meetings
                 </Box>
             }
             header={
@@ -93,7 +93,7 @@ export default ({ schedules, deleteInvites }: Props) => {
                         </Button>
                     }
                 >
-                    Invitations
+                    Upcoming Meetings
                 </Header>
             }
         />

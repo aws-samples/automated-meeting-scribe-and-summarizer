@@ -35,14 +35,16 @@ intro_messages = [
     ' visit https://github.com/aws-samples/automated-meeting-scribe-and-summarizer.'),
     (f'If all attendees consent to my use, send "{start_command}" in the chat'
     ' to start saving attendance, new messages and machine-generated captions.'),
-    f'Send "{pause_command}" in the chat to pause saving meeting details.',
     (f'If you do not consent to my use, send "{end_command}" in the chat'
     ' to remove me from this meeting.')
 ]
 
 start = False
 
-start_message = 'Saving attendance, new messages and machine-generated captions.'
+start_messages = [
+    'Saving attendance, new messages and machine-generated captions.',
+    f'Send "{pause_command}" in the chat to stop saving meeting details.'
+]
 pause_message = 'Not saving attendance, new messages or machine-generated captions.'
 
 attendees = []
@@ -84,7 +86,6 @@ async def write_audio(stream):
         callback=callback,
         blocksize=1024 * 2,
         dtype='int16'
-        # device="pulse"
     ):
         while start:
             indata, status = await input_queue.get()

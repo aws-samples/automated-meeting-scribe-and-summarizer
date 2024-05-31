@@ -31,16 +31,16 @@ async def initialize(page):
         )
         await chat_panel_element.click()
 
-        async def send_message(message):
-            message_element = await page.wait_for_selector(
-                'textarea[placeholder="Message all attendees"]'
-            )
-            await message_element.fill(message)
-            await message_element.press('Enter')       
+        async def send_messages(messages):
+            for message in messages:
+                message_element = await page.wait_for_selector(
+                    'textarea[placeholder="Message all attendees"]'
+                )
+                await message_element.fill(message)
+                await message_element.press('Enter')   
 
         print("Sending introduction messages.")
-        for message in scribe.intro_messages:
-            await send_message(message)
+        await send_messages(scribe.intro_messages)
 
         print("Opening attendees panel.")
         attendees_panel_element = await page.wait_for_selector(
@@ -77,8 +77,8 @@ async def initialize(page):
                 await send_message(scribe.pause_message)
             elif not scribe.start and text == scribe.start_command:
                 scribe.start = True
-                print(scribe.start_message)
-                await send_message(scribe.start_message)
+                print(scribe.start_messages[0])
+                await send_messages(scribe.start_messages)
                 asyncio.create_task(scribe.transcribe())
             elif scribe.start and not (sender == "Amazon Chime" or scribe.scribe_name in sender):
                 timestamp = datetime.now().strftime('%H:%M')
