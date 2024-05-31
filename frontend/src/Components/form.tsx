@@ -5,8 +5,8 @@ import { useState } from "react"
 import Form from "@cloudscape-design/components/form"
 import SpaceBetween from "@cloudscape-design/components/space-between"
 import FormField from "@cloudscape-design/components/form-field"
-import Select from "@cloudscape-design/components/select"
 import Input from "@cloudscape-design/components/input"
+import Select from "@cloudscape-design/components/select"
 import Alert from "@cloudscape-design/components/alert"
 import DatePicker from "@cloudscape-design/components/date-picker"
 import TimeInput from "@cloudscape-design/components/time-input"
@@ -77,6 +77,13 @@ export default ({ createInvite }: Props) => {
       <Form variant="embedded">
         <SpaceBetween direction="vertical" size="l">
 
+          <FormField label="Meeting Name">
+            <Input
+              onChange={({ detail }) => setMeetingName(detail.value)}
+              value={meetingName}
+            />
+          </FormField>
+
           <FormField label="Meeting Platform">
             <Select
               onChange={({ detail }) => setMeetingPlatform(detail.selectedOption as MeetingPlatform)}
@@ -97,13 +104,6 @@ export default ({ createInvite }: Props) => {
               onChange={({ detail }) => setMeetingPassword(detail.value)}
               value={meetingPassword}
               type="password"
-            />
-          </FormField>
-
-          <FormField label="Meeting Name">
-            <Input
-              onChange={({ detail }) => setMeetingName(detail.value)}
-              value={meetingName}
             />
           </FormField>
 

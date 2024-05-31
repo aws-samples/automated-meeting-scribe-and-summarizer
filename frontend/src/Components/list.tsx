@@ -20,6 +20,7 @@ export default ({ schedules, deleteInvites }: Props) => {
             onSelectionChange={({ detail }) => setSelectedItems((detail?.selectedItems ?? []) as any)}
             selectedItems={selectedItems as unknown as Schedule[]}
             cardDefinition={{
+                header: schedule => schedule.Description.split("_")[1],
                 sections: [
                     {
                         id: "meeting_platform",
@@ -32,11 +33,6 @@ export default ({ schedules, deleteInvites }: Props) => {
                         id: "meeting_id",
                         header: "Meeting ID",
                         content: schedule => schedule.Name.split("_")[0]
-                    },
-                    {
-                        id: "meeting_name",
-                        header: "Meeting Name",
-                        content: schedule => schedule.Description.split("_")[1]
                     },
                     {
                         id: "meeting_time",
@@ -70,7 +66,7 @@ export default ({ schedules, deleteInvites }: Props) => {
             loadingText="Loading invitations"
             selectionType="multi"
             trackBy="Name"
-            visibleSections={["meeting_platform", "meeting_id", "meeting_name", "meeting_time"]}
+            visibleSections={["meeting_platform", "meeting_id", "meeting_time"]}
             empty={
                 <Box
                     margin={{ vertical: "xs" }}
