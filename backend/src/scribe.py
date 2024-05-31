@@ -13,6 +13,7 @@ import re
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+import requests
 
 meeting_platform = os.environ['MEETING_PLATFORM']
 meeting_id = os.environ['MEETING_ID']
@@ -189,6 +190,11 @@ def deliver():
         attachment = MIMEApplication(chat)
         attachment.add_header('Content-Disposition','attachment',filename="chat.txt")
         msg.attach(attachment)
+
+        for file_name, link in attachments.items():
+            attachment = MIMEApplication(requests.get(link).content)
+            attachment.add_header('Content-Disposition','attachment',filename=file_name)
+            msg.attach(attachment)
 
     charset = "utf-8"
 
