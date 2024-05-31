@@ -76,7 +76,7 @@ async def initialize(page):
                 print(scribe.start_messages[0])
                 await send_messages(scribe.start_messages)
                 asyncio.create_task(scribe.transcribe())
-            elif scribe.start:
+            elif scribe.start and "You to Everyone," not in message:
                 scribe.messages.append(message)   
 
         await page.expose_function("messageChange", message_change)
