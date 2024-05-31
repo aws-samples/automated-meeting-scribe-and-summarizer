@@ -76,8 +76,8 @@ async def initialize(page):
                 await page.goto("about:blank")
             elif scribe.start and text == scribe.pause_command:
                 scribe.start = False
-                print(scribe.pause_message)
-                await send_messages([scribe.pause_message])
+                print(scribe.pause_messages[0])
+                await send_messages(scribe.pause_messages)
             elif not scribe.start and text == scribe.start_command:
                 scribe.start = True
                 print(scribe.start_messages[0])

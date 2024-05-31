@@ -67,14 +67,16 @@ async def initialize(page):
             # print('New Message:', message)
             if scribe.end_command in message:
                 await page.goto("about:blank")
-            elif scribe.start and scribe.pause_command in message:
-                scribe.start = False
-                print(scribe.pause_message)
-                await send_messages([scribe.pause_message])
-            elif not scribe.start and scribe.start_command in message:
-                scribe.start = True
-                print(scribe.start_messages[0])
-                await send_messages(scribe.start_messages)
+            elif (scribe.start and scribe.pause_command in message
+                and scribe.start_messages[1] not in message):
+                    scribe.start = False
+                    print(scribe.pause_messages[0])
+                    await send_messages(scribe.pause_messages)
+            elif (not scribe.start and scribe.start_command in message
+                and scribe.pause_messages[1] not in message):
+                    scribe.start = True
+                    print(scribe.start_messages[0])
+                    await send_messages(scribe.start_messages)
                 asyncio.create_task(scribe.transcribe())
             elif scribe.start:
                 scribe.messages.append(message)   

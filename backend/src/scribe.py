@@ -46,7 +46,10 @@ start_messages = [
     'Saving attendance, new messages and machine-generated captions.',
     f'Send "{pause_command}" in the chat to stop saving meeting details.'
 ]
-pause_message = 'Not saving attendance, new messages or machine-generated captions.'
+pause_messages = [
+    'Not saving attendance, new messages or machine-generated captions.',
+    f'Send "{start_command}" in the chat to start saving meeting details.'
+]
 
 attendees = []
 messages = []
