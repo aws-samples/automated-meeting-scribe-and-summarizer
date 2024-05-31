@@ -32,10 +32,10 @@ async def initialize(page):
         await chat_panel_element.click()
 
         async def send_messages(messages):
+            message_element = await page.wait_for_selector(
+                'textarea[placeholder="Message all attendees"]'
+            )
             for message in messages:
-                message_element = await page.wait_for_selector(
-                    'textarea[placeholder="Message all attendees"]'
-                )
                 await message_element.fill(message)
                 await message_element.press('Enter')   
 

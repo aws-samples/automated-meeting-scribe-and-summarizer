@@ -31,10 +31,10 @@ async def initialize(page):
         await chat_button_element.click()
 
         async def send_messages(messages):
+            message_element = await page.wait_for_selector(
+                'div[aria-placeholder="Type message here..."]'
+            )
             for message in messages:
-                message_element = await page.wait_for_selector(
-                    'div[aria-placeholder="Type message here..."]'
-                )
                 await message_element.fill(message)
                 await message_element.press('Enter')   
 
