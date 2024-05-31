@@ -133,7 +133,7 @@ Resources:
                     - aws ecr get-login-password --region ${AWS::Region} | docker login --username AWS --password-stdin ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com
                 build:
                   commands:    
-                    - docker build -t ${ImageRepo} .
+                    - docker build -t ${ImageRepo} backend
                     - docker tag ${ImageRepo}:latest ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ImageRepo}:latest
                     - cd frontend
                     - echo -e "VITE_USER_POOL_ID=${UserPool}\nVITE_USER_POOL_CLIENT_ID=${UserPoolClient}\nVITE_API_ENDPOINT=https://${RestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod\nVITE_REGION=${AWS::Region}" > .env
@@ -150,7 +150,7 @@ Resources:
                 RestApi: !Ref RestApi,
                 WebsiteBucket: !Ref WebsiteBucket
               }
-      # SourceVersion: branch
+      # SourceVersion: dev
       Environment:
         Type: LINUX_CONTAINER
         Image: aws/codebuild/amazonlinux2-x86_64-standard:5.0
@@ -518,6 +518,14 @@ Resources:
       ManagedPolicyArns:
         - !GetAtt LogsPolicy.PolicyArn
       Policies:
+        - PolicyName: TranscribePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'transcribe:*'
+                Resource: '*'
         - PolicyName: DetectPIIPolicy
           PolicyDocument:
             Version: 2012-10-17
@@ -600,7 +608,24 @@ Resources:
   ScheduleGroup:
     Type: AWS::Scheduler::ScheduleGroup
 
-  StartTaskRole:
+  ECSPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'ecs:RunTask'
+            Resource: '*'
+          - Effect: Allow
+            Action: iam:PassRole
+            Resource: "*"
+            Condition:
+              StringLike:
+                iam:PassedToService: ecs-tasks.amazonaws.com
+
+  TargetECSRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -615,21 +640,12 @@ Resources:
             Action: sts:AssumeRole
       ManagedPolicyArns:
         - !GetAtt LogsPolicy.PolicyArn
+        - !GetAtt ECSPolicy.PolicyArn
       Policies:
-        - PolicyName: ECRPolicy
+        - PolicyName: TagPolicy
           PolicyDocument:
-            Version: 2012-10-17
+            Version: "2012-10-17"
             Statement:
-              - Effect: Allow
-                Action:
-                  - 'ecs:RunTask'
-                Resource: '*'
-              - Effect: Allow
-                Action: iam:PassRole
-                Resource: "*"
-                Condition:
-                  StringLike:
-                    iam:PassedToService: ecs-tasks.amazonaws.com
               - Effect: Allow
                 Action: ecs:TagResource
                 Resource: "*"
@@ -655,6 +671,8 @@ Resources:
               Service: states.amazonaws.com
             Action: "sts:AssumeRole"
       Path: "/"
+      ManagedPolicyArns:
+        - !GetAtt ECSPolicy.PolicyArn
       Policies:
         - PolicyName: ExpandedLogsPolicy
           PolicyDocument:
@@ -704,7 +722,7 @@ Resources:
             Statement:
               - Effect: Allow
                 Action: iam:PassRole
-                Resource: !GetAtt StartTaskRole.Arn
+                Resource: !GetAtt TargetECSRole.Arn
                 Condition:
                   StringLike:
                     iam:PassedToService: scheduler.amazonaws.com
@@ -736,7 +754,7 @@ Resources:
                     {
                       "Variable": "$.apiInfo.httpMethod",
                       "StringEquals": "POST",
-                      "Next": "CreateSchedule"
+                      "Next": "Time Choice"
                     },
                     {
                       "Variable": "$.apiInfo.httpMethod",
@@ -751,11 +769,75 @@ Resources:
                   ],
                   "Default": "Pass"
                 },
+                "Time Choice": {
+                  "Type": "Choice",
+                  "Choices": [
+                    {
+                      "Not": {
+                        "Variable": "$.data.meetingTime",
+                        "StringMatches": ""
+                      },
+                      "Next": "CreateSchedule"
+                    }
+                  ],
+                  "Default": "RunTask"
+                },
+                "RunTask": {
+                  "Type": "Task",
+                  "Resource": "arn:aws:states:::ecs:runTask",
+                  "Parameters": {
+                    "Cluster": "${ClusterArn}",
+                    "TaskDefinition": "${TaskDefinition}",
+                    "LaunchType": "FARGATE",
+                    "NetworkConfiguration": {
+                      "AwsvpcConfiguration": {
+                        "AssignPublicIp": "DISABLED",
+                        "SecurityGroups": [
+                          "${SecurityGroup}"
+                        ],
+                        "Subnets": [
+                          "${PrivateSubnetOne}",
+                          "${PrivateSubnetTwo}"
+                        ]
+                      }
+                    },
+                    "Overrides": {
+                      "ContainerOverrides": [
+                        {
+                          "Name": "scribe",
+                          "Environment": [
+                            {
+                              "Name": "MEETING_PLATFORM",
+                              "Value.$": "$.data.meetingPlatform"
+                            },
+                            {
+                              "Name": "MEETING_ID",
+                              "Value.$": "$.data.meetingID"
+                            },
+                            {
+                              "Name": "MEETING_PASSWORD",
+                              "Value.$": "$.data.meetingPassword"
+                            },
+                            {
+                              "Name": "EMAIL",
+                              "Value": "${Email}"
+                            },
+                            {
+                              "Name": "MEETING_NAME",
+                              "Value.$": "$.data.meetingName"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  "End": true
+                },
                 "CreateSchedule": {
                   "Type": "Task",
                   "Parameters": {
                     "ActionAfterCompletion": "DELETE",
-                    "Description.$": "$.data.meetingName",
+                    "Description.$": "States.Format('{}_{}', $.data.meetingPlatform, $.data.meetingName)",
                     "FlexibleTimeWindow": {
                       "Mode": "OFF"
                     },
@@ -766,7 +848,7 @@ Resources:
                     "State": "ENABLED",
                     "Target": {
                       "Arn": "${ClusterArn}",
-                      "RoleArn": "${StartTaskRoleArn}",
+                      "RoleArn": "${TargetECSRoleArn}",
                       "EcsParameters": {
                         "EnableECSManagedTags": false,
                         "EnableExecuteCommand": false,
@@ -792,8 +874,16 @@ Resources:
                             "name": "scribe",
                             "environment": [
                               {
+                                "name": "MEETING_PLATFORM",
+                                "value.$": "$.data.meetingPlatform"
+                              },
+                              {
                                 "name": "MEETING_ID",
                                 "value.$": "$.data.meetingID"
+                              },
+                              {
+                                "name": "MEETING_PASSWORD",
+                                "value.$": "$.data.meetingPassword"
                               },
                               {
                                 "name": "EMAIL",
@@ -867,7 +957,7 @@ Resources:
             }
           - {
               ClusterArn: !GetAtt [ Cluster, Arn ],
-              StartTaskRoleArn: !GetAtt [ StartTaskRole, Arn ]
+              TargetECSRoleArn: !GetAtt [ TargetECSRole, Arn ]
             }
 
 ### API Resources ###
@@ -1215,7 +1305,7 @@ Resources:
       Type: "AWS::CloudFront::OriginAccessControl"
       Properties:
           OriginAccessControlConfig: 
-              Name: !Join [ '', ['frontendwebaccess', !Select [0, !Split [-, !Select [2, !Split [/, !Ref AWS::StackId ]]]]]]
+              Name: !Join [ '', ['FrontendWebAccess-', !Select [2, !Split [/, !Ref AWS::StackId ]]]]
               OriginAccessControlOriginType: "s3"
               SigningBehavior: "always"
               SigningProtocol: "sigv4"

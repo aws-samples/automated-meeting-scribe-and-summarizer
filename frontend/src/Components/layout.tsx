@@ -1,5 +1,5 @@
 
-import scheduleService, { Schedule } from '../services/schedule'
+import scheduleService, { Schedule } from '../services/details'
 import { HttpService } from '../services/http'
 import { CanceledError } from '../services/client'
 import MeetingForm from './form'
@@ -18,7 +18,9 @@ import {
 } from '@cloudscape-design/components'
 
 export type Meeting = {
+  meetingPlatform: string,
   meetingID: string,
+  meetingPassword: string,
   meetingName: string,
   meetingTime: string
 }
@@ -151,7 +153,7 @@ function Layout() {
             <SpaceBetween direction="vertical" size="l">
 
               <Container header={
-                <Header variant="h2" description="Add an AI-assisted scribe to your upcoming Amazon Chime meeting.">
+                <Header variant="h2" description="Add an AI-assisted scribe to your upcoming meeting.">
                   Invite
                 </Header>}>
                 <MeetingForm createInvite={createInvite}></MeetingForm>

@@ -1,10 +1,12 @@
 
 import { Meeting } from "./layout"
+import { meetingPlatforms, MeetingPlatform } from '../services/details'
 import { useState } from "react"
 import Form from "@cloudscape-design/components/form"
 import SpaceBetween from "@cloudscape-design/components/space-between"
 import FormField from "@cloudscape-design/components/form-field"
 import Input from "@cloudscape-design/components/input"
+import Select from "@cloudscape-design/components/select"
 import Alert from "@cloudscape-design/components/alert"
 import DatePicker from "@cloudscape-design/components/date-picker"
 import TimeInput from "@cloudscape-design/components/time-input"
@@ -15,23 +17,14 @@ interface Props {
 }
 
 export default ({ createInvite }: Props) => {
+  const [meetingPlatform, setMeetingPlatform] = useState(meetingPlatforms[0])
   const [meetingId, setMeetingId] = useState("")
+  const [meetingPassword, setMeetingPassword] = useState("")
   const [meetingName, setMeetingName] = useState("")
   const [meetingDate, setMeetingDate] = useState("")
   const [meetingTime, setMeetingTime] = useState("")
 
-  const [meetingIdError, setMeetingIdError] = useState("")
   const [meetingTimeError, setMeetingTimeError] = useState("")
-
-  const validateMeetingId = (id: string) => {
-    const pattern = /^\s*\d\s*\d\s*\d\s*\d\s*\d\s*\d\s*\d\s*\d\s*\d\s*\d\s*$/
-
-    if (!id || pattern.test(id)) {
-      setMeetingIdError('')
-    } else {
-      setMeetingIdError('Meeting ID must be ten digits.')
-    }
-  }
 
   const validateMeetingTime = (time: string) => {
     if (!time) {
@@ -55,18 +48,25 @@ export default ({ createInvite }: Props) => {
   }
 
   const submitMeetingForm = () => {
-    var meetingDateTime = new Date(meetingDate + "T" + meetingTime)
-    meetingDateTime.setMinutes(meetingDateTime.getMinutes() - 2)
+    var meetingDateTimeFormatted = ""
+    if (meetingTime) {
+      var meetingDateTime = new Date(meetingDate + "T" + meetingTime)
+      meetingDateTime.setMinutes(meetingDateTime.getMinutes() - 2)
+      meetingDateTimeFormatted = meetingDateTime.toISOString().slice(0, -5)
+    }
 
     const meeting = {
+      meetingPlatform: meetingPlatform.value,
       meetingID: meetingId.replace(/ /g, ''),
+      meetingPassword: meetingPassword,
       meetingName: meetingName,
-      meetingTime: meetingDateTime.toISOString().slice(0, -5)
+      meetingTime: meetingDateTimeFormatted
     }
 
     createInvite(meeting)
 
     setMeetingId("")
+    setMeetingPassword("")
     setMeetingName("")
     setMeetingDate("")
     setMeetingTime("")
@@ -77,23 +77,33 @@ export default ({ createInvite }: Props) => {
       <Form variant="embedded">
         <SpaceBetween direction="vertical" size="l">
 
-          <FormField label="Meeting ID">
-            <Input
-              onChange={({ detail }) => setMeetingId(detail.value)}
-              onBlur={() => validateMeetingId(meetingId)}
-              value={meetingId}
-            />
-            {meetingIdError && <Alert
-              type="error"
-            >
-              {meetingIdError}
-            </Alert>}
-          </FormField>
-
           <FormField label="Meeting Name">
             <Input
               onChange={({ detail }) => setMeetingName(detail.value)}
               value={meetingName}
+            />
+          </FormField>
+
+          <FormField label="Meeting Platform">
+            <Select
+              onChange={({ detail }) => setMeetingPlatform(detail.selectedOption as MeetingPlatform)}
+              options={meetingPlatforms}
+              selectedOption={meetingPlatform}
+            />
+          </FormField>
+
+          <FormField label="Meeting ID">
+            <Input
+              onChange={({ detail }) => setMeetingId(detail.value)}
+              value={meetingId}
+            />
+          </FormField>
+
+          <FormField label="Meeting Password">
+            <Input
+              onChange={({ detail }) => setMeetingPassword(detail.value)}
+              value={meetingPassword}
+              type="password"
             />
           </FormField>
 
@@ -132,13 +142,22 @@ export default ({ createInvite }: Props) => {
           </FormField>
 
           <FormField>
-            <Button
-              variant="primary"
-              form="meetingForm"
-              disabled={!meetingId || !!meetingIdError || !meetingName || !meetingTime || !!meetingTimeError}
-            >
-              Submit
-            </Button>
+            <SpaceBetween direction="horizontal" size="l">
+              <Button
+                variant="normal"
+                form="meetingForm"
+                disabled={!meetingId || !meetingName}
+              >
+                Invite Now
+              </Button>
+              <Button
+                variant="primary"
+                form="meetingForm"
+                disabled={!meetingId || !meetingName || !meetingTime || !!meetingTimeError}
+              >
+                Invite Later
+              </Button>
+            </SpaceBetween>
           </FormField>
 
         </SpaceBetween>

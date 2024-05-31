@@ -1,8 +1,8 @@
 
-import { Schedule } from "../services/schedule"
+import { Schedule } from "../services/details"
+import { meetingPlatforms } from '../services/details'
 import { useState } from "react"
 import Cards from "@cloudscape-design/components/cards"
-import Link from "@cloudscape-design/components/link"
 import Box from "@cloudscape-design/components/box"
 import Header from "@cloudscape-design/components/header"
 import Button from "@cloudscape-design/components/button"
@@ -20,20 +20,19 @@ export default ({ schedules, deleteInvites }: Props) => {
             onSelectionChange={({ detail }) => setSelectedItems((detail?.selectedItems ?? []) as any)}
             selectedItems={selectedItems as unknown as Schedule[]}
             cardDefinition={{
+                header: schedule => schedule.Description.split("_")[1],
                 sections: [
+                    {
+                        id: "meeting_platform",
+                        header: "Meeting Platform",
+                        content: schedule => meetingPlatforms.find(
+                            (platform) => platform.value === schedule.Description.split("_")[0]
+                        )?.label
+                    },
                     {
                         id: "meeting_id",
                         header: "Meeting ID",
-                        content: schedule => (
-                            <Link external href={"https://chime.aws/" + schedule.Name.split("_")[0]}>
-                                {schedule.Name.split("_")[0].replace(/(\d{4})(\d{2})(\d{4})/, '$1 $2 $3')}
-                            </Link>
-                        )
-                    },
-                    {
-                        id: "meeting_name",
-                        header: "Meeting Name",
-                        content: schedule => schedule.Description
+                        content: schedule => schedule.Name.split("_")[0]
                     },
                     {
                         id: "meeting_time",
@@ -67,14 +66,14 @@ export default ({ schedules, deleteInvites }: Props) => {
             loadingText="Loading invitations"
             selectionType="multi"
             trackBy="Name"
-            visibleSections={["meeting_id", "meeting_name", "meeting_time"]}
+            visibleSections={["meeting_platform", "meeting_id", "meeting_time"]}
             empty={
                 <Box
                     margin={{ vertical: "xs" }}
                     textAlign="center"
                     color="inherit"
                 >
-                    No invitations
+                    No upcoming meetings
                 </Box>
             }
             header={
@@ -94,7 +93,7 @@ export default ({ schedules, deleteInvites }: Props) => {
                         </Button>
                     }
                 >
-                    Invitations
+                    Upcoming Meetings
                 </Header>
             }
         />
