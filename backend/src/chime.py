@@ -56,7 +56,10 @@ async def initialize(page):
 
             const callback = (mutationList, observer) => {
                 for (const mutation of mutationList) {
-                    speakerChange(mutation.target.textContent)
+                    const speaker = mutation.target.textContent
+                    if (speaker != "No one") {
+                        speakerChange(speaker)
+                    }
                 }
             }
 
