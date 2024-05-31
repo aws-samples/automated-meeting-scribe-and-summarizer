@@ -7,8 +7,8 @@ from amazon_transcribe.model import TranscriptEvent
 import sounddevice as sd
 import string
 
-import json
 import boto3
+import json
 import re
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
@@ -116,6 +116,19 @@ async def speaker_change(speaker):
     if speaker not in attendees:
         attendees.append(speaker) 
 
+def redact_pii(text, pii_exceptions):
+
+    if text:
+        text_copy = text
+        response = boto3.client('comprehend').detect_pii_entities(Text=text_copy, LanguageCode='en')
+        for entity in response['Entities']:
+            entity_type = entity['Type']
+            if entity_type not in pii_exceptions and entity['Score'] >= .999:
+                pii = text_copy[entity['BeginOffset']:entity['EndOffset']]
+                text = text.replace(pii, f"[{entity_type}]")
+
+    return text
+
 def deliver():
 
     # print(attendees)
@@ -141,6 +154,10 @@ def deliver():
         chat = '\n'.join(messages)
         transcriptions = [f"{speaker}: {caption}" for speaker, caption in zip(speakers, captions)]
         transcript = '\n\n'.join(transcriptions)
+
+        pii_exceptions = ['EMAIL', 'ADDRESS', 'NAME', 'PHONE', 'DATE_TIME', 'URL', 'AGE', 'USERNAME']
+        chat = redact_pii(chat, pii_exceptions)
+        transcript = redact_pii(transcript, pii_exceptions)
 
         prompt = (
             "Please create a title, summary, and list of action items from the following transcript:"
