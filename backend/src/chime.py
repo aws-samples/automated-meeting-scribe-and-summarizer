@@ -48,8 +48,29 @@ async def initialize(page):
         )
         await attendees_panel_element.click()
 
+        async def attendee_change(number: int):
+            if number <= 1:
+                print("Your scribe got lonely and left.")
+                await page.goto("about:blank")
+
+        await page.expose_function("attendeeChange", attendee_change)
+
+        print("Listening for attendee changes.")
+        await page.evaluate('''
+            const targetNode = document.querySelector('button[data-testid="collapse-container"][aria-label^="Present"]')
+            const config = { characterData: true, subtree: true }
+
+            const callback = (mutationList, observer) => {
+                attendeeChange(parseInt(mutationList[mutationList.length - 1].target.textContent))
+            }
+
+            const observer = new MutationObserver(callback)
+            observer.observe(targetNode, config)
+        ''')
+
         await page.expose_function("speakerChange", scribe.speaker_change)
 
+        print("Listening for speaker changes.")
         await page.evaluate('''
             const targetNode = document.querySelector('.activeSpeakerCell ._3yg3rB2Xb_sfSzRXkm8QT-')
             const config = { characterData: true, subtree: true }
@@ -100,6 +121,7 @@ async def initialize(page):
 
         await page.expose_function("messageChange", message_change)
         
+        print("Listening for message changes.")
         await page.evaluate('''
             const targetNode = document.querySelector('._2B9DdDvc2PdUbvEGXfOU20')
             const config = { childList: true, subtree: true }

@@ -35,5 +35,5 @@ async def meeting():
         await browser.close()
 
 asyncio.run(meeting())
-scribe.deliver()
+scribe.encapsulate()
 sys.exit

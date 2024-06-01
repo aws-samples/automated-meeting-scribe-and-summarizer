@@ -41,8 +41,29 @@ async def initialize(page):
         print("Sending introduction messages.")
         await send_messages(scribe.intro_messages)
 
+        async def attendee_change(number: int):
+            if number <= 1:
+                print("Your scribe got lonely and left.")
+                await page.goto("about:blank")
+
+        await page.expose_function("attendeeChange", attendee_change)
+
+        print("Listening for attendee changes.")
+        await page.evaluate('''
+            const targetNode = document.querySelector('.footer-button__number-counter')
+            const config = { characterData: true, subtree: true }
+
+            const callback = (mutationList, observer) => {
+                attendeeChange(parseInt(mutationList[mutationList.length - 1].target.textContent))
+            }
+
+            const observer = new MutationObserver(callback)
+            observer.observe(targetNode, config)
+        ''')
+
         await page.expose_function("speakerChange", scribe.speaker_change)
 
+        print("Listening for speaker changes.")
         await page.evaluate('''
             const targetNode = document.querySelector(
                 '.speaker-active-container__video-frame .video-avatar__avatar .video-avatar__avatar-title'
@@ -81,6 +102,7 @@ async def initialize(page):
 
         await page.expose_function("messageChange", message_change)
         
+        print("Listening for message changes.")
         await page.evaluate('''
             const targetNode = document.querySelector('div[aria-label="Chat Message List"]')
             const config = { childList: true, subtree: true }

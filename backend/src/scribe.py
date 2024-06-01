@@ -5,7 +5,7 @@ from amazon_transcribe.client import TranscribeStreamingClient
 from amazon_transcribe.handlers import TranscriptResultStreamHandler
 from amazon_transcribe.model import TranscriptEvent
 import sounddevice as sd
-import string
+from datetime import datetime, timedelta
 
 import boto3
 import json
@@ -24,8 +24,10 @@ scribe_name = "Scribe"
 email_address = os.environ['EMAIL']
 scribe_identity = f"{scribe_name} ({email_address})"
 
-waiting_timeout = 3000000
-meeting_timeout = 43200000
+waiting_timeout = 300000 # 5 minutes
+meeting_timeout = 21600000 # 6 hours
+
+start = False
 
 start_command = "START"
 pause_command = "PAUSE"
@@ -34,47 +36,42 @@ end_command = "END"
 intro_messages = [
     ('Hello! I am an AI-assisted scribe. To learn more about me,'
     ' visit https://github.com/aws-samples/automated-meeting-scribe-and-summarizer.'),
-    (f'If all attendees consent to my use, send "{start_command}" in the chat'
-    ' to start saving attendance, new messages and machine-generated captions.'),
+    (f'If all participants consent to my use, send "{start_command}" in the chat'
+    ' to start saving new speakers, messages, and machine-generated captions.'),
     (f'If you do not consent to my use, send "{end_command}" in the chat'
     ' to remove me from this meeting.')
 ]
-
-start = False
-
 start_messages = [
-    'Saving attendance, new messages and machine-generated captions.',
+    'Saving new speakers, messages, and machine-generated captions.',
     f'Send "{pause_command}" in the chat to stop saving meeting details.'
 ]
 pause_messages = [
-    'Not saving attendance, new messages or machine-generated captions.',
+    'Not saving speakers, messages, or machine-generated captions.',
     f'Send "{start_command}" in the chat to start saving meeting details.'
 ]
 
-attendees = []
 messages = []
 attachments = {}
-captions = []
 speakers = []
+captions = []
 
 current_speaker = "First Speaker"
-
-def baseline_text(text: str):
-    return text.lower().translate(str.maketrans('', '', string.punctuation))
+start_time = datetime.now() 
 
 class MyEventHandler(TranscriptResultStreamHandler):
     async def handle_transcript_event(self, transcript_event: TranscriptEvent):
         results = transcript_event.transcript.results
         for result in results:
-            for alt in result.alternatives:
-                caption = alt.transcript
-                # print('New Caption:', caption)
+            if not result.is_partial:
+                speaker = current_speaker
+                speech = result.alternatives[0].transcript
+                # print('New Speech:', speech)
                 if captions:
-                    if baseline_text(captions[-1]) in baseline_text(caption):
-                        captions[-1] = caption
+                    if speaker in captions[-1].split(': ')[0]:
+                        captions[-1] += f" {speech}"
                         continue
-                captions.append(caption)
-                speakers.append(current_speaker)
+                current_time = start_time + timedelta(milliseconds=result.start_time)
+                captions.append(f"[{current_time.strftime('%H:%M')}] {speaker}: {speech}")
 
 async def write_audio(stream):
     loop = asyncio.get_event_loop()
@@ -83,7 +80,6 @@ async def write_audio(stream):
     def callback(indata, frame_count, time_info, status):
         loop.call_soon_threadsafe(input_queue.put_nowait, (bytes(indata), status))
 
-    # Create the audio stream
     with sd.RawInputStream(
         channels=1,
         samplerate=16000,
@@ -113,11 +109,10 @@ async def speaker_change(speaker):
     # print('New Speaker:', speaker)
     global current_speaker
     current_speaker = speaker
-    if speaker not in attendees:
-        attendees.append(speaker) 
+    if speaker not in speakers:
+        speakers.append(speaker) 
 
 def redact_pii(text, pii_exceptions):
-
     if text:
         text_copy = text
         response = boto3.client('comprehend').detect_pii_entities(Text=text_copy, LanguageCode='en')
@@ -129,41 +124,41 @@ def redact_pii(text, pii_exceptions):
 
     return text
 
-def deliver():
-
-    # print(attendees)
-    # print(messages)
-    # print(attachments)
-    # print(captions)
-    # print(speakers)
-
+def encapsulate():
     email_source = f"{scribe_name} <{'+scribe@'.join(email_address.split('@'))}>"
     email_destinations = [email_address]
-
+    
     msg = MIMEMultipart('mixed')
     msg['From'] = email_source
     msg['To'] = ', '.join(email_destinations)
+    subject = meeting_name
 
-    if not (captions or messages):
-        msg['Subject'] = meeting_name
-        end_message = "No meeting details were saved."
-        print(end_message)
-        body_html = body_text = end_message
-    else:
-        attendance = '\n'.join(attendees)
-        chat = '\n'.join(messages)
-        transcriptions = [f"{speaker}: {caption}" for speaker, caption in zip(speakers, captions)]
-        transcript = '\n\n'.join(transcriptions)
+    # print("Messages:", messages)
+    # print("Attachments:", attachments)
+    # print("Speakers:", speakers)
+    # print("Captions:", captions)
 
-        pii_exceptions = ['EMAIL', 'ADDRESS', 'NAME', 'PHONE', 'DATE_TIME', 'URL', 'AGE', 'USERNAME']
-        chat = redact_pii(chat, pii_exceptions)
-        transcript = redact_pii(transcript, pii_exceptions)
+    pii_exceptions = ['EMAIL', 'ADDRESS', 'NAME', 'PHONE', 'DATE_TIME', 'URL', 'AGE', 'USERNAME']
+    chat = redact_pii('\n'.join(messages), pii_exceptions)
+    particpants = '\n'.join(speakers)
+    transcript = redact_pii('\n\n'.join(captions), pii_exceptions)
 
+    if chat: 
+        attachment = MIMEApplication(chat)
+        attachment.add_header('Content-Disposition','attachment',filename="chat.txt")
+        msg.attach(attachment)        
+      
+    for file_name, link in attachments.items():
+        attachment = MIMEApplication(requests.get(link).content)
+        attachment.add_header('Content-Disposition','attachment',filename=file_name)
+        msg.attach(attachment)   
+
+    html = f"Did not save meeting details."
+    if transcript:
         prompt = (
-            "Please create a title, summary, and list of action items from the following transcript:"
+            "Output a title in <title></title> tags, a summary in <summary></summary> tags, "
+            "and a list of action items in <action items></action items> tags from the following transcript:"
             f"\n<transcript>{transcript}</transcript>"
-            "\nPlease output the title in <title></title> tags, the summary in <summary></summary> tags,"
-            " and the action items in <action items></action items> tags."
         )
         body = json.dumps({
             "max_tokens": 4096,
@@ -174,55 +169,40 @@ def deliver():
             response = boto3.client("bedrock-runtime").invoke_model(
                 body=body, modelId="anthropic.claude-3-sonnet-20240229-v1:0"
             )
-            bedrock_completion = json.loads(response.get("body").read())["content"][0]["text"]
-        except Exception as e:
-            print(f"Error while invoking model: {e}")
-            bedrock_completion = ""
+            completion = json.loads(response.get("body").read())["content"][0]["text"]
 
-        title = re.findall(r'<title>(.*?)</title>|$', bedrock_completion, re.DOTALL)[0].strip()
-        summary = re.findall(r'<summary>(.*?)</summary>|$', bedrock_completion, re.DOTALL)[0].strip()
-        action_items = re.findall(
-            r'<action items>(.*?)</action items>|$', bedrock_completion, re.DOTALL
-        )[0].strip()   
-
-        msg['Subject'] = f"{meeting_name} | {title}"
-
-        body_text = "Attendees:\n" + attendance + "\nSummary:\n" + summary \
-            + "\n\nAction Items:\n" + action_items
-        newline = '\n'
-        body_html = f"""
-        <html>
-            <body>
-                <h4>Attendees</h4>
-                <p>{attendance.replace(newline, '<br>')}</p>
-                <h4>Summary</h4>
-                <p>{summary.replace(newline, '<br>')}</p>
-                <h4>Action Items</h4>
-                <p>{action_items.replace(newline, '<br>')}</p>
-            </body>
-        </html>
-        """
+            title = re.findall(r'<title>(.*?)</title>', completion, re.DOTALL)[0].strip()
+            summary = re.findall(r'<summary>(.*?)</summary>', completion, re.DOTALL)[0].strip()
+            action_items = re.findall(r'<action items>(.*?)</action items>', completion, re.DOTALL)[0].strip() 
+        except Exception as exception:
+            print(exception)
+            html = f"Could not summarize meeting details. Check the logs for more information."
+        else:
+            subject = f"{meeting_name} | {title}"
+            html = f"""
+                <html>
+                    <body>
+                        <h4>Participants</h4>
+                        <p>{particpants.replace('\n', '<br>')}</p>
+                        <h4>Summary</h4>
+                        <p>{summary.replace('\n', '<br>')}</p>
+                        <h4>Action Items</h4>
+                        <p>{action_items.replace('\n', '<br>')}</p>
+                    </body>
+                </html>
+            """
 
         attachment = MIMEApplication(transcript)
         attachment.add_header('Content-Disposition','attachment',filename="transcript.txt")
         msg.attach(attachment)
 
-        attachment = MIMEApplication(chat)
-        attachment.add_header('Content-Disposition','attachment',filename="chat.txt")
-        msg.attach(attachment)
-
-        for file_name, link in attachments.items():
-            attachment = MIMEApplication(requests.get(link).content)
-            attachment.add_header('Content-Disposition','attachment',filename=file_name)
-            msg.attach(attachment)
-
+    body = MIMEMultipart('alternative')
     charset = "utf-8"
+    body.attach(MIMEText(html.encode(charset), 'html', charset))
+    msg.attach(body)
 
-    msg_body = MIMEMultipart('alternative')
-    msg_body.attach(MIMEText(body_text.encode(charset), 'plain', charset))
-    msg_body.attach(MIMEText(body_html.encode(charset), 'html', charset))
-    msg.attach(msg_body)
-    
+    msg['Subject'] = subject
+
     boto3.client("ses").send_raw_email(
         Source=email_source,
         Destinations=email_destinations,
