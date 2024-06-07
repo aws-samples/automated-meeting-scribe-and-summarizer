@@ -1,150 +1,162 @@
 
 import asyncio
 import scribe
+from playwright.async_api import TimeoutError
 from datetime import datetime
 
-async def initialize(page):
+async def meeting(page):
 
-        print("Getting meeting link.")
-        await page.goto(f"https://app.chime.aws/meetings/{scribe.meeting_id}")
+    print("Getting meeting link.")
+    await page.goto(f"https://app.chime.aws/meetings/{scribe.meeting_id}")
 
-        print("Entering name.")
+    print("Entering name.")
+    try:
         name_text_element = await page.wait_for_selector('#name')
+    except TimeoutError:
+        print("Your scribe was unable to join the meeting.")
+        return
+    else:
         await name_text_element.type(scribe.scribe_identity)
         await name_text_element.press('Tab')
         await page.keyboard.press('Enter')
 
-        print("Clicking mute button.")
-        mute_checkbox_element = await page.wait_for_selector('text="Join muted"')
-        await mute_checkbox_element.click()
+    print("Clicking mute button.")
+    mute_checkbox_element = await page.wait_for_selector('text="Join muted"')
+    await mute_checkbox_element.click()
 
-        print("Clicking join button.")
-        join_button_element = await page.wait_for_selector(
-            'button[data-testid="button"][aria-label="Join"]'
-        )
-        await join_button_element.click()
+    print("Clicking join button.")
+    join_button_element = await page.wait_for_selector(
+        'button[data-testid="button"][aria-label="Join"]'
+    )
+    await join_button_element.click()
 
-        print("Opening chat panel.")
+    print("Opening chat panel.")
+    try:
         chat_panel_element = await page.wait_for_selector(
             'button[data-testid="button"][aria-label^="Open chat panel"]',
             timeout=scribe.waiting_timeout
         )
+    except TimeoutError:
+        print("Your scribe was not admitted into the meeting.")
+        return
+    else:
         await chat_panel_element.click()
 
-        async def send_messages(messages):
-            message_element = await page.wait_for_selector(
-                'textarea[placeholder="Message all attendees"]'
-            )
-            for message in messages:
-                await message_element.fill(message)
-                await message_element.press('Enter')   
-
-        print("Sending introduction messages.")
-        await send_messages(scribe.intro_messages)
-
-        print("Opening attendees panel.")
-        attendees_panel_element = await page.wait_for_selector(
-            'button[data-testid="button"][aria-label^="Open attendees panel"]'
+    async def send_messages(messages):
+        message_element = await page.wait_for_selector(
+            'textarea[placeholder="Message all attendees"]'
         )
-        await attendees_panel_element.click()
+        for message in messages:
+            await message_element.fill(message)
+            await message_element.press('Enter')   
 
-        async def attendee_change(number: int):
-            if number <= 1:
-                print("Your scribe got lonely and left.")
-                await page.goto("about:blank")
+    print("Sending introduction messages.")
+    await send_messages(scribe.intro_messages)
 
-        await page.expose_function("attendeeChange", attendee_change)
+    print("Opening attendees panel.")
+    attendees_panel_element = await page.wait_for_selector(
+        'button[data-testid="button"][aria-label^="Open attendees panel"]'
+    )
+    await attendees_panel_element.click()
 
-        print("Listening for attendee changes.")
-        await page.evaluate('''
-            const targetNode = document.querySelector('button[data-testid="collapse-container"][aria-label^="Present"]')
-            const config = { characterData: true, subtree: true }
+    async def attendee_change(number: int):
+        if number <= 1:
+            print("Your scribe got lonely and left.")
+            await page.goto("about:blank")
 
-            const callback = (mutationList, observer) => {
-                attendeeChange(parseInt(mutationList[mutationList.length - 1].target.textContent))
+    await page.expose_function("attendeeChange", attendee_change)
+
+    print("Listening for attendee changes.")
+    await page.evaluate('''
+        const targetNode = document.querySelector('button[data-testid="collapse-container"][aria-label^="Present"]')
+        const config = { characterData: true, subtree: true }
+
+        const callback = (mutationList, observer) => {
+            attendeeChange(parseInt(mutationList[mutationList.length - 1].target.textContent))
+        }
+
+        const observer = new MutationObserver(callback)
+        observer.observe(targetNode, config)
+    ''')
+
+    await page.expose_function("speakerChange", scribe.speaker_change)
+
+    print("Listening for speaker changes.")
+    await page.evaluate('''
+        const targetNode = document.querySelector('.activeSpeakerCell ._3yg3rB2Xb_sfSzRXkm8QT-')
+        const config = { characterData: true, subtree: true }
+
+        const callback = (mutationList, observer) => {
+            for (const mutation of mutationList) {
+                const new_speaker = mutation.target.textContent
+                if (new_speaker != "No one") speakerChange(new_speaker)
             }
+        }
 
-            const observer = new MutationObserver(callback)
-            observer.observe(targetNode, config)
-        ''')
+        const observer = new MutationObserver(callback)
+        observer.observe(targetNode, config)
 
-        await page.expose_function("speakerChange", scribe.speaker_change)
+        const initial_speaker = targetNode.textContent
+        if (initial_speaker != "No one") speakerChange(initial_speaker)
+    ''')
 
-        print("Listening for speaker changes.")
-        await page.evaluate('''
-            const targetNode = document.querySelector('.activeSpeakerCell ._3yg3rB2Xb_sfSzRXkm8QT-')
-            const config = { characterData: true, subtree: true }
-
-            const callback = (mutationList, observer) => {
-                for (const mutation of mutationList) {
-                    const speaker = mutation.target.textContent
-                    if (speaker != "No one") {
-                        speakerChange(speaker)
-                    }
-                }
-            }
-
-            const observer = new MutationObserver(callback)
-            observer.observe(targetNode, config)
-        ''')
-
-        async def message_change(sender, text, attachment_title, attachment_href):
-            global prev_sender
-            if not sender:
-                sender = prev_sender
-            prev_sender = sender
-            if text == scribe.end_command:
-                print("Your scribe has been removed from the meeting.")
-                await page.goto("about:blank")
-            elif scribe.start and text == scribe.pause_command:
-                scribe.start = False
-                print(scribe.pause_messages[0])
-                await send_messages(scribe.pause_messages)
-            elif not scribe.start and text == scribe.start_command:
-                scribe.start = True
-                print(scribe.start_messages[0])
-                await send_messages(scribe.start_messages)
-                asyncio.create_task(scribe.transcribe())
-            elif scribe.start and not (sender == "Amazon Chime" or scribe.scribe_name in sender):
-                timestamp = datetime.now().strftime('%H:%M')
-                message = f"[{timestamp}] {sender}: "
-                if attachment_title and attachment_href:
-                    scribe.attachments[attachment_title] = attachment_href
-                    if text:
-                        message += f"{text} | {attachment_title}"
-                    else:
-                        message += attachment_title
+    async def message_change(sender, text, attachment_title, attachment_href):
+        global prev_sender
+        if not sender:
+            sender = prev_sender
+        prev_sender = sender
+        if text == scribe.end_command:
+            print("Your scribe has been removed from the meeting.")
+            await page.goto("about:blank")
+        elif scribe.start and text == scribe.pause_command:
+            scribe.start = False
+            print(scribe.pause_messages[0])
+            await send_messages(scribe.pause_messages)
+        elif not scribe.start and text == scribe.start_command:
+            scribe.start = True
+            print(scribe.start_messages[0])
+            await send_messages(scribe.start_messages)
+            asyncio.create_task(scribe.transcribe())
+        elif scribe.start and not (sender == "Amazon Chime" or scribe.scribe_name in sender):
+            timestamp = datetime.now().strftime('%H:%M')
+            message = f"[{timestamp}] {sender}: "
+            if attachment_title and attachment_href:
+                scribe.attachments[attachment_title] = attachment_href
+                if text:
+                    message += f"{text} | {attachment_title}"
                 else:
-                    message += text
-                # print('New Message:', message)
-                scribe.messages.append(message)                
+                    message += attachment_title
+            else:
+                message += text
+            # print('New Message:', message)
+            scribe.messages.append(message)                
 
-        await page.expose_function("messageChange", message_change)
-        
-        print("Listening for message changes.")
-        await page.evaluate('''
-            const targetNode = document.querySelector('._2B9DdDvc2PdUbvEGXfOU20')
-            const config = { childList: true, subtree: true }
+    await page.expose_function("messageChange", message_change)
+    
+    print("Listening for message changes.")
+    await page.evaluate('''
+        const targetNode = document.querySelector('._2B9DdDvc2PdUbvEGXfOU20')
+        const config = { childList: true, subtree: true }
 
-            const callback = (mutationList, observer) => {
-                for (const mutation of mutationList) {
-                    const addedNode = mutation.addedNodes[0]
-                    if (addedNode) {
-                        const sender = addedNode.querySelector('h3[data-testid="chat-bubble-sender-name"]')?.textContent
-                        const text = addedNode.querySelector('.Linkify')?.textContent
-                        const attachmentElement = addedNode.querySelector('.SLFfm3Dwo5MfFzks4uM11')
-                        const attachmentTitle = attachmentElement?.title
-                        const attachmentHref = attachmentElement?.href
-                        messageChange(sender, text, attachmentTitle, attachmentHref)  
-                    }
+        const callback = (mutationList, observer) => {
+            for (const mutation of mutationList) {
+                const addedNode = mutation.addedNodes[0]
+                if (addedNode) {
+                    const sender = addedNode.querySelector('h3[data-testid="chat-bubble-sender-name"]')?.textContent
+                    const text = addedNode.querySelector('.Linkify')?.textContent
+                    const attachmentElement = addedNode.querySelector('.SLFfm3Dwo5MfFzks4uM11')
+                    const attachmentTitle = attachmentElement?.title
+                    const attachmentHref = attachmentElement?.href
+                    messageChange(sender, text, attachmentTitle, attachmentHref)  
                 }
             }
+        }
 
-            const observer = new MutationObserver(callback)
-            observer.observe(targetNode, config)
-        ''')
+        const observer = new MutationObserver(callback)
+        observer.observe(targetNode, config)
+    ''')
 
-async def deinitialize(page):
+    print("Waiting for meeting end.")
     try:
         await page.wait_for_selector('button[id="endMeeting"]', state="detached", timeout=scribe.meeting_timeout)
         print("Meeting ended.")

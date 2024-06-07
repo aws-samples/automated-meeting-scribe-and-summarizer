@@ -6,6 +6,7 @@ from amazon_transcribe.handlers import TranscriptResultStreamHandler
 from amazon_transcribe.model import TranscriptEvent
 import sounddevice as sd
 from datetime import datetime, timedelta
+import bisect
 
 import boto3
 import json
@@ -52,26 +53,34 @@ pause_messages = [
 
 messages = []
 attachments = {}
-speakers = []
 captions = []
-
-current_speaker = "First Speaker"
-start_time = datetime.now() 
+speakers = []
+speaker_timestamps = []
 
 class MyEventHandler(TranscriptResultStreamHandler):
     async def handle_transcript_event(self, transcript_event: TranscriptEvent):
         results = transcript_event.transcript.results
         for result in results:
             if not result.is_partial:
-                speaker = current_speaker
-                speech = result.alternatives[0].transcript
-                # print('New Speech:', speech)
-                if captions:
-                    if speaker in captions[-1].split(': ')[0]:
-                        captions[-1] += f" {speech}"
-                        continue
-                current_time = start_time + timedelta(milliseconds=result.start_time)
-                captions.append(f"[{current_time.strftime('%H:%M')}] {speaker}: {speech}")
+                for item in result.alternatives[0].items:
+                    timestamp = start_time + timedelta(seconds=item.start_time)
+                    # print('Timestamp:', timestamp)
+                    speaker = speakers[
+                        bisect.bisect_right(speaker_timestamps, timestamp) - 1
+                    ]
+                    # print('Speaker:', speaker)
+                    word = item.content
+                    # print('Word:', word)
+                    word_type = item.item_type
+                    # print('Type:', word_type)
+                    if captions:
+                        if speaker in captions[-1].split(': ')[0]:
+                            if word_type == "pronunciation":
+                                captions[-1] += f" {word}"
+                            elif word_type == "punctuation":
+                                captions[-1] += word
+                            continue
+                    captions.append(f"[{timestamp.strftime('%H:%M')}] {speaker}: {word}")
 
 async def write_audio(stream):
     loop = asyncio.get_event_loop()
@@ -94,6 +103,9 @@ async def write_audio(stream):
         await stream.input_stream.end_stream()
 
 async def transcribe():
+    global start_time
+    start_time = datetime.now()
+
     stream = await TranscribeStreamingClient(region="us-east-1").start_stream_transcription(
         language_code="en-US",
         media_sample_rate_hz=16000,
@@ -106,11 +118,9 @@ async def transcribe():
     )      
 
 async def speaker_change(speaker):
+    speaker_timestamps.append(datetime.now())
+    speakers.append(speaker)
     # print('New Speaker:', speaker)
-    global current_speaker
-    current_speaker = speaker
-    if speaker not in speakers:
-        speakers.append(speaker) 
 
 def redact_pii(text, pii_exceptions):
     if text:
@@ -135,13 +145,17 @@ def encapsulate():
 
     # print("Messages:", messages)
     # print("Attachments:", attachments)
-    # print("Speakers:", speakers)
     # print("Captions:", captions)
+    # print("Speakers:", speakers)
 
     pii_exceptions = ['EMAIL', 'ADDRESS', 'NAME', 'PHONE', 'DATE_TIME', 'URL', 'AGE', 'USERNAME']
     chat = redact_pii('\n'.join(messages), pii_exceptions)
-    particpants = '\n'.join(speakers)
     transcript = redact_pii('\n\n'.join(captions), pii_exceptions)
+    particpants = '\n'.join(set(speakers))
+
+    # print("Chat:", chat)
+    # print("Transcript:", transcript)   
+    # print("Participants:", particpants)
 
     if chat: 
         attachment = MIMEApplication(chat)
@@ -153,7 +167,7 @@ def encapsulate():
         attachment.add_header('Content-Disposition','attachment',filename=file_name)
         msg.attach(attachment)   
 
-    html = f"Did not save meeting details."
+    html = ""
     if transcript:
         prompt = (
             "Output a title in <title></title> tags, a summary in <summary></summary> tags, "
@@ -175,8 +189,9 @@ def encapsulate():
             summary = re.findall(r'<summary>(.*?)</summary>', completion, re.DOTALL)[0].strip()
             action_items = re.findall(r'<action items>(.*?)</action items>', completion, re.DOTALL)[0].strip() 
         except Exception as exception:
-            print(exception)
-            html = f"Could not summarize meeting details. Check the logs for more information."
+            error_message = "Error while summarizing"
+            print(f"{error_message}: {exception}")
+            html = f"{error_message}. Check the logs for more information."
         else:
             subject = f"{meeting_name} | {title}"
             html = f"""

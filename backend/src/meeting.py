@@ -1,15 +1,15 @@
 
-import scribe
+from scribe import meeting_platform, encapsulate
 import asyncio
 from playwright.async_api import async_playwright
 import sys
 
-if scribe.meeting_platform == "Chime":
-    from chime import initialize, deinitialize
-elif scribe.meeting_platform == "Zoom":
-    from zoom import initialize, deinitialize
+if meeting_platform == "Chime":
+    from chime import meeting
+elif meeting_platform == "Zoom":
+    from zoom import meeting
 
-async def meeting():
+async def app():
     async with async_playwright() as p:
         browser = await p.chromium.launch(
             headless=True, 
@@ -28,12 +28,9 @@ async def meeting():
         page = await browser.new_page()
         page.set_default_timeout(20000)
 
-        await initialize(page)
-
-        print("Waiting for meeting end.")
-        await deinitialize(page)
+        await meeting(page)
         await browser.close()
+        encapsulate()
 
-asyncio.run(meeting())
-scribe.encapsulate()
+asyncio.run(app())
 sys.exit
