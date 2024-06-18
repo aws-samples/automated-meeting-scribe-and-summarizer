@@ -32,7 +32,7 @@ export default ({ schedules, deleteInvites }: Props) => {
                     {
                         id: "meeting_id",
                         header: "Meeting ID",
-                        content: schedule => schedule.Name.split("_")[0]
+                        content: schedule => schedule.Name.split("_")[1]
                     },
                     {
                         id: "meeting_time",

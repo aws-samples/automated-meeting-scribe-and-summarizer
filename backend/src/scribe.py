@@ -21,9 +21,11 @@ meeting_id = os.environ['MEETING_ID']
 meeting_password = os.environ['MEETING_PASSWORD']
 meeting_name = os.environ['MEETING_NAME']
 
+email_sender = os.environ['EMAIL_SENDER']
+email_receiver = os.environ['EMAIL_RECEIVER']
+
 scribe_name = "Scribe"
-email_address = os.environ['EMAIL']
-scribe_identity = f"{scribe_name} ({email_address})"
+scribe_identity = f"{scribe_name} ({email_receiver})"
 
 waiting_timeout = 300000 # 5 minutes
 meeting_timeout = 21600000 # 6 hours
@@ -135,8 +137,8 @@ def redact_pii(text, pii_exceptions):
     return text
 
 def encapsulate():
-    email_source = f"{scribe_name} <{'+scribe@'.join(email_address.split('@'))}>"
-    email_destinations = [email_address]
+    email_source = f"{scribe_name} <{'+scribe@'.join(email_sender.split('@'))}>"
+    email_destinations = [email_receiver]
     
     msg = MIMEMultipart('mixed')
     msg['From'] = email_source

@@ -5,7 +5,7 @@ Description: Automated Meeting Scribe and Summarizer Template
 Parameters:
 
   Email:
-    Description: Address to receive meeting transcripts, summaries, action items, etc.
+    Description: This address is used to send meeting transcripts, summaries, action items, etc.
     Type: String
     AllowedPattern: "^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}$"
 
@@ -709,13 +709,13 @@ Resources:
               - Effect: Allow
                 Action:
                   - scheduler:CreateSchedule
-                  - scheduler:ListSchedules
                   - scheduler:GetSchedule
                   - scheduler:UpdateSchedule
                   - scheduler:DeleteSchedule
-                Resource:
-                  - arn:aws:scheduler:*:*:schedule/*
-                  - arn:aws:scheduler:*:*:schedule-group/default
+                Resource: !Sub arn:aws:scheduler:*:*:schedule/${ScheduleGroup}/*
+              - Effect: Allow
+                Action: scheduler:ListSchedules
+                Resource: arn:aws:scheduler:*:*:schedule/*
         - PolicyName: PassRolePolicy
           PolicyDocument:
             Version: "2012-10-17"
@@ -752,17 +752,17 @@ Resources:
                   "Type": "Choice",
                   "Choices": [
                     {
-                      "Variable": "$.apiInfo.httpMethod",
+                      "Variable": "$.info.httpMethod",
                       "StringEquals": "POST",
                       "Next": "Time Choice"
                     },
                     {
-                      "Variable": "$.apiInfo.httpMethod",
+                      "Variable": "$.info.httpMethod",
                       "StringEquals": "GET",
                       "Next": "ListSchedules"
                     },
                     {
-                      "Variable": "$.apiInfo.httpMethod",
+                      "Variable": "$.info.httpMethod",
                       "StringEquals": "DELETE",
                       "Next": "DeleteSchedule"
                     }
@@ -819,8 +819,12 @@ Resources:
                               "Value.$": "$.data.meetingPassword"
                             },
                             {
-                              "Name": "EMAIL",
+                              "Name": "EMAIL_SENDER",
                               "Value": "${Email}"
+                            },
+                            {
+                              "Name": "EMAIL_RECEIVER",
+                              "Value.$": "$.info.email"
                             },
                             {
                               "Name": "MEETING_NAME",
@@ -842,7 +846,7 @@ Resources:
                       "Mode": "OFF"
                     },
                     "GroupName": "${ScheduleGroup}",
-                    "Name.$": "States.Format('{}_{}', $.data.meetingID, States.UUID())",
+                    "Name.$": "States.Format('{}_{}_{}', $.info.sub, $.data.meetingID, States.MathRandom(0, 1000000))",
                     "ScheduleExpression.$": "States.Format('at({})', $.data.meetingTime)",
                     "ScheduleExpressionTimezone": "UTC",
                     "State": "ENABLED",
@@ -886,8 +890,12 @@ Resources:
                                 "value.$": "$.data.meetingPassword"
                               },
                               {
-                                "name": "EMAIL",
+                                "name": "EMAIL_SENDER",
                                 "value": "${Email}"
+                              },
+                              {
+                                "name": "EMAIL_RECEIVER",
+                                "value.$": "$.info.email"
                               },
                               {
                                 "name": "MEETING_NAME",
@@ -905,7 +913,8 @@ Resources:
                 "ListSchedules": {
                   "Type": "Task",
                   "Parameters": {
-                    "GroupName": "${ScheduleGroup}"
+                    "GroupName": "${ScheduleGroup}",
+                    "NamePrefix.$": "$.info.sub"
                   },
                   "Resource": "arn:aws:states:::aws-sdk:scheduler:listSchedules",
                   "Next": "Map"
@@ -962,6 +971,50 @@ Resources:
 
 ### API Resources ###
 
+  PostConfirmationTriggerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - !GetAtt LogsPolicy.PolicyArn
+      Policies:
+        - PolicyName: SESPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: 
+                  - ses:GetAccount
+                  - ses:VerifyEmailIdentity
+                Resource: '*'
+
+  PostConfirmationTriggerFunction:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      Handler: index.handler
+      Role: !GetAtt PostConfirmationTriggerRole.Arn
+      Timeout: 300
+      Runtime: python3.12
+      Code:
+        ZipFile: !Sub |
+          import boto3
+
+          def handler(event, context):
+            
+            if not boto3.client('sesv2').get_account()['ProductionAccessEnabled']:
+              print("SES is sandboxed.")
+              boto3.client('ses').verify_email_identity(
+                EmailAddress=event['request']['userAttributes']['email']
+              )
+            
+            return event
+
   UserPool:
     Type: AWS::Cognito::UserPool
     Properties:
@@ -984,11 +1037,23 @@ Resources:
             Priority: 1
       UsernameAttributes:
         - email
+      AutoVerifiedAttributes:
+        - email
       Schema:
         - Name: email
           AttributeDataType: String
           Mutable: false
           Required: true
+      LambdaConfig:
+        PostConfirmation: !GetAtt PostConfirmationTriggerFunction.Arn
+
+  PostConfirmationTriggerPermission:
+    Type: "AWS::Lambda::Permission"
+    Properties:
+      FunctionName: !GetAtt PostConfirmationTriggerFunction.Arn
+      Action: lambda:InvokeFunction
+      SourceArn: !GetAtt UserPool.Arn
+      Principal: cognito-idp.amazonaws.com
 
   UserPoolClient:
     Type: AWS::Cognito::UserPoolClient
@@ -1003,9 +1068,6 @@ Resources:
   UserPoolUser:
     Type: AWS::Cognito::UserPoolUser
     Properties:
-      UserAttributes:        
-        - Name: email
-          Value: !Ref Email
       UserPoolId: !Ref UserPool
       Username: !Ref Email
 
@@ -1076,17 +1138,15 @@ Resources:
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:states:action/StartSyncExecution
         PassthroughBehavior: WHEN_NO_MATCH
         RequestTemplates:
-            application/json: !Sub
-              - |
-                #set($body= $input.json('$'))
-                #set($inputRoot='{ "data" :'+$body+',"apiInfo":{"httpMethod" :"'+ $context.httpMethod+'", "apiKey":"'+ $context.identity.apiKey+'"}}')
-                #set($apiData=$util.escapeJavaScript($inputRoot))
-                #set($apiData=$apiData.replaceAll("\\'","'"))
-                {
-                  "input": "$apiData",
-                  "stateMachineArn": "${StateMachineArn}"
-                }
-              - { StateMachineArn: !GetAtt SchedulerStateMachine.Arn }
+          application/json: !Sub
+            - |
+              #set($body = $input.json('$'))
+              #set($input = '{"data": '+$body+', "info": {"httpMethod": "'+ $context.httpMethod+'", "sub": "'+ $context.authorizer.claims.sub+'", "email": "'+ $context.authorizer.claims.email+'"}}')
+              {
+                "input": "$util.escapeJavaScript($input).replaceAll("\\'", "'")",
+                "stateMachineArn": "${StateMachineArn}"
+              }
+            - { StateMachineArn: !GetAtt SchedulerStateMachine.Arn }
         Credentials: !GetAtt ApiGatewayRole.Arn
         IntegrationResponses:
           - StatusCode: '200'
@@ -1097,19 +1157,19 @@ Resources:
               method.response.header.Access-Control-Allow-Credentials: "'true'"
             ResponseTemplates:
               application/json: |
-                #set ($bodyObj = $util.parseJson($input.body))
-                #if ($bodyObj.status == "SUCCEEDED")
-                    $bodyObj.output
-                #elseif ($bodyObj.status == "FAILED")
-                    #set($context.responseOverride.status = 500)
-                    {
-                        "cause": "$bodyObj.cause",
-                        "error": "$bodyObj.error"
-                    }
+                #set($bodyObj = $util.parseJson($input.body))
+                #if($bodyObj.status == "SUCCEEDED")
+                  $bodyObj.output
+                #elseif($bodyObj.status == "FAILED")
+                  #set($context.responseOverride.status = 500)
+                  {
+                    "cause": "$bodyObj.cause",
+                    "error": "$bodyObj.error"
+                  }
                 #else
-                    #set($context.responseOverride.status = 500)
-                    $input.body
-                #end              
+                  #set($context.responseOverride.status = 500)
+                  $input.body
+                #end
       MethodResponses:
         - StatusCode: '200'
           ResponseModels:

@@ -1,7 +1,7 @@
 
 # Automated Meeting Scribe and Summarizer
 
-Using this application's website, you can invite an AI-assisted scribe to your upcoming Amazon Chime or Zoom meeting(s) to get a follow-up email with the attendee list, chat history, attachments, and transcript, as well as a summary and action items. You don't even need to be present in a meeting for your invited scribe to join. Each scribe is linked to your email for identification. The scribe also redacts sensitive personally identifiable information (PII) by default. This security and privacy-focused application deploys into an individual AWS account with just a few clicks in the AWS CloudFormation console. All processing, from transcription to summarization, is done within that account.
+Using this application's website, you can invite an AI-assisted scribe to your upcoming Amazon Chime or Zoom meeting(s) to get a follow-up email with the attendee list, chat history, attachments, and transcript, as well as a summary and action items. You don't even need to be present in a meeting for your invited scribe to join. Each scribe is linked to your email for identification. The scribe also redacts sensitive personally identifiable information (PII) by default. This security and privacy-focused application deploys into an AWS account with just a few clicks in the AWS CloudFormation console. All processing, from transcription to summarization, is done within that account.
 
 ## Architecture
 
@@ -42,17 +42,18 @@ To interact with Claude 3 Sonnet on Bedrock, you need to [request access to the 
     - Email Address Verification Request in region US East (N. Virginia)
         - Click the provided URL to authorize use of the email address.
     - Your temporary password
-        - Use your username and temporary password to log in to the website.
+        - The username and temporary password can be used to log in to the website.
+- Optionally, you can [request to move out of the SES sandbox](https://docs.aws.amazon.com/ses/latest/dg/request-production-access.html) to email new users without additional verification.
 
 ### Accessing the Website
 - Return to the CloudFormation console. 
 - Once the stack shows *CREATE_COMPLETE* status, click **Outputs**. 
 - Click on the CloudFront URL to open the website. 
-- Enter your username and password. 
-    - Change your password and verify your email as needed.
+- Enter your username and password or create a new account.
+    - Change your password and/or verify your email as needed.
 
 ### Using the Website
-- To invite a scribe to your upcoming meeting, enter the **Meeting Name**, **Meeting ID**, and, optionally, the **Meeting Password** and **Meeting Time**.
+- To invite a scribe to your upcoming meeting, enter the **Meeting Name**, **Meeting ID**, and, optionally, the **Meeting Password** and/or **Meeting Time**.
 - Click **Invite Now** to invite the scribe to join as soon as possible, or click **Invite Later** to schedule the scribe.
 - To delete an invite for an upcoming meeting, select the invite then click **Delete**.
 - To log out, click **Logout**.
@@ -73,6 +74,8 @@ To interact with Claude 3 Sonnet on Bedrock, you need to [request access to the 
 ## Clean-up
 - Open the [CloudFormation console](https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks).
 - Select the stack you created then click **Delete** twice.
+- Open the [SES console](https://us-east-1.console.aws.amazon.com/ses/home?region=us-east-1#/identities).
+- Select unused identities then click **Delete** followed by **Confirm**.
 
 ## Security
 See the [CONTRIBUTING](CONTRIBUTING) file for more information.
