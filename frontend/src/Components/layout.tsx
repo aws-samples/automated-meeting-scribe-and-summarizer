@@ -34,7 +34,6 @@ interface CustomMessage {
   id: string
 }
 
-
 function Layout() {
   const [schedules, setSchedules] = useState<Schedule[]>([])
   const [message, setMessage] = useState<CustomMessage[]>()
@@ -56,7 +55,7 @@ function Layout() {
     setMessage([{
       type: type,
       dismissible: true,
-      dismissLabel: "Error",
+      dismissLabel: "Dismiss",
       onDismiss: () => setMessage([]),
       content: (
         <>
@@ -81,7 +80,6 @@ function Layout() {
             setMessageProperties(err.message, "error")
           }
         })
-
         return () => cancel()
 
       } catch (err) {
@@ -89,7 +87,6 @@ function Layout() {
       }
     }
     initializeSession()
-
   }, [])
 
   const createInvite = async (meeting: Meeting) => {
@@ -104,7 +101,7 @@ function Layout() {
       }).catch((err) => {
         setMessageProperties((err as Error).message, "error")
       }).finally(() => {
-        setMessageProperties("Invite " + meeting.meetingName + " created successfully!", "success")
+        setMessageProperties(meeting.meetingName + " invite created!", "success")
       })
 
     }).catch(err => {
@@ -131,11 +128,9 @@ function Layout() {
         }).catch(err => {
           setMessageProperties((err as Error).message, "error")
         }).finally(() => {
-          setMessageProperties("All selected invites deleted successfully!", "success")
-        }
-        )
-      }
-      )
+          setMessageProperties("Selected invite(s) deleted!", "success")
+        })
+      })
     }
   }
 
