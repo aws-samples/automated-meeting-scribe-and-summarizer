@@ -1,5 +1,6 @@
 
-from scribe import meeting_platform, encapsulate
+from details import meeting_platform
+from process import encapsulate
 import asyncio
 from playwright.async_api import async_playwright
 import sys

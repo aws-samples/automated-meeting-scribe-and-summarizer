@@ -835,7 +835,10 @@ Resources:
                       ]
                     }
                   },
-                  "End": true
+                  "End": true,
+                  "ResultSelector": {
+                    "failures.$": "$.Failures"
+                  }
                 },
                 "CreateSchedule": {
                   "Type": "Task",

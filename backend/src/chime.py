@@ -1,5 +1,6 @@
 
 import asyncio
+import details
 import scribe
 from playwright.async_api import TimeoutError
 from datetime import datetime
@@ -7,7 +8,7 @@ from datetime import datetime
 async def meeting(page):
 
     print("Getting meeting link.")
-    await page.goto(f"https://app.chime.aws/meetings/{scribe.meeting_id}")
+    await page.goto(f"https://app.chime.aws/meetings/{details.meeting_id}")
 
     print("Entering name.")
     try:
@@ -16,7 +17,7 @@ async def meeting(page):
         print("Your scribe was unable to join the meeting.")
         return
     else:
-        await name_text_element.type(scribe.scribe_identity)
+        await name_text_element.type(details.scribe_identity)
         await name_text_element.press('Tab')
         await page.keyboard.press('Enter')
 
@@ -34,7 +35,7 @@ async def meeting(page):
     try:
         chat_panel_element = await page.wait_for_selector(
             'button[data-testid="button"][aria-label^="Open chat panel"]',
-            timeout=scribe.waiting_timeout
+            timeout=details.waiting_timeout
         )
     except TimeoutError:
         print("Your scribe was not admitted into the meeting.")
@@ -51,7 +52,7 @@ async def meeting(page):
             await message_element.press('Enter')   
 
     print("Sending introduction messages.")
-    await send_messages(scribe.intro_messages)
+    await send_messages(details.intro_messages)
 
     print("Opening attendees panel.")
     attendees_panel_element = await page.wait_for_selector(
@@ -105,23 +106,23 @@ async def meeting(page):
         if not sender:
             sender = prev_sender
         prev_sender = sender
-        if text == scribe.end_command:
+        if text == details.end_command:
             print("Your scribe has been removed from the meeting.")
             await page.goto("about:blank")
-        elif scribe.start and text == scribe.pause_command:
-            scribe.start = False
-            print(scribe.pause_messages[0])
-            await send_messages(scribe.pause_messages)
-        elif not scribe.start and text == scribe.start_command:
-            scribe.start = True
-            print(scribe.start_messages[0])
-            await send_messages(scribe.start_messages)
+        elif details.start and text == details.pause_command:
+            details.start = False
+            print(details.pause_messages[0])
+            await send_messages(details.pause_messages)
+        elif not details.start and text == details.start_command:
+            details.start = True
+            print(details.start_messages[0])
+            await send_messages(details.start_messages)
             asyncio.create_task(scribe.transcribe())
-        elif scribe.start and not (sender == "Amazon Chime" or scribe.scribe_name in sender):
+        elif details.start and not (sender == "Amazon Chime" or details.scribe_name in sender):
             timestamp = datetime.now().strftime('%H:%M')
             message = f"[{timestamp}] {sender}: "
             if attachment_title and attachment_href:
-                scribe.attachments[attachment_title] = attachment_href
+                details.attachments[attachment_title] = attachment_href
                 if text:
                     message += f"{text} | {attachment_title}"
                 else:
@@ -129,7 +130,7 @@ async def meeting(page):
             else:
                 message += text
             # print('New Message:', message)
-            scribe.messages.append(message)                
+            details.messages.append(message)                
 
     await page.expose_function("messageChange", message_change)
     
@@ -158,9 +159,9 @@ async def meeting(page):
 
     print("Waiting for meeting end.")
     try:
-        await page.wait_for_selector('button[id="endMeeting"]', state="detached", timeout=scribe.meeting_timeout)
+        await page.wait_for_selector('button[id="endMeeting"]', state="detached", timeout=details.meeting_timeout)
         print("Meeting ended.")
     except TimeoutError:
         print("Meeting timed out.")
     finally:
-        scribe.start = False
+        details.start = False

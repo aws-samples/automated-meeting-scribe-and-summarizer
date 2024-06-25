@@ -1,12 +1,13 @@
 
 import asyncio
+import details
 import scribe
 from playwright.async_api import TimeoutError
 
 async def meeting(page):
 
     print("Getting meeting link.")
-    await page.goto(f"https://zoom.us/wc/{scribe.meeting_id}/join")
+    await page.goto(f"https://zoom.us/wc/{details.meeting_id}/join")
 
     print("Typing meeting password.")
     try:
@@ -15,18 +16,18 @@ async def meeting(page):
         print("Your scribe was unable to join the meeting.")
         return
     else:
-        await password_text_element.type(scribe.meeting_password)
+        await password_text_element.type(details.meeting_password)
 
     print("Entering name.")
     name_text_element = await page.wait_for_selector('#input-for-name')
-    await name_text_element.type(scribe.scribe_identity)
+    await name_text_element.type(details.scribe_identity)
     await name_text_element.press("Enter")
 
     print("Adding audio.")
     try:
         audio_button_element = await page.wait_for_selector(
             "text=Join Audio by Computer",
-            timeout=scribe.waiting_timeout
+            timeout=details.waiting_timeout
         )
     except TimeoutError:
         print("Your scribe was not admitted into the meeting.")
@@ -50,7 +51,7 @@ async def meeting(page):
             await message_element.press('Enter')   
 
     print("Sending introduction messages.")
-    await send_messages(scribe.intro_messages)
+    await send_messages(details.intro_messages)
 
     async def attendee_change(number: int):
         if number <= 1:
@@ -97,20 +98,20 @@ async def meeting(page):
 
     async def message_change(message):
         # print('New Message:', message)
-        if scribe.end_command in message:
+        if details.end_command in message:
             print("Your scribe has been removed from the meeting.")
             await page.goto("about:blank")
-        elif scribe.start and scribe.pause_command in message:
-            scribe.start = False
-            print(scribe.pause_messages[0])
-            await send_messages(scribe.pause_messages)
-        elif not scribe.start and scribe.start_command in message:
-            scribe.start = True
-            print(scribe.start_messages[0])
-            await send_messages(scribe.start_messages)
+        elif details.start and details.pause_command in message:
+            details.start = False
+            print(details.pause_messages[0])
+            await send_messages(details.pause_messages)
+        elif not details.start and details.start_command in message:
+            details.start = True
+            print(details.start_messages[0])
+            await send_messages(details.start_messages)
             asyncio.create_task(scribe.transcribe())
-        elif scribe.start:
-            scribe.messages.append(message)   
+        elif details.start:
+            details.messages.append(message)   
 
     await page.expose_function("messageChange", message_change)
     
@@ -141,11 +142,11 @@ async def meeting(page):
                 asyncio.create_task(page.wait_for_selector('div[class="zm-modal zm-modal-legacy"]', timeout=0))
             ],
             return_when=asyncio.FIRST_COMPLETED,
-            timeout=scribe.meeting_timeout
+            timeout=details.meeting_timeout
         )
         [task.cancel() for task in pending]
         print("Meeting ended.")
     except:
         print("Meeting timed out.")
     finally:
-        scribe.start = False
+        details.start = False
