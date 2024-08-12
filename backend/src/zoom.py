@@ -80,6 +80,10 @@ async def meeting(page):
         const targetNode = document.querySelector(
             '.speaker-active-container__video-frame .video-avatar__avatar .video-avatar__avatar-title'
         )
+
+        const initial_speaker = targetNode.textContent
+        if (initial_speaker) speakerChange(initial_speaker)
+
         const config = { childList: true, subtree: true }
 
         const callback = (mutationList, observer) => {
@@ -91,9 +95,6 @@ async def meeting(page):
 
         const observer = new MutationObserver(callback)
         observer.observe(targetNode, config)
-                        
-        const initial_speaker = targetNode.textContent
-        if (initial_speaker) speakerChange(initial_speaker)
     ''')
 
     async def message_change(message):

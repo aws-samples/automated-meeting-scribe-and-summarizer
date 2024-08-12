@@ -10,7 +10,7 @@ import bisect
 
 speaker_timestamps = []
 
-class MyEventHandler(TranscriptResultStreamHandler):
+class ScribeHandler(TranscriptResultStreamHandler):
     async def handle_transcript_event(self, transcript_event: TranscriptEvent):
         for result in transcript_event.transcript.results:
             if not result.is_partial:
@@ -64,7 +64,7 @@ async def transcribe():
 
     await asyncio.gather(
         write_audio(stream), 
-        MyEventHandler(stream.output_stream).handle_events()
+        ScribeHandler(stream.output_stream).handle_events()
     )      
 
 async def speaker_change(speaker):

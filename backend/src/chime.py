@@ -85,6 +85,10 @@ async def meeting(page):
     print("Listening for speaker changes.")
     await page.evaluate('''
         const targetNode = document.querySelector('.activeSpeakerCell ._3yg3rB2Xb_sfSzRXkm8QT-')
+                        
+        const initial_speaker = targetNode.textContent
+        if (initial_speaker != "No one") speakerChange(initial_speaker)
+
         const config = { characterData: true, subtree: true }
 
         const callback = (mutationList, observer) => {
@@ -96,9 +100,6 @@ async def meeting(page):
 
         const observer = new MutationObserver(callback)
         observer.observe(targetNode, config)
-
-        const initial_speaker = targetNode.textContent
-        if (initial_speaker != "No one") speakerChange(initial_speaker)
     ''')
 
     async def message_change(sender, text, attachment_title, attachment_href):

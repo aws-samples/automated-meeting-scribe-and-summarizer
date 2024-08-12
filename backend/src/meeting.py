@@ -1,4 +1,3 @@
-
 from details import meeting_platform
 from process import encapsulate
 import asyncio
@@ -9,12 +8,15 @@ if meeting_platform == "Chime":
     from chime import meeting
 elif meeting_platform == "Zoom":
     from zoom import meeting
+elif meeting_platform == "Webex":
+    from webex import meeting
+
 
 async def app():
     async with async_playwright() as p:
         browser = await p.chromium.launch(
-            headless=True, 
-            ignore_default_args=['--mute-audio'],
+            headless=False,
+            ignore_default_args=["--mute-audio"],
             args=[
                 "--window-size=1920,1080",
                 "--use-fake-ui-for-media-stream",
@@ -23,15 +25,17 @@ async def app():
                 "--disable-extensions",
                 "--disable-crash-reporter",
                 "--disable-dev-shm-usage",
-                "--no-sandbox"
-            ]
+                "--no-sandbox",
+            ],
         )
         page = await browser.new_page()
-        page.set_default_timeout(20000)
+        # page.set_default_timeout(20000)
+        page.set_default_timeout(200000)
 
         await meeting(page)
         await browser.close()
         encapsulate()
+
 
 asyncio.run(app())
 sys.exit
