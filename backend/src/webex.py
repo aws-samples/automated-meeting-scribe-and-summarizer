@@ -2,7 +2,7 @@ import asyncio
 import details
 import scribe
 from playwright.async_api import TimeoutError
-from datetime import datetime
+from time import sleep
 
 
 async def meeting(page):
@@ -64,6 +64,8 @@ async def meeting(page):
     else:
         await chat_panel_element.click()
 
+    sleep(1)
+
     async def send_messages(messages):
         message_element = await frame.wait_for_selector(
             'textarea[placeholder="Type your message here"]'
@@ -74,28 +76,6 @@ async def meeting(page):
 
     print("Sending introduction messages.")
     await send_messages(details.intro_messages)
-
-    # async def attendee_change(number: int):
-    #     if number <= 1:
-    #         print("Your scribe got lonely and left.")
-    #         await page.goto("about:blank")
-
-    # await page.expose_function("attendeeChange", attendee_change)
-
-    # print("Listening for attendee changes.")
-    # await page.evaluate(
-    #     """
-    #     const targetNode = document.querySelector('button[data-testid="collapse-container"][aria-label^="Present"]')
-    #     const config = { characterData: true, subtree: true }
-
-    #     const callback = (mutationList, observer) => {
-    #         attendeeChange(parseInt(mutationList[mutationList.length - 1].target.textContent))
-    #     }
-
-    #     const observer = new MutationObserver(callback)
-    #     observer.observe(targetNode, config)
-    # """
-    # )
 
     await page.expose_function("speakerChange", scribe.speaker_change)
 
@@ -125,65 +105,49 @@ async def meeting(page):
     """
     )
 
-    # async def message_change(sender, text, attachment_title, attachment_href):
-    #     global prev_sender
-    #     if not sender:
-    #         sender = prev_sender
-    #     prev_sender = sender
-    #     if text == details.end_command:
-    #         print("Your scribe has been removed from the meeting.")
-    #         await page.goto("about:blank")
-    #     elif details.start and text == details.pause_command:
-    #         details.start = False
-    #         print(details.pause_messages[0])
-    #         await send_messages(details.pause_messages)
-    #     elif not details.start and text == details.start_command:
-    #         details.start = True
-    #         print(details.start_messages[0])
-    #         await send_messages(details.start_messages)
-    #         asyncio.create_task(scribe.transcribe())
-    #     elif details.start and not (
-    #         sender == "Amazon Chime" or details.scribe_name in sender
-    #     ):
-    #         timestamp = datetime.now().strftime("%H:%M")
-    #         message = f"[{timestamp}] {sender}: "
-    #         if attachment_title and attachment_href:
-    #             details.attachments[attachment_title] = attachment_href
-    #             if text:
-    #                 message += f"{text} | {attachment_title}"
-    #             else:
-    #                 message += attachment_title
-    #         else:
-    #             message += text
-    #         # print('New Message:', message)
-    #         details.messages.append(message)
+    async def message_change(message):
+        # print('New Message:', message)
+        if details.end_command in message:
+            print("Your scribe has been removed from the meeting.")
+            await page.goto("about:blank")
+        elif details.start and details.pause_command in message:
+            details.start = False
+            print(details.pause_messages[0])
+            await send_messages(details.pause_messages)
+        elif not details.start and details.start_command in message:
+            details.start = True
+            print(details.start_messages[0])
+            await send_messages(details.start_messages)
+            asyncio.create_task(scribe.transcribe())
+        elif details.start:
+            details.messages.append(message)
 
-    # await page.expose_function("messageChange", message_change)
+    await page.expose_function("messageChange", message_change)
 
-    # print("Listening for message changes.")
-    # await page.evaluate(
-    #     """
-    #     const targetNode = document.querySelector('._2B9DdDvc2PdUbvEGXfOU20')
-    #     const config = { childList: true, subtree: true }
+    print("Listening for message changes.")
+    await page.evaluate(
+        """
+        const iFrame = document.querySelector("iframe[name='thinIframe']")
+        const iFrameDocument = iFrame.contentDocument
+        const targetNode = iFrameDocument.querySelector('div[class^="style-chat-box"]')
+        
+        const config = { childList: true, subtree: true }
 
-    #     const callback = (mutationList, observer) => {
-    #         for (const mutation of mutationList) {
-    #             const addedNode = mutation.addedNodes[0]
-    #             if (addedNode) {
-    #                 const sender = addedNode.querySelector('h3[data-testid="chat-bubble-sender-name"]')?.textContent
-    #                 const text = addedNode.querySelector('.Linkify')?.textContent
-    #                 const attachmentElement = addedNode.querySelector('.SLFfm3Dwo5MfFzks4uM11')
-    #                 const attachmentTitle = attachmentElement?.title
-    #                 const attachmentHref = attachmentElement?.href
-    #                 messageChange(sender, text, attachmentTitle, attachmentHref)
-    #             }
-    #         }
-    #     }
+        const callback = (mutationList, observer) => {
+            const addedNode = mutationList[mutationList.length - 1].addedNodes[0]
+            if (addedNode) {
+                sender = addedNode.querySelector('h3[class^="style-chat-label"]').textContent
+                message = addedNode.querySelector('span[class^="style-chat-msg"]').textContent
+                if (!sender.startsWith("from Scribe")) {
+                    messageChange(message)
+                }
+            }
+        }
 
-    #     const observer = new MutationObserver(callback)
-    #     observer.observe(targetNode, config)
-    # """
-    # )
+        const observer = new MutationObserver(callback)
+        observer.observe(targetNode, config)
+    """
+    )
 
     print("Waiting for meeting end.")
     try:
