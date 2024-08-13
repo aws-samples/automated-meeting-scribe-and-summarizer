@@ -64,14 +64,6 @@ async def meeting(page):
     else:
         await chat_panel_element.click()
 
-    # print("Clicking layout button.")
-    # layout_button_element = await frame.wait_for_selector('text="Layout"')
-    # await layout_button_element.click()
-
-    # print("Clicking stack button.")
-    # stack_button_element = await frame.wait_for_selector('button[aria-label="Stack"]')
-    # await stack_button_element.click()
-
     async def send_messages(messages):
         message_element = await frame.wait_for_selector(
             'textarea[placeholder="Type your message here"]'
@@ -105,29 +97,33 @@ async def meeting(page):
     # """
     # )
 
-    # await page.expose_function("speakerChange", scribe.speaker_change)
+    await page.expose_function("speakerChange", scribe.speaker_change)
 
-    # print("Listening for speaker changes.")
-    # await page.evaluate(
-    #     """
-    #     const targetNode = document.querySelector('.activeSpeakerCell ._3yg3rB2Xb_sfSzRXkm8QT-')
+    print("Listening for speaker changes.")
+    await page.evaluate(
+        """
+        const iFrame = document.querySelector("iframe[name='thinIframe']")
+        const iFrameDocument = iFrame.contentDocument
+        const targetNode = iFrameDocument.querySelector('div[class*="layout-layout-content-left"]')
 
-    #     const initial_speaker = targetNode.textContent
-    #     if (initial_speaker != "No one") speakerChange(initial_speaker)
+        const config = { attributes: true, subtree: true };
 
-    #     const config = { characterData: true, subtree: true }
+        const callback = (mutationList, observer) => {
+            for (const mutation of mutationList) {
+                if (mutation.attributeName === 'class') {
+                    const childNode = mutation.target;
+                    const pattern = /.*videoitem-in-speaking.*/;
+                    if (childNode.classList.value.match(pattern)) {
+                        speakerChange(childNode.textContent);
+                    }
+                }
+            }
+        }
 
-    #     const callback = (mutationList, observer) => {
-    #         for (const mutation of mutationList) {
-    #             const new_speaker = mutation.target.textContent
-    #             if (new_speaker != "No one") speakerChange(new_speaker)
-    #         }
-    #     }
-
-    #     const observer = new MutationObserver(callback)
-    #     observer.observe(targetNode, config)
-    # """
-    # )
+        const observer = new MutationObserver(callback)
+        observer.observe(targetNode, config)
+    """
+    )
 
     # async def message_change(sender, text, attachment_title, attachment_href):
     #     global prev_sender
