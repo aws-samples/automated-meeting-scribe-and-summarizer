@@ -52,7 +52,7 @@ async def transcribe():
         "-f",
         "pulse",
         "-i",
-        ":0",
+        "default",
         "-f",
         "s16le",
         "-ar",
