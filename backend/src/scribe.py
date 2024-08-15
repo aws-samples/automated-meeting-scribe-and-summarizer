@@ -3,7 +3,6 @@ import details
 from amazon_transcribe.client import TranscribeStreamingClient
 from amazon_transcribe.handlers import TranscriptResultStreamHandler
 from amazon_transcribe.model import TranscriptEvent
-import sounddevice as sd
 from datetime import datetime, timedelta
 import bisect
 
@@ -36,30 +35,35 @@ class ScribeHandler(TranscriptResultStreamHandler):
                         details.captions[-1] += word
 
 
-async def write_audio(stream):
-    loop = asyncio.get_event_loop()
-    input_queue = asyncio.Queue()
+async def write_audio(process, stream):
+    while details.start:
+        audio_data = await process.stdout.read(1024)
+        await stream.input_stream.send_audio_event(audio_chunk=audio_data)
 
-    def callback(indata, frame_count, time_info, status):
-        loop.call_soon_threadsafe(input_queue.put_nowait, (bytes(indata), status))
-
-    with sd.RawInputStream(
-        channels=1,
-        samplerate=16000,
-        callback=callback,
-        blocksize=1024 * 2,
-        dtype="int16",
-    ):
-        while details.start:
-            indata, status = await input_queue.get()
-            await stream.input_stream.send_audio_event(audio_chunk=indata)
-
-        await stream.input_stream.end_stream()
+    await stream.input_stream.end_stream()
+    process.terminate()
 
 
 async def transcribe():
     global start_time
 
+    process = await asyncio.create_subprocess_exec(
+        "ffmpeg",
+        "-f",
+        "pulse",
+        "-i",
+        ":0",
+        "-f",
+        "s16le",
+        "-ar",
+        "16000",
+        "-ac",
+        "1",
+        "-acodec",
+        "pcm_s16le",
+        "-",
+        stdout=asyncio.subprocess.PIPE,
+    )
     stream = await TranscribeStreamingClient(
         region="us-east-1"
     ).start_stream_transcription(
@@ -71,7 +75,8 @@ async def transcribe():
     start_time = datetime.now()
 
     await asyncio.gather(
-        write_audio(stream), ScribeHandler(stream.output_stream).handle_events()
+        write_audio(process, stream),
+        ScribeHandler(stream.output_stream).handle_events(),
     )
 
 
