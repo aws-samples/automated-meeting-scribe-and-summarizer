@@ -1,8 +1,8 @@
-
 import asyncio
 import details
 import scribe
 from playwright.async_api import TimeoutError
+
 
 async def meeting(page):
 
@@ -11,7 +11,7 @@ async def meeting(page):
 
     print("Typing meeting password.")
     try:
-        password_text_element = await page.wait_for_selector('#input-for-pwd')
+        password_text_element = await page.wait_for_selector("#input-for-pwd")
     except TimeoutError:
         print("Your scribe was unable to join the meeting.")
         return
@@ -19,15 +19,14 @@ async def meeting(page):
         await password_text_element.type(details.meeting_password)
 
     print("Entering name.")
-    name_text_element = await page.wait_for_selector('#input-for-name')
+    name_text_element = await page.wait_for_selector("#input-for-name")
     await name_text_element.type(details.scribe_identity)
     await name_text_element.press("Enter")
 
     print("Adding audio.")
     try:
         audio_button_element = await page.wait_for_selector(
-            "text=Join Audio by Computer",
-            timeout=details.waiting_timeout
+            "text=Join Audio by Computer", timeout=details.waiting_timeout
         )
     except TimeoutError:
         print("Your scribe was not admitted into the meeting.")
@@ -48,7 +47,7 @@ async def meeting(page):
         )
         for message in messages:
             await message_element.fill(message)
-            await message_element.press('Enter')   
+            await message_element.press("Enter")
 
     print("Sending introduction messages.")
     await send_messages(details.intro_messages)
@@ -61,7 +60,8 @@ async def meeting(page):
     await page.expose_function("attendeeChange", attendee_change)
 
     print("Listening for attendee changes.")
-    await page.evaluate('''
+    await page.evaluate(
+        """
         const targetNode = document.querySelector('.footer-button__number-counter')
         const config = { characterData: true, subtree: true }
 
@@ -71,12 +71,14 @@ async def meeting(page):
 
         const observer = new MutationObserver(callback)
         observer.observe(targetNode, config)
-    ''')
+    """
+    )
 
     await page.expose_function("speakerChange", scribe.speaker_change)
 
     print("Listening for speaker changes.")
-    await page.evaluate('''
+    await page.evaluate(
+        """
         const targetNode = document.querySelector(
             '.speaker-active-container__video-frame .video-avatar__avatar .video-avatar__avatar-title'
         )
@@ -95,7 +97,8 @@ async def meeting(page):
 
         const observer = new MutationObserver(callback)
         observer.observe(targetNode, config)
-    ''')
+    """
+    )
 
     async def message_change(message):
         # print('New Message:', message)
@@ -112,12 +115,13 @@ async def meeting(page):
             await send_messages(details.start_messages)
             asyncio.create_task(scribe.transcribe())
         elif details.start:
-            details.messages.append(message)   
+            details.messages.append(message)
 
     await page.expose_function("messageChange", message_change)
-    
+
     print("Listening for message changes.")
-    await page.evaluate('''
+    await page.evaluate(
+        """
         const targetNode = document.querySelector('div[aria-label="Chat Message List"]')
         const config = { childList: true, subtree: true }
 
@@ -133,17 +137,26 @@ async def meeting(page):
 
         const observer = new MutationObserver(callback)
         observer.observe(targetNode, config)
-    ''')
+    """
+    )
 
     print("Waiting for meeting end.")
     try:
         done, pending = await asyncio.wait(
             fs=[
-                asyncio.create_task(page.wait_for_selector('button[aria-label="Leave"]', state="detached", timeout=0)),
-                asyncio.create_task(page.wait_for_selector('div[class="zm-modal zm-modal-legacy"]', timeout=0))
+                asyncio.create_task(
+                    page.wait_for_selector(
+                        'button[aria-label="Leave"]', state="detached", timeout=0
+                    )
+                ),
+                asyncio.create_task(
+                    page.wait_for_selector(
+                        'div[class="zm-modal zm-modal-legacy"]', timeout=0
+                    )
+                ),
             ],
             return_when=asyncio.FIRST_COMPLETED,
-            timeout=details.meeting_timeout
+            timeout=details.meeting_timeout,
         )
         [task.cancel() for task in pending]
         print("Meeting ended.")

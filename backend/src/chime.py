@@ -1,9 +1,10 @@
-
 import asyncio
 import details
 import scribe
 from playwright.async_api import TimeoutError
+from time import sleep
 from datetime import datetime
+
 
 async def meeting(page):
 
@@ -12,14 +13,14 @@ async def meeting(page):
 
     print("Entering name.")
     try:
-        name_text_element = await page.wait_for_selector('#name')
+        name_text_element = await page.wait_for_selector("#name")
     except TimeoutError:
         print("Your scribe was unable to join the meeting.")
         return
     else:
         await name_text_element.type(details.scribe_identity)
-        await name_text_element.press('Tab')
-        await page.keyboard.press('Enter')
+        await name_text_element.press("Tab")
+        await page.keyboard.press("Enter")
 
     print("Clicking mute button.")
     mute_checkbox_element = await page.wait_for_selector('text="Join muted"')
@@ -35,7 +36,7 @@ async def meeting(page):
     try:
         chat_panel_element = await page.wait_for_selector(
             'button[data-testid="button"][aria-label^="Open chat panel"]',
-            timeout=details.waiting_timeout
+            timeout=details.waiting_timeout,
         )
     except TimeoutError:
         print("Your scribe was not admitted into the meeting.")
@@ -43,13 +44,15 @@ async def meeting(page):
     else:
         await chat_panel_element.click()
 
+    sleep(1)
+
     async def send_messages(messages):
         message_element = await page.wait_for_selector(
             'textarea[placeholder="Message all attendees"]'
         )
         for message in messages:
             await message_element.fill(message)
-            await message_element.press('Enter')   
+            await message_element.press("Enter")
 
     print("Sending introduction messages.")
     await send_messages(details.intro_messages)
@@ -68,7 +71,8 @@ async def meeting(page):
     await page.expose_function("attendeeChange", attendee_change)
 
     print("Listening for attendee changes.")
-    await page.evaluate('''
+    await page.evaluate(
+        """
         const targetNode = document.querySelector('button[data-testid="collapse-container"][aria-label^="Present"]')
         const config = { characterData: true, subtree: true }
 
@@ -78,12 +82,14 @@ async def meeting(page):
 
         const observer = new MutationObserver(callback)
         observer.observe(targetNode, config)
-    ''')
+    """
+    )
 
     await page.expose_function("speakerChange", scribe.speaker_change)
 
     print("Listening for speaker changes.")
-    await page.evaluate('''
+    await page.evaluate(
+        """
         const targetNode = document.querySelector('.activeSpeakerCell ._3yg3rB2Xb_sfSzRXkm8QT-')
                         
         const initial_speaker = targetNode.textContent
@@ -100,7 +106,8 @@ async def meeting(page):
 
         const observer = new MutationObserver(callback)
         observer.observe(targetNode, config)
-    ''')
+    """
+    )
 
     async def message_change(sender, text, attachment_title, attachment_href):
         global prev_sender
@@ -119,8 +126,10 @@ async def meeting(page):
             print(details.start_messages[0])
             await send_messages(details.start_messages)
             asyncio.create_task(scribe.transcribe())
-        elif details.start and not (sender == "Amazon Chime" or details.scribe_name in sender):
-            timestamp = datetime.now().strftime('%H:%M')
+        elif details.start and not (
+            sender == "Amazon Chime" or details.scribe_name in sender
+        ):
+            timestamp = datetime.now().strftime("%H:%M")
             message = f"[{timestamp}] {sender}: "
             if attachment_title and attachment_href:
                 details.attachments[attachment_title] = attachment_href
@@ -131,12 +140,13 @@ async def meeting(page):
             else:
                 message += text
             # print('New Message:', message)
-            details.messages.append(message)                
+            details.messages.append(message)
 
     await page.expose_function("messageChange", message_change)
-    
+
     print("Listening for message changes.")
-    await page.evaluate('''
+    await page.evaluate(
+        """
         const targetNode = document.querySelector('._2B9DdDvc2PdUbvEGXfOU20')
         const config = { childList: true, subtree: true }
 
@@ -156,11 +166,14 @@ async def meeting(page):
 
         const observer = new MutationObserver(callback)
         observer.observe(targetNode, config)
-    ''')
+    """
+    )
 
     print("Waiting for meeting end.")
     try:
-        await page.wait_for_selector('button[id="endMeeting"]', state="detached", timeout=details.meeting_timeout)
+        await page.wait_for_selector(
+            'button[id="endMeeting"]', state="detached", timeout=details.meeting_timeout
+        )
         print("Meeting ended.")
     except TimeoutError:
         print("Meeting timed out.")

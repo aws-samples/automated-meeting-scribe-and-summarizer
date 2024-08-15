@@ -15,7 +15,7 @@ elif meeting_platform == "Webex":
 async def app():
     async with async_playwright() as p:
         browser = await p.chromium.launch(
-            headless=False,
+            headless=True,
             ignore_default_args=["--mute-audio"],
             args=[
                 "--window-size=1920,1080",
