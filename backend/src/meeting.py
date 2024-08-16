@@ -29,8 +29,7 @@ async def app():
             ],
         )
         page = await browser.new_page()
-        # page.set_default_timeout(20000)
-        page.set_default_timeout(200000)
+        page.set_default_timeout(20000)
 
         await meeting(page)
         await browser.close()
