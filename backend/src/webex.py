@@ -6,6 +6,7 @@ from time import sleep
 
 
 async def meeting(page):
+    iframe = 'iframe[name="thinIframe"]'
 
     print("Getting meeting link.")
     await page.goto("https://signin.webex.com/join")
@@ -19,7 +20,7 @@ async def meeting(page):
     await page.wait_for_selector(".meet_message_H1")
     await page.goto(f"{page.url}?launchApp=true")
 
-    frame_element = await page.wait_for_selector("iframe[name='thinIframe']")
+    frame_element = await page.wait_for_selector(iframe)
     frame = await frame_element.content_frame()
 
     print("Entering name.")
@@ -33,7 +34,7 @@ async def meeting(page):
         'input[aria-labelledby="emailLabel"]'
     )
     # await email_text_element.type(details.email_sender)
-    await email_text_element.type("scribe@scribe.dev.amazon.com")
+    await email_text_element.type("bot@scribe.tools.aws.dev")
     await email_text_element.press("Enter")
 
     print("Clicking cookie button.")
@@ -82,7 +83,7 @@ async def meeting(page):
     print("Listening for speaker changes.")
     await page.evaluate(
         """
-        const iFrame = document.querySelector("iframe[name='thinIframe']")
+        const iFrame = document.querySelector('%s')
         const iFrameDocument = iFrame.contentDocument
         const targetNode = iFrameDocument.querySelector('div[class*="layout-layout-content-left"]')
 
@@ -103,6 +104,7 @@ async def meeting(page):
         const observer = new MutationObserver(callback)
         observer.observe(targetNode, config)
     """
+        % iframe
     )
 
     async def message_change(message):
@@ -127,7 +129,7 @@ async def meeting(page):
     print("Listening for message changes.")
     await page.evaluate(
         """
-        const iFrame = document.querySelector("iframe[name='thinIframe']")
+        const iFrame = document.querySelector('%s')
         const iFrameDocument = iFrame.contentDocument
         const targetNode = iFrameDocument.querySelector('div[class^="style-chat-box"]')
         
@@ -147,6 +149,7 @@ async def meeting(page):
         const observer = new MutationObserver(callback)
         observer.observe(targetNode, config)
     """
+        % iframe
     )
 
     print("Waiting for meeting end.")
@@ -155,7 +158,7 @@ async def meeting(page):
             ".style-end-message-2PkYs", timeout=details.meeting_timeout
         )
         print("Meeting ended.")
-    except TimeoutError:
+    except:
         print("Meeting timed out.")
     finally:
         details.start = False
