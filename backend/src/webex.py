@@ -17,8 +17,13 @@ async def meeting(page):
     await meeting_text_element.press("Enter")
 
     print("Launching app.")
-    await page.wait_for_selector(".meet_message_H1")
-    await page.goto(f"{page.url}?launchApp=true")
+    try:
+        await page.wait_for_selector(".meet_message_H1")
+    except TimeoutError:
+        print("Your scribe was unable to join the meeting.")
+        return
+    else:
+        await page.goto(f"{page.url}?launchApp=true")
 
     frame_element = await page.wait_for_selector(iframe)
     frame = await frame_element.content_frame()

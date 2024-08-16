@@ -1,7 +1,7 @@
 
 # Automated Meeting Scribe and Summarizer
 
-Using this application's website, you can invite an AI-assisted scribe to your upcoming Amazon Chime or Zoom meeting(s) to get a follow-up email with the attendee list, chat history, attachments, and transcript, as well as a summary and action items. You don't even need to be present in a meeting for your invited scribe to join. Each scribe is linked to your email for identification. The scribe also redacts sensitive personally identifiable information (PII) by default. This security and privacy-focused application deploys into an AWS account with just a few clicks in the AWS CloudFormation console. All processing, from transcription to summarization, is done within that account.
+Using this application's website, you can invite an AI-assisted scribe to your upcoming Amazon Chime, Webex, or Zoom meeting(s) to get a follow-up email with the attendee list, chat history, attachments, and transcript, as well as a summary and action items. You don't even need to be present in a meeting for your invited scribe to join. Each scribe is linked to your email for identification. The scribe also redacts sensitive personally identifiable information (PII) by default. This security and privacy-focused application deploys into an AWS account with just a few clicks in the AWS CloudFormation console. All processing, from transcription to summarization, is done within that account.
 
 ## Architecture
 
@@ -58,7 +58,7 @@ To interact with Claude 3 Sonnet on Bedrock, you need to [request access to the 
 - To delete an invite for an upcoming meeting, select the invite then click **Delete**.
 - To log out, click **Logout**.
 
-### Using Amazon Chime or Zoom
+### Using the Meeting Platform
 - At the specified meeting time, your scribe will join the meeting's waiting room.
     - It will wait for up to five minutes in the waiting room.
 - Verify the scribe's linked email then admit it into the meeting.
