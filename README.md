@@ -1,15 +1,11 @@
 
 # Automated Meeting Scribe and Summarizer
 
-Using this application's website, you can invite an AI-assisted scribe to your upcoming Amazon Chime, Webex, or Zoom meeting(s) to get a follow-up email with the attendee list, chat history, attachments, and transcript, as well as a summary and action items. You don't even need to be present in a meeting for your invited scribe to join. Each scribe is linked to your email for identification. The scribe also redacts sensitive personally identifiable information (PII) by default. This security and privacy-focused application deploys into an AWS account with just a few clicks in the AWS CloudFormation console. All processing, from transcription to summarization, is done within that account.
+Using this application's website, you can invite an AI-assisted scribe to your upcoming Amazon Chime or Webex meeting(s) to get a follow-up email with the speaker list, chat history, attachments, and transcript, as well as a summary and action items. You don't even need to be present in a meeting for your invited scribe to join. Each scribe is linked to your email for identification. The scribe also redacts sensitive personally identifiable information (PII) by default. All processing, from transcription to summarization, is done within the account that the CDK is deployed in.
 
 ## Architecture
 
-![Architecture Diagram](architecture.jpg)
-
-### Build Resources 
-- The CloudFormation stack creates an AWS CodeBuild project that references the source code in this repository to build a Docker image that is pushed to Amazon Elastic Container Registry (ECR) and a React build directory that is uploaded to Amazon Simple Storage Service (S3). 
-    - An AWS Lambda-backed custom resource runs a build of the CodeBuild project.
+![Architecture Diagram](architecture.png)
 
 ### Application Resources
 - The static website is hosted in S3 and served using Amazon CloudFront. 
