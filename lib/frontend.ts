@@ -19,7 +19,6 @@ import {
     custom_resources,
     CfnOutput,
 } from "aws-cdk-lib";
-import { OriginAccessIdentity } from "aws-cdk-lib/aws-cloudfront";
 import { Construct } from 'constructs';
 
 interface FrontendStackProps extends StackProps {
@@ -34,12 +33,10 @@ export default class FrontendStack extends Stack {
         const website_bucket = new s3.Bucket(this, 'website_bucket', {
             autoDeleteObjects: true,
             removalPolicy: RemovalPolicy.DESTROY,
-            websiteIndexDocument: 'index.html',
-            publicReadAccess: false
+            publicReadAccess: false,
+            blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+            enforceSSL: true
         });
-
-        const oai = new cloudfront.OriginAccessIdentity(this, 'oai');
-        website_bucket.grantRead(oai);
 
         function createManagedRule(
             prefix: string,
@@ -80,30 +77,21 @@ export default class FrontendStack extends Stack {
             ]
         });
 
-        const distribution = new cloudfront.CloudFrontWebDistribution(this, 'distribution', {
-            webACLId: distribution_web_acl.attrArn,
-            originConfigs: [
+        const distribution = new cloudfront.Distribution(this, 'distribution', {
+            defaultRootObject: 'index.html',
+            defaultBehavior: {
+                origin: cloudfront_origins.S3BucketOrigin.withOriginAccessControl(website_bucket),
+                viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+                allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
+            },
+            errorResponses: [
                 {
-                    s3OriginSource: {
-                        s3BucketSource: website_bucket,
-                        originAccessIdentity: oai,
-                    },
-                    behaviors: [
-                        { isDefaultBehavior: true },
-                        {
-                            pathPattern: '/*',
-                            allowedMethods: cloudfront.CloudFrontAllowedMethods.ALL
-                        }
-                    ]
-                },
-            ],
-            errorConfigurations: [
-                {
-                    errorCode: 404,
+                    httpStatus: 404,
                     responsePagePath: '/index.html',
-                    responseCode: 200,
+                    responseHttpStatus: 200,
                 },
             ],
+            webAclId: distribution_web_acl.attrArn
         });
 
         const post_confirmation_lambda = new lambda.Function(this, 'post_confirmation_lambda', {
@@ -125,16 +113,19 @@ export default class FrontendStack extends Stack {
             removalPolicy: RemovalPolicy.DESTROY,
             selfSignUpEnabled: true,
             signInAliases: { email: true },
-            autoVerify: { email: true },
             passwordPolicy: {
                 minLength: 8,
                 requireLowercase: true,
                 requireDigits: true,
                 requireSymbols: true,
                 requireUppercase: true,
-                tempPasswordValidity: Duration.days(2)
+                tempPasswordValidity: Duration.days(1)
             },
             mfa: cognito.Mfa.OPTIONAL,
+            mfaSecondFactor: {
+                otp: true,
+                sms: false
+            },
             accountRecovery: cognito.AccountRecovery.EMAIL_ONLY,
             advancedSecurityMode: cognito.AdvancedSecurityMode.ENFORCED,
             lambdaTriggers: {
@@ -144,11 +135,6 @@ export default class FrontendStack extends Stack {
 
         const user_pool_client = new cognito.UserPoolClient(this, 'user_pool_client', {
             userPool: user_pool,
-            authFlows: {
-                userPassword: true,
-                userSrp: true,
-                adminUserPassword: true,
-            },
             preventUserExistenceErrors: true
         });
 
@@ -183,16 +169,14 @@ export default class FrontendStack extends Stack {
 
         props.table.grantReadWriteData(proxy_function)
 
-        const authorizer = new apigateway.CognitoUserPoolsAuthorizer(this, 'authorizer', {
-            cognitoUserPools: [user_pool]
-        })
-
         const rest_api = new apigateway.LambdaRestApi(this, 'rest_api', {
             handler: proxy_function,
             proxy: true,
             defaultMethodOptions: {
                 authorizationType: apigateway.AuthorizationType.COGNITO,
-                authorizer: authorizer,
+                authorizer: new apigateway.CognitoUserPoolsAuthorizer(this, 'authorizer', {
+                    cognitoUserPools: [user_pool]
+                }),
             },
             defaultCorsPreflightOptions: {
                 allowCredentials: true,

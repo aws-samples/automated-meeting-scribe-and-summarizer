@@ -20,7 +20,7 @@ import {
     Checkbox,
     Button,
 } from "@cloudscape-design/components";
-import NavigationComponent from "../components/side_navigation";
+import NavigationComponent from "../components/navigation";
 import FlashbarContext, { FlashbarComponent } from '../components/notifications';
 
 const Create = () => {

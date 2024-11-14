@@ -1,7 +1,8 @@
 
-import { Amplify } from 'aws-amplify'
-import { withAuthenticator, WithAuthenticatorProps } from '@aws-amplify/ui-react'
-import '@aws-amplify/ui-react/styles.css'
+import { Amplify } from 'aws-amplify';
+import { Authenticator } from '@aws-amplify/ui-react';
+import '@aws-amplify/ui-react/styles.css';
+import TopNavigation from "@cloudscape-design/components/top-navigation"
 import '@cloudscape-design/global-styles/index.css';
 
 import {
@@ -13,7 +14,6 @@ import {
 import { FlashbarProvider } from './components/notifications';
 import CreateInvite from "./pages/create";
 import ListInvites from "./pages/list";
-import Navigation from "./components/top_navigation"
 
 Amplify.configure({
     Auth: {
@@ -24,7 +24,7 @@ Amplify.configure({
     }
 })
 
-function App(authenticatorProps: WithAuthenticatorProps) {
+export default function App() {
 
     const router = createBrowserRouter([
         {
@@ -42,13 +42,25 @@ function App(authenticatorProps: WithAuthenticatorProps) {
     ]);
 
     return (
-        <FlashbarProvider>
-            <Navigation authenticatorProps={authenticatorProps} />
-            <RouterProvider router={router} />
-        </FlashbarProvider>
+        <Authenticator>
+            {({ signOut, user }) => (
+                <FlashbarProvider>
+                    <TopNavigation
+                        identity={{
+                            href: "",
+                            title: user?.signInDetails?.loginId,
+                        }}
+                        utilities={[
+                            {
+                                type: "button",
+                                text: "Logout",
+                                onClick: () => signOut!(),
+                            },
+                        ]}
+                    />
+                    <RouterProvider router={router} />
+                </FlashbarProvider>
+            )}
+        </Authenticator>
     )
 }
-
-export default withAuthenticator(App, {
-    hideSignUp: false
-})

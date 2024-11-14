@@ -21,7 +21,6 @@ export default () => {
       items={[
         { type: "link", text: "Create Invite", href: "/create" },
         { type: "link", text: "List Invites", href: "/list" },
-        { type: "link", text: "Query Meetings", href: "/query" },
         { type: "divider" },
         {
           type: "link",

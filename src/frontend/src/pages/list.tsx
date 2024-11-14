@@ -13,7 +13,7 @@ import {
     Cards,
     Box,
 } from "@cloudscape-design/components";
-import NavigationComponent from "../components/side_navigation";
+import NavigationComponent from "../components/navigation";
 import { FlashbarComponent } from '../components/notifications';
 
 const List = () => {
