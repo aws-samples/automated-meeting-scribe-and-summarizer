@@ -175,7 +175,7 @@ const Create = () => {
                                     }
                                     checked={checked}
                                 >
-                                    I won't break the law.
+                                    I will not violate legal, corporate, or ethical restrictions that apply to meeting transcription and summarization.
                                 </Checkbox>
 
                                 <FormField>

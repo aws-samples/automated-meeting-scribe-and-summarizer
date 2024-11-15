@@ -3,7 +3,7 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom";
 import SideNavigation from '@cloudscape-design/components/side-navigation';
 
-export default () => {
+export default function Navigation() {
   const [activeHref, setActiveHref] = useState("/");
   const navigate = useNavigate();
 
