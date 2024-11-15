@@ -80,7 +80,7 @@ const Create = () => {
         setMeetingDate("")
         setMeetingTime("");
 
-        const response = await apiCall('scribe-create', 'POST', meeting);
+        const response = await apiCall('post-invite', 'POST', meeting);
         updateFlashbar(response.type, response.content)
     }
 

@@ -24,7 +24,7 @@ const List = () => {
 
     useEffect(() => {
         const fetchMeetings = async () => {
-            const body = await apiCall('scribe-list', 'GET');
+            const body = await apiCall('get-invites', 'GET');
             setMeetings(body.invites || []);
         };
         fetchMeetings();
@@ -52,7 +52,7 @@ const List = () => {
                                 <Button
                                     onClick={() => {
                                         if (selectedMeetings) {
-                                            apiCall('scribe-delete', 'DELETE', [...selectedMeetings])
+                                            apiCall('delete-invites', 'DELETE', [...selectedMeetings])
                                             setMeetings(meetings.filter(meeting => !selectedMeetings.includes(meeting)))
                                             setSelectedMeetings([])
                                         }

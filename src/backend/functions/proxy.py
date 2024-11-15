@@ -20,8 +20,8 @@ table = boto3.resource("dynamodb").Table(os.environ["TABLE_NAME"])
 expiration_seconds = 2592000  # 30 days
 
 
-@app.post("/scribe-create")
-def create_invite():
+@app.post("/post-invite")
+def post_invite():
     email = app.current_event.request_context.authorizer.claims.get("email")
     data = app.current_event.json_body
     meeting_time = data["time"]
@@ -51,7 +51,7 @@ def create_invite():
     return {"type": "success", "content": f"{data['name']} invite created!"}
 
 
-@app.get("/scribe-list")
+@app.get("/get-invites")
 def get_invites():
     email = app.current_event.request_context.authorizer.claims.get("email")
     logger.info("getting")
@@ -80,8 +80,8 @@ def get_invites():
     }
 
 
-@app.delete("/scribe-delete")
-def delete_invite():
+@app.delete("/delete-invites")
+def delete_invites():
     email = app.current_event.request_context.authorizer.claims.get("email")
     for data in app.current_event.json_body:
         meeting = "#".join(

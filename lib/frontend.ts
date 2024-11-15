@@ -215,12 +215,12 @@ export default class FrontendStack extends Stack {
             webAclArn: rest_api_web_acl.attrArn
         });
 
-        const website_assets = new s3_assets.Asset(this, 'DockerfileAsset', {
+        const website_assets = new s3_assets.Asset(this, 'website_assets', {
             path: './src/frontend',
             exclude: ['build', 'node_modules']
         });
 
-        const buildProject = new codebuild.Project(this, 'BuildProject', {
+        const build_project = new codebuild.Project(this, 'build_project', {
             source: codebuild.Source.s3({
                 bucket: website_assets.bucket,
                 path: website_assets.s3ObjectKey,
@@ -258,7 +258,7 @@ export default class FrontendStack extends Stack {
                 computeType: codebuild.ComputeType.SMALL,
             },
         });
-        buildProject.addToRolePolicy(new iam.PolicyStatement({
+        build_project.addToRolePolicy(new iam.PolicyStatement({
             actions: [
                 's3:PutObject',
                 's3:ListBucket',
@@ -268,7 +268,7 @@ export default class FrontendStack extends Stack {
                 `${website_bucket.bucketArn}/*`
             ],
         }));
-        buildProject.addToRolePolicy(new iam.PolicyStatement({
+        build_project.addToRolePolicy(new iam.PolicyStatement({
             actions: [
                 'cloudfront:CreateInvalidation'
             ],
@@ -282,7 +282,7 @@ export default class FrontendStack extends Stack {
                 service: 'CodeBuild',
                 action: 'startBuild',
                 parameters: {
-                    projectName: buildProject.projectName,
+                    projectName: build_project.projectName,
                 },
                 physicalResourceId: custom_resources.PhysicalResourceId.of(Date.now().toString()),
             },
@@ -290,12 +290,12 @@ export default class FrontendStack extends Stack {
                 service: 'CodeBuild',
                 action: 'startBuild',
                 parameters: {
-                    projectName: buildProject.projectName,
+                    projectName: build_project.projectName,
                 },
                 physicalResourceId: custom_resources.PhysicalResourceId.of(Date.now().toString()),
             },
             policy: custom_resources.AwsCustomResourcePolicy.fromSdkCalls({
-                resources: [buildProject.projectArn],
+                resources: [build_project.projectArn],
             }),
         });
 
