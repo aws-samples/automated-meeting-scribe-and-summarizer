@@ -8,9 +8,10 @@ type Body = FlashbarItem & {
 
 export const apiCall = async (endpoint: string, method: string, body?: any): Promise<Body> => {
     try {
+        const config = await (await fetch('./config.json')).json();
         const id_token = (await fetchAuthSession()).tokens?.idToken;
 
-        const response = await fetch(`${process.env.REACT_APP_REST_API_ENDPOINT!}${endpoint}`, {
+        const response = await fetch(`${config.restApiUrl}${endpoint}`, {
             credentials: 'include',
             method: method,
             body: body ? JSON.stringify(body) : undefined,

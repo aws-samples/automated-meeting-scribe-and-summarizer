@@ -186,6 +186,8 @@ dist-ssr
 *.sw?
 .env
 
+config.json
+
 # CDK asset staging directory
 .cdk.staging
 cdk.out

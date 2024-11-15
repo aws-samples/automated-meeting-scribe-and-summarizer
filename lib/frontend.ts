@@ -14,9 +14,7 @@ import {
     aws_apigateway as apigateway,
     aws_logs as logs,
     aws_wafv2 as waf,
-    aws_s3_assets as s3_assets,
-    aws_codebuild as codebuild,
-    custom_resources,
+    aws_s3_deployment as s3_deployment,
     CfnOutput,
 } from "aws-cdk-lib";
 import { Construct } from 'constructs';
@@ -215,89 +213,32 @@ export default class FrontendStack extends Stack {
             webAclArn: rest_api_web_acl.attrArn
         });
 
-        const website_assets = new s3_assets.Asset(this, 'website_assets', {
-            path: './src/frontend',
-            exclude: ['build', 'node_modules']
+        const website_bundle = s3_deployment.Source.asset('./src/frontend', {
+            exclude: ['build', 'node_modules', 'config.json'],
+            bundling: {
+                image: lambda.Runtime.NODEJS_20_X.bundlingImage,
+                command: [
+                    'sh',
+                    '-c',
+                    'npm install && npm run build && cp -r build/* /asset-output/'
+                ],
+            },
         });
 
-        const build_project = new codebuild.Project(this, 'build_project', {
-            source: codebuild.Source.s3({
-                bucket: website_assets.bucket,
-                path: website_assets.s3ObjectKey,
-            }),
-            buildSpec: codebuild.BuildSpec.fromObject({
-                version: '0.2',
-                phases: {
-                    install: {
-                        commands: [
-                            'npm install',
-                        ]
-                    },
-                    pre_build: {
-                        commands: [
-                            `echo "REACT_APP_USER_POOL_ID=${user_pool.userPoolId}" >> .env`,
-                            `echo "REACT_APP_USER_POOL_CLIENT_ID=${user_pool_client.userPoolClientId}" >> .env`,
-                            `echo "REACT_APP_REST_API_ENDPOINT=${rest_api.url}" >> .env`,
-                        ],
-                    },
-                    build: {
-                        commands: [
-                            'npm run build',
-                        ],
-                    },
-                    post_build: {
-                        commands: [
-                            `aws s3 cp build/ s3://${website_bucket.bucketName} --recursive`,
-                            `aws cloudfront create-invalidation --distribution-id ${distribution.distributionId} --paths "/*"`,
-                        ],
-                    },
-                },
-            }),
-            environment: {
-                buildImage: codebuild.LinuxBuildImage.AMAZON_LINUX_2_5,
-                computeType: codebuild.ComputeType.SMALL,
-            },
-        });
-        build_project.addToRolePolicy(new iam.PolicyStatement({
-            actions: [
-                's3:PutObject',
-                's3:ListBucket',
-            ],
-            resources: [
-                website_bucket.bucketArn,
-                `${website_bucket.bucketArn}/*`
-            ],
-        }));
-        build_project.addToRolePolicy(new iam.PolicyStatement({
-            actions: [
-                'cloudfront:CreateInvalidation'
-            ],
-            resources: [
-                `arn:aws:cloudfront::${this.account}:distribution/${distribution.distributionId}`
-            ],
-        }));
+        const config = {
+            userPoolId: user_pool.userPoolId,
+            userPoolClientId: user_pool_client.userPoolClientId,
+            restApiUrl: rest_api.url
+        };
 
-        new custom_resources.AwsCustomResource(this, 'StartBuild', {
-            onCreate: {
-                service: 'CodeBuild',
-                action: 'startBuild',
-                parameters: {
-                    projectName: build_project.projectName,
-                },
-                physicalResourceId: custom_resources.PhysicalResourceId.of(Date.now().toString()),
-            },
-            onUpdate: {
-                service: 'CodeBuild',
-                action: 'startBuild',
-                parameters: {
-                    projectName: build_project.projectName,
-                },
-                physicalResourceId: custom_resources.PhysicalResourceId.of(Date.now().toString()),
-            },
-            policy: custom_resources.AwsCustomResourcePolicy.fromSdkCalls({
-                resources: [build_project.projectArn],
-            }),
-        });
+        new s3_deployment.BucketDeployment(this, 'website_deployment', {
+            sources: [
+                website_bundle,
+                s3_deployment.Source.jsonData('config.json', config)
+            ],
+            destinationBucket: website_bucket,
+            distribution: distribution,
+        })
 
         new CfnOutput(this, 'email', {
             value: props.email,

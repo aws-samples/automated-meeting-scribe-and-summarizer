@@ -15,14 +15,16 @@ import { FlashbarProvider } from './components/notifications';
 import CreateInvite from "./pages/create";
 import ListInvites from "./pages/list";
 
+const config = await (await fetch('./config.json')).json();
+
 Amplify.configure({
     Auth: {
         Cognito: {
-            userPoolId: process.env.REACT_APP_USER_POOL_ID!,
-            userPoolClientId: process.env.REACT_APP_USER_POOL_CLIENT_ID!
+            userPoolId: config.userPoolId,
+            userPoolClientId: config.userPoolClientId
         }
     }
-})
+});
 
 export default function App() {
 
