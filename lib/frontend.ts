@@ -214,13 +214,13 @@ export default class FrontendStack extends Stack {
         });
 
         const website_bundle = s3_deployment.Source.asset('./src/frontend', {
-            exclude: ['build', 'node_modules', 'config.json'],
+            // exclude: ['dist', 'node_modules', 'config.json'],
             bundling: {
                 image: lambda.Runtime.NODEJS_20_X.bundlingImage,
                 command: [
                     'sh',
                     '-c',
-                    'npm install && npm run build && cp -r build/* /asset-output/'
+                    'npm install && npm run build && cp -r dist/* /asset-output/'
                 ],
             },
         });
