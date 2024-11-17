@@ -21,7 +21,7 @@ export default class DataStack extends Stack {
             type: 'String',
             description: 'This address is used to send meeting transcripts, summaries, action items, etc.',
             allowedPattern: '^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}$',
-            default: 'kppinker@amazon.com'
+            default: this.node.tryGetContext('email')
         });
 
         new ses.EmailIdentity(this, 'identity', {

@@ -17,7 +17,7 @@ app = APIGatewayRestResolver(
     )
 )
 table = boto3.resource("dynamodb").Table(os.environ["TABLE_NAME"])
-expiration_seconds = 2592000  # 30 days
+expiration_seconds = 60 * 5  # 5 minutes
 
 
 @app.post("/post-invite")

@@ -11,4 +11,4 @@ RUN playwright install --with-deps chromium
 RUN apt install ffmpeg -y
 RUN apt install pulseaudio -y
 
-ENTRYPOINT ["python", "/srv/src/meeting.py"]
+ENTRYPOINT ["python", "/srv/meeting.py"]

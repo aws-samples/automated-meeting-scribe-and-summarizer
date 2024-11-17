@@ -1,81 +1,71 @@
 
 # Automated Meeting Scribe and Summarizer
 
-Using this application's website, you can invite an AI-assisted scribe to your upcoming Amazon Chime or Webex meeting(s) to get a follow-up email with the speaker list, chat history, attachments, and transcript, as well as a summary and action items. You don't even need to be present in a meeting for your invited scribe to join. Each scribe is linked to your email for identification. The scribe also redacts sensitive personally identifiable information (PII) by default. All processing, from transcription to summarization, is done within the account that the CDK is deployed to.
+Using this application's website, you can invite an AI-assisted scribe to your upcoming Amazon Chime or Webex meeting(s) to get a follow-up email with the speaker list, chat history, attachments, and transcript, as well as a summary and action items. You don't even need to be present in a meeting for an invited scribe to join. Each scribe is linked to your email for identification. The scribe redacts sensitive personally identifiable information (PII) by default. And, all processing, from transcription to summarization, is done within the AWS account that the CDK is deployed to.
 
 ## Architecture
 
 ![Architecture Diagram](architecture.png)
 
 ### Application Resources
-- The static website is hosted in S3 and served using Amazon CloudFront. 
-- Web authentication is provided by AWS Amplify Authentication, powered by Amazon Cognito.
-- AWS Web Application Firewall (WAF) also protects the Amazon CloudFront distribution and API Gateway*.
-- An Amazon Lambda proxy integration in API Gateway is used to create, list, and delete meeting invites in Amazon DynamoDB. 
-- DynamoDB Streams triggers another Lambda that runs an Amazon Elastic Container Service (ECS) task or schedules it through Amazon EventBridge Scheduler based on the meeting time.
+- The static website is hosted in Amazon S3 and served using Amazon CloudFront.
+- Web authentication is handled by Amazon Cognito through AWS Amplify Authentication.
+- AWS Web Application Firewall (WAF) protects both the Amazon CloudFront distribution and API Gateway*.
+- An Amazon API Gateway Lambda proxy integration is used to create, list, and delete meeting invites in Amazon DynamoDB.
+- DynamoDB Streams triggers another AWS Lambda that runs an Amazon Elastic Container Service (ECS) task or schedules it through Amazon EventBridge Scheduler based on the meeting time.
 - The ECS application uses Playwright to join the meeting from a Chromium browser then monitor attendees and messages. Amazon Transcribe is used to convert speech to text, generating a transcript. Amazon Comprehend is then used to detect/redact PII before Anthropic Claude on Amazon Bedrock generates summaries from the redacted transcript. The summary and action items, along with the other meeting details, are emailed using Amazon Simple Email Service (SES).
 
-<br>\* This application uses the following AWS-managed WAF rules on each Web ACL: AWSManagedRulesAmazonIpReputationList, AWSManagedRulesCommonRuleSet, and AWSManagedRulesKnownBadInputsRuleSet. If you would like to add additional rules, you can do so in the [WAF console](https://us-east-1.console.aws.amazon.com/wafv2/homev2?region=us-east-1#/).<br />
+<br>\* This application uses the following AWS-managed WAF rules on each Web ACL: AWSManagedRulesAmazonIpReputationList, AWSManagedRulesCommonRuleSet, and AWSManagedRulesKnownBadInputsRuleSet. If you would like to add additional rules, you can do so in the [WAF console](https://console.aws.amazon.com/wafv2/homev2).<br />
 
 ## Getting Started
 
 ### Prerequisites
-To interact with Claude 3 Sonnet on Bedrock, you need to [request access to the model in US East (North Virginia)](https://console.aws.amazon.com/bedrock/home?#/modelaccess)*. Make sure to read and accept the end-user license agreements or EULA.
+- Install [Docker](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-docker.html#install-docker-instructions) and the [AWS CDK CLI](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html#getting_started_install) then complete the [prerequisites for CDK deployments](https://docs.aws.amazon.com/cdk/v2/guide/deploy.html#deploy-prerequisites)**.
+- To interact with Claude 3 Sonnet on Bedrock, you need to [request access to the model](https://console.aws.amazon.com/bedrock/home?#/modelaccess). Make sure to read and accept the end-user license agreements or EULA.
 
 ### Deployment
-- Per [guidance for workload isolation on AWS](https://aws.amazon.com/solutions/guidance/workload-isolation-on-aws/), it is recommended that you deploy the CDK application in its own AWS account.
-- Clone the entire repository with `git clone https://github.com/aws-samples/automated-meeting-scribe-and-summarizer.git`.
-- [Deploy the CDK application](https://docs.aws.amazon.com/cdk/v2/guide/deploy.html). 
+- Open a terminal and set the working directory to the location where you want to clone this repository. Clone the repository using the command `git clone https://github.com/aws-samples/automated-meeting-scribe-and-summarizer.git`.
+- Provide a [context value](https://docs.aws.amazon.com/cdk/v2/guide/context.html) for the [email](lib/base.ts) paramater.
+- [Deploy the CDK application](https://docs.aws.amazon.com/cdk/v2/guide/deploy.html#deploy-how-deploy)**.
+
+<br>\** Per the [guidance for workload isolation on AWS](https://aws.amazon.com/solutions/guidance/workload-isolation-on-aws/), it is recommended that you deploy the CDK application in its own AWS account.<br />
 
 ### Email Verification
 - Open the inbox of the email you entered. You can expect to receive two emails:
-    - Email Address Verification Request in region US East (N. Virginia)
+    - Email Address Verification Request in region...
         - Click the provided URL to authorize use of the email address.
     - Your temporary password
         - The username and temporary password can be used to log in to the website.
 - Optionally, you can [request to move out of the SES sandbox](https://docs.aws.amazon.com/ses/latest/dg/request-production-access.html) to email new users without additional verification.
 
 ### Accessing the Website
-- Open the [CloudFormation console](https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/).
-- Once the frontend stack shows *CREATE_COMPLETE* status, click **Outputs**. 
-- Click on the CloudFront URL to open the website. 
+- Once your deployment completes, you can find the CloudFront URL as an output in the terminal, or you can open the [CloudFormation console](https://console.aws.amazon.com/cloudformation/home) then click **FrontendStack** followed by **Outputs**.
+- Open the CloudFront URL in your browser to access the website.
 - Enter your username and password or create a new account.
     - Change your password and/or verify your email as needed.
 
 ### Using the Website
-- To invite a scribe to your upcoming meeting, enter the **Meeting Name**, **Meeting ID**, and, optionally, the **Meeting Password** and/or **Meeting Time**.
-- Click **Invite Now** to invite the scribe to join as soon as possible, or click **Invite Later** to schedule the scribe.
-- To delete an invite for an upcoming meeting, select the invite then click **Delete**.
+- To invite a scribe to your upcoming meeting click **Create Invite**. Enter the **Meeting Name**, **Meeting ID**, and, optionally, the **Meeting Password** and/or **Meeting Time**. Select the checkbox, then click **Invite Now** to invite the scribe to join as soon as possible or click **Invite Later** to schedule the scribe.
+- To view upcoming meetings, click **List Invites**. To delete an invite for an upcoming meeting, select the invite then click **Delete**.
 - To log out, click **Logout**.
 
 ### Using the Meeting Platform
 - At the specified meeting time, your scribe will join the meeting's waiting room.
     - It will wait for up to five minutes in the waiting room.
-- Verify the scribe's linked email then admit it into the meeting.
-- Once admitted, the scribe will introduce itself in the chat.
+- Verify your scribe's name then admit it into the meeting. Do not admit a scribe you can't verify.
+- Once admitted, the scribe will introduce itself in the chat and list the users it was invited by. 
 - At any point thereafter, you can send the scribe command messages in the chat: 
     - "START" will start saving attendance, new messages and machine-generated captions.
     - "PAUSE" will stop saving meeting details.
-    - "END" will remove the scribe from the meeting.
+    - "END" will remove the scribe from the meeting. If you do not approve of a user, you can remove their scribe from the meeting using this command alone.
 - After the meeting ends, if the start message was sent in the chat, you should receive a follow-up email with the meeting details.
 
-<br>\* The application stack will not deploy outside US East (North Virginia) because, to use an Amazon Certificate Manager (ACM) certificate with CloudFront, the certificate must be requested in that region.<br />
-
 ## Clean-up
-- Open the [CloudFormation console](https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks).
-- Select the stacks you created then click **Delete** twice.
-- Open the [SES console](https://us-east-1.console.aws.amazon.com/ses/home?region=us-east-1#/identities).
-- Select unused identities then click **Delete** followed by **Confirm**.
+- Use [`cdk destroy`](https://docs.aws.amazon.com/cdk/v2/guide/ref-cli-cmd-destroy.html), or open the [CloudFormation console](https://console.aws.amazon.com/cloudformation/home) then select each stack you created and click **Delete** twice.
+- Open the [SES console](https://console.aws.amazon.com/ses/home?#/identities), select unused identities, then click **Delete** followed by **Confirm**.
 
 ## Security
 See the [CONTRIBUTING](CONTRIBUTING) file for more information.
 
 ## License
 This repository is licensed under the MIT-0 License. See the [LICENSE](LICENSE) file.
-
-## Contributors
-- Kevin Pinkerton
-- Lawton Pittenger
-- Eashan Kaushik
-- Chase Pinkerton
-- Romi Asad
