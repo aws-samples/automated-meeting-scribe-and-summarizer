@@ -45,10 +45,10 @@ export default class BackendStack extends Stack {
                 },
             ],
             flowLogs: {
-                'flow_log': {
+                'flowLog': {
                     trafficType: ec2.FlowLogTrafficType.ALL,
                     destination: ec2.FlowLogDestination.toCloudWatchLogs(
-                        new logs.LogGroup(this, 'flow_log_group', {
+                        new logs.LogGroup(this, 'flowLogGroup', {
                             removalPolicy: RemovalPolicy.DESTROY,
                             retention: logs.RetentionDays.FIVE_DAYS
                         })
@@ -56,23 +56,23 @@ export default class BackendStack extends Stack {
                 }
             }
         });
-        vpc.addInterfaceEndpoint('ecr_docker_endpoint', {
+        vpc.addInterfaceEndpoint('ecrDockerEndpoint', {
             service: ec2.InterfaceVpcEndpointAwsService.ECR_DOCKER,
         });
-        vpc.addGatewayEndpoint('dynamodb_endpoint', {
+        vpc.addGatewayEndpoint('dynamodbEndpoint', {
             service: ec2.GatewayVpcEndpointAwsService.DYNAMODB,
         });
-        vpc.addInterfaceEndpoint('transcribe_endpoint', {
+        vpc.addInterfaceEndpoint('transcribeEndpoint', {
             service: ec2.InterfaceVpcEndpointAwsService.TRANSCRIBE_STREAMING,
         });
-        vpc.addInterfaceEndpoint('comprehend_endpoint', {
+        vpc.addInterfaceEndpoint('comprehendEndpoint', {
             service: ec2.InterfaceVpcEndpointAwsService.COMPREHEND,
         });
-        vpc.addInterfaceEndpoint('bedrock_runtime_endpoint', {
+        vpc.addInterfaceEndpoint('bedrockRuntimeEndpoint', {
             service: ec2.InterfaceVpcEndpointAwsService.BEDROCK_RUNTIME,
         });
 
-        const security_group = new ec2.SecurityGroup(this, 'security_group', {
+        const securityGroup = new ec2.SecurityGroup(this, 'securityGroup', {
             vpc: vpc,
             allowAllOutbound: true,
         });
@@ -82,45 +82,45 @@ export default class BackendStack extends Stack {
             containerInsights: true,
         });
 
-        const task_role = new iam.Role(this, 'task_role', {
+        const taskRole = new iam.Role(this, 'taskRole', {
             assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com'),
         });
-        props.table.grantReadWriteData(task_role)
-        task_role.addToPolicy(new iam.PolicyStatement({
+        props.table.grantReadWriteData(taskRole)
+        taskRole.addToPolicy(new iam.PolicyStatement({
             effect: iam.Effect.ALLOW,
             actions: ['transcribe:*'],
             resources: ['*'],
         }));
-        task_role.addToPolicy(new iam.PolicyStatement({
+        taskRole.addToPolicy(new iam.PolicyStatement({
             effect: iam.Effect.ALLOW,
             actions: ['comprehend:DetectPiiEntities'],
             resources: ['*'],
         }));
-        task_role.addToPolicy(new iam.PolicyStatement({
+        taskRole.addToPolicy(new iam.PolicyStatement({
             effect: iam.Effect.ALLOW,
             actions: ['bedrock:InvokeModel'],
             resources: [`arn:aws:bedrock:${this.region}::foundation-model/anthropic.*`],
         }));
-        task_role.addToPolicy(new iam.PolicyStatement({
+        taskRole.addToPolicy(new iam.PolicyStatement({
             effect: iam.Effect.ALLOW,
             actions: ['ses:SendRawEmail'],
             resources: ['*'],
         }));
 
-        const task_definition = new ecs.FargateTaskDefinition(this, 'task_definition', {
+        const taskDefinition = new ecs.FargateTaskDefinition(this, 'taskDefinition', {
             cpu: 1024,
             memoryLimitMiB: 4096,
             runtimePlatform: {
                 cpuArchitecture: ecs.CpuArchitecture.ARM64,
                 operatingSystemFamily: ecs.OperatingSystemFamily.LINUX,
             },
-            taskRole: task_role,
+            taskRole: taskRole,
         });
 
-        const container_id = 'container'
-        task_definition.addContainer(container_id, {
+        const containerId = 'container'
+        taskDefinition.addContainer(containerId, {
             image: ecs.ContainerImage.fromDockerImageAsset(
-                new ecr_assets.DockerImageAsset(this, 'docker_image_asset', {
+                new ecr_assets.DockerImageAsset(this, 'dockerImageAsset', {
                     directory: './src/backend/task',
                     platform: ecr_assets.Platform.LINUX_ARM64,
                 })
@@ -132,15 +132,15 @@ export default class BackendStack extends Stack {
             }),
         });
 
-        const meeting_schedule_group = new scheduler.CfnScheduleGroup(this, 'meeting_schedule_group', {});
+        const meetingScheduleGroup = new scheduler.CfnScheduleGroup(this, 'meetingScheduleGroup', {});
 
-        const eventbridge_scheduler_role = new iam.Role(this, 'eventbridge_scheduler_role', {
+        const eventbridgeSchedulerRole = new iam.Role(this, 'eventbridgeSchedulerRole', {
             assumedBy: new iam.CompositePrincipal(
                 new iam.ServicePrincipal('scheduler.amazonaws.com'),
                 new iam.ServicePrincipal('events.amazonaws.com')
             )
         });
-        eventbridge_scheduler_role.addToPolicy(new iam.PolicyStatement({
+        eventbridgeSchedulerRole.addToPolicy(new iam.PolicyStatement({
             effect: iam.Effect.ALLOW,
             actions: ['ecs:TagResource'],
             resources: ['*'],
@@ -150,16 +150,16 @@ export default class BackendStack extends Stack {
                 }
             }
         }));
-        task_definition.grantRun(eventbridge_scheduler_role)
+        taskDefinition.grantRun(eventbridgeSchedulerRole)
 
-        const lambda_scheduler_role = new iam.Role(this, 'lambda_scheduler_role', {
+        const lambdaSchedulerRole = new iam.Role(this, 'lambdaSchedulerRole', {
             assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
             managedPolicies: [
                 iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole')
             ]
         });
-        props.table.grantStreamRead(lambda_scheduler_role)
-        lambda_scheduler_role.addToPolicy(new iam.PolicyStatement({
+        props.table.grantStreamRead(lambdaSchedulerRole)
+        lambdaSchedulerRole.addToPolicy(new iam.PolicyStatement({
             effect: iam.Effect.ALLOW,
             actions: [
                 'scheduler:CreateSchedule',
@@ -168,46 +168,46 @@ export default class BackendStack extends Stack {
                 'scheduler:ListSchedules',
                 'scheduler:DescribeSchedule'
             ],
-            resources: [`arn:aws:scheduler:*:*:schedule/${meeting_schedule_group.ref}/*`]
+            resources: [`arn:aws:scheduler:*:*:schedule/${meetingScheduleGroup.ref}/*`]
         }));
-        lambda_scheduler_role.addToPolicy(new iam.PolicyStatement({
+        lambdaSchedulerRole.addToPolicy(new iam.PolicyStatement({
             effect: iam.Effect.ALLOW,
             actions: [
                 "iam:PassRole"
             ],
-            resources: [eventbridge_scheduler_role.roleArn],
+            resources: [eventbridgeSchedulerRole.roleArn],
             conditions: {
                 StringLike: {
                     "iam:PassedToService": "scheduler.amazonaws.com"
                 }
             }
         }));
-        task_definition.grantRun(lambda_scheduler_role)
+        taskDefinition.grantRun(lambdaSchedulerRole)
 
-        const scheduler_function = new lambda.Function(this, 'scheduler_function', {
+        const schedulerFunction = new lambda.Function(this, 'schedulerFunction', {
             runtime: lambda.Runtime.PYTHON_3_12,
             architecture: lambda.Architecture.ARM_64,
             handler: 'scheduler.handler',
-            role: lambda_scheduler_role,
+            role: lambdaSchedulerRole,
             timeout: Duration.minutes(2),
             code: lambda.Code.fromAsset('./src/backend/functions'),
             environment: {
-                TASK_DEFINITION_ARN: task_definition.taskDefinitionArn,
+                TASK_DEFINITION_ARN: taskDefinition.taskDefinitionArn,
                 ECS_CLUSTER_ARN: cluster.clusterArn,
-                SECURITY_GROUPS: JSON.stringify([security_group.securityGroupId]),
+                SECURITY_GROUPS: JSON.stringify([securityGroup.securityGroupId]),
                 SUBNETS: JSON.stringify(vpc.privateSubnets.map(subnet => subnet.subnetId)),
-                CONTAINER_ID: container_id,
+                CONTAINER_ID: containerId,
                 TABLE_NAME: props.table.tableName,
                 MEETING_INDEX: props.index,
                 EMAIL_SOURCE: props.email,
                 // VOCABULARY_NAME: 'lingo',
-                SCHEDULE_GROUP: meeting_schedule_group.ref,
-                SCHEDULER_ROLE_ARN: eventbridge_scheduler_role.roleArn,
+                SCHEDULE_GROUP: meetingScheduleGroup.ref,
+                SCHEDULER_ROLE_ARN: eventbridgeSchedulerRole.roleArn,
             },
             logRetention: logs.RetentionDays.FIVE_DAYS
         });
 
-        scheduler_function.addEventSource(
+        schedulerFunction.addEventSource(
             new lambda_event_sources.DynamoEventSource(props.table, {
                 startingPosition: lambda.StartingPosition.LATEST,
                 retryAttempts: 3,

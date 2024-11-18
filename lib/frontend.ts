@@ -21,7 +21,7 @@ import { Construct } from 'constructs';
 import { execSync } from 'child_process';
 
 interface FrontendStackProps extends StackProps {
-    logging_bucket: s3.Bucket;
+    loggingBucket: s3.Bucket;
     email: string;
     table: dynamodb.TableV2;
 }
@@ -30,12 +30,12 @@ export default class FrontendStack extends Stack {
     constructor(scope: Construct, id: string, props: FrontendStackProps) {
         super(scope, id, props);
 
-        const website_bucket = new s3.Bucket(this, 'website_bucket', {
+        const websiteBucket = new s3.Bucket(this, 'websiteBucket', {
             autoDeleteObjects: true,
             removalPolicy: RemovalPolicy.DESTROY,
             blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
             enforceSSL: true,
-            serverAccessLogsBucket: props.logging_bucket,
+            serverAccessLogsBucket: props.loggingBucket,
             serverAccessLogsPrefix: 'website'
         });
 
@@ -63,11 +63,11 @@ export default class FrontendStack extends Stack {
             }
         }
 
-        const distribution_web_acl = new waf.CfnWebACL(this, 'distribution_web_acl', {
+        const distributionWebAcl = new waf.CfnWebACL(this, 'distributionWebAcl', {
             defaultAction: { allow: {} },
             scope: 'CLOUDFRONT',
             visibilityConfig: {
-                metricName: 'distribution_web_acl',
+                metricName: 'distributionWebAcl',
                 sampledRequestsEnabled: true,
                 cloudWatchMetricsEnabled: true,
             },
@@ -81,7 +81,7 @@ export default class FrontendStack extends Stack {
         const distribution = new cloudfront.Distribution(this, 'distribution', {
             defaultRootObject: 'index.html',
             defaultBehavior: {
-                origin: cloudfront_origins.S3BucketOrigin.withOriginAccessControl(website_bucket),
+                origin: cloudfront_origins.S3BucketOrigin.withOriginAccessControl(websiteBucket),
                 viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
                 allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
             },
@@ -97,13 +97,13 @@ export default class FrontendStack extends Stack {
                     responseHttpStatus: 200,
                 }
             ],
-            webAclId: distribution_web_acl.attrArn,
-            logBucket: props.logging_bucket,
+            webAclId: distributionWebAcl.attrArn,
+            logBucket: props.loggingBucket,
             logIncludesCookies: true,
             logFilePrefix: 'distribution',
         });
 
-        const post_confirmation_lambda = new lambda.Function(this, 'post_confirmation_lambda', {
+        const postConfirmationLambda = new lambda.Function(this, 'postConfirmationLambda', {
             runtime: lambda.Runtime.PYTHON_3_12,
             architecture: lambda.Architecture.ARM_64,
             timeout: Duration.minutes(2),
@@ -118,7 +118,7 @@ export default class FrontendStack extends Stack {
             ]
         });
 
-        const user_pool = new cognito.UserPool(this, 'user_pool', {
+        const userPool = new cognito.UserPool(this, 'userPool', {
             removalPolicy: RemovalPolicy.DESTROY,
             selfSignUpEnabled: true,
             signInAliases: { email: true },
@@ -138,12 +138,12 @@ export default class FrontendStack extends Stack {
             accountRecovery: cognito.AccountRecovery.EMAIL_ONLY,
             advancedSecurityMode: cognito.AdvancedSecurityMode.ENFORCED,
             lambdaTriggers: {
-                postConfirmation: post_confirmation_lambda
+                postConfirmation: postConfirmationLambda
             }
         });
 
-        const user_pool_client = new cognito.UserPoolClient(this, 'user_pool_client', {
-            userPool: user_pool,
+        const userPoolClient = new cognito.UserPoolClient(this, 'userPoolClient', {
+            userPool: userPool,
             preventUserExistenceErrors: true,
             authFlows: {
                 userPassword: true,
@@ -151,8 +151,8 @@ export default class FrontendStack extends Stack {
             },
         });
 
-        new cognito.CfnUserPoolUser(this, 'user_pool_user', {
-            userPoolId: user_pool.userPoolId,
+        new cognito.CfnUserPoolUser(this, 'userPoolUser', {
+            userPoolId: userPool.userPoolId,
             username: props.email,
         })
 
@@ -161,7 +161,7 @@ export default class FrontendStack extends Stack {
             'http://localhost:3000'
         ];
 
-        const proxy_function = new lambda.Function(this, 'proxy_function', {
+        const proxyFunction = new lambda.Function(this, 'proxyFunction', {
             runtime: lambda.Runtime.PYTHON_3_12,
             architecture: lambda.Architecture.ARM_64,
             handler: 'proxy.handler',
@@ -181,15 +181,15 @@ export default class FrontendStack extends Stack {
             logRetention: logs.RetentionDays.FIVE_DAYS,
         });
 
-        props.table.grantReadWriteData(proxy_function)
+        props.table.grantReadWriteData(proxyFunction)
 
-        const rest_api = new apigateway.LambdaRestApi(this, 'rest_api', {
-            handler: proxy_function,
+        const restApi = new apigateway.LambdaRestApi(this, 'restApi', {
+            handler: proxyFunction,
             proxy: true,
             defaultMethodOptions: {
                 authorizationType: apigateway.AuthorizationType.COGNITO,
                 authorizer: new apigateway.CognitoUserPoolsAuthorizer(this, 'authorizer', {
-                    cognitoUserPools: [user_pool]
+                    cognitoUserPools: [userPool]
                 }),
             },
             defaultCorsPreflightOptions: {
@@ -200,7 +200,7 @@ export default class FrontendStack extends Stack {
             },
             deployOptions: {
                 accessLogDestination: new apigateway.LogGroupLogDestination(
-                    new logs.LogGroup(this, 'rest_api_log_group', {
+                    new logs.LogGroup(this, 'restApiLogGroup', {
                         removalPolicy: RemovalPolicy.DESTROY,
                         retention: logs.RetentionDays.FIVE_DAYS,
                     })
@@ -209,11 +209,11 @@ export default class FrontendStack extends Stack {
             },
         });
 
-        const rest_api_web_acl = new waf.CfnWebACL(this, 'rest_api_web_acl', {
+        const restApiWebAcl = new waf.CfnWebACL(this, 'restApiWebAcl', {
             defaultAction: { allow: {} },
             scope: 'REGIONAL',
             visibilityConfig: {
-                metricName: 'rest_api_web_acl',
+                metricName: 'restApiWebAcl',
                 sampledRequestsEnabled: true,
                 cloudWatchMetricsEnabled: true,
             },
@@ -224,22 +224,22 @@ export default class FrontendStack extends Stack {
             ]
         });
 
-        new waf.CfnWebACLAssociation(this, 'rest_api_web_acl_association', {
-            resourceArn: rest_api.deploymentStage.stageArn,
-            webAclArn: rest_api_web_acl.attrArn
+        new waf.CfnWebACLAssociation(this, 'restApiWebAclAssociation', {
+            resourceArn: restApi.deploymentStage.stageArn,
+            webAclArn: restApiWebAcl.attrArn
         });
 
-        const website_path = './src/frontend'
-        const website_bundle = s3_deployment.Source.asset(website_path, {
+        const websitePath = './src/frontend'
+        const websiteBundle = s3_deployment.Source.asset(websitePath, {
             bundling: {
                 image: lambda.Runtime.NODEJS_20_X.bundlingImage,
                 local: {
-                    tryBundle(output_directory: string) {
+                    tryBundle(outputDirectory: string) {
                         execSync([
-                            `cd ${website_path}`,
+                            `cd ${websitePath}`,
                             'npm install',
                             'npm run build',
-                            `cp -r dist/* ${output_directory}/`
+                            `cp -r dist/* ${outputDirectory}/`
                         ].join(' && '));
                         return true;
                     }
@@ -248,17 +248,17 @@ export default class FrontendStack extends Stack {
         });
 
         const config = {
-            userPoolId: user_pool.userPoolId,
-            userPoolClientId: user_pool_client.userPoolClientId,
-            restApiUrl: rest_api.url
+            userPoolId: userPool.userPoolId,
+            userPoolClientId: userPoolClient.userPoolClientId,
+            restApiUrl: restApi.url
         };
 
-        new s3_deployment.BucketDeployment(this, 'website_deployment', {
+        new s3_deployment.BucketDeployment(this, 'websiteDeployment', {
             sources: [
-                website_bundle,
+                websiteBundle,
                 s3_deployment.Source.jsonData('config.json', config)
             ],
-            destinationBucket: website_bucket,
+            destinationBucket: websiteBucket,
             distribution: distribution,
         })
 
@@ -271,12 +271,12 @@ export default class FrontendStack extends Stack {
             description: 'CloudFront URL'
         });
 
-        new CfnOutput(this, 'user_pool_id', {
-            value: user_pool.userPoolId,
+        new CfnOutput(this, 'userPoolId', {
+            value: userPool.userPoolId,
         });
 
-        new CfnOutput(this, 'user_pool_client_id', {
-            value: user_pool_client.userPoolClientId,
+        new CfnOutput(this, 'userPoolClientId', {
+            value: userPoolClient.userPoolClientId,
         });
 
     }

@@ -10,8 +10,8 @@ import {
 } from "aws-cdk-lib";
 import { Construct } from 'constructs';
 
-export default class DataStack extends Stack {
-    public readonly logging_bucket: s3.Bucket;
+export default class BaseStack extends Stack {
+    public readonly loggingBucket: s3.Bucket;
     public readonly email: CfnParameter;
     public readonly table: dynamodb.TableV2;
     public readonly index: string;
@@ -19,7 +19,7 @@ export default class DataStack extends Stack {
     constructor(scope: Construct, id: string, props?: StackProps) {
         super(scope, id, props);
 
-        this.logging_bucket = new s3.Bucket(this, 'logging_bucket', {
+        this.loggingBucket = new s3.Bucket(this, 'loggingBucket', {
             autoDeleteObjects: true,
             removalPolicy: RemovalPolicy.DESTROY,
             blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,

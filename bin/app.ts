@@ -8,16 +8,16 @@ import BackendStack from "../lib/backend";
 
 const app = new App();
 
-const base_stack = new BaseStack(app, 'BaseStack', {});
+const baseStack = new BaseStack(app, 'base', {});
 
-new FrontendStack(app, 'FrontendStack', {
-  logging_bucket: base_stack.logging_bucket,
-  email: base_stack.email.valueAsString,
-  table: base_stack.table,
+new FrontendStack(app, 'frontend', {
+  loggingBucket: baseStack.loggingBucket,
+  email: baseStack.email.valueAsString,
+  table: baseStack.table,
 });
 
-new BackendStack(app, 'BackendStack', {
-  email: base_stack.email.valueAsString,
-  table: base_stack.table,
-  index: base_stack.index,
+new BackendStack(app, 'backend', {
+  email: baseStack.email.valueAsString,
+  table: baseStack.table,
+  index: baseStack.index,
 });

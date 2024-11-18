@@ -39,15 +39,17 @@ Using this application's website, you can invite an AI-assisted scribe to your u
 - Optionally, you can [request to move out of the SES sandbox](https://docs.aws.amazon.com/ses/latest/dg/request-production-access.html) to email new users without additional verification.
 
 ### Accessing the Website
-- Once your deployment completes, you can find the CloudFront URL as an output in the terminal, or you can open the [CloudFormation console](https://console.aws.amazon.com/cloudformation/home) then click **FrontendStack** followed by **Outputs**.
+- Once your deployment completes, you can find the CloudFront URL as an output in the terminal, or you can open the [CloudFormation console](https://console.aws.amazon.com/cloudformation/home) then click **frontend** followed by **Outputs**.
 - Open the CloudFront URL in your browser to access the website.
 - Enter your username and password or create a new account.
     - Change your password and/or verify your email as needed.
 
 ### Using the Website
-- To invite a scribe to your upcoming meeting click **Create Invite**. Enter the **Meeting Name**, **Meeting ID**, and, optionally, the **Meeting Password** and/or **Meeting Time**. Select the checkbox, then click **Invite Now** to invite the scribe to join as soon as possible or click **Invite Later** to schedule the scribe.
+- To invite a scribe to your upcoming meeting click **Create Invite**. Enter the **Meeting Name**, **Meeting ID**, and, optionally, the **Meeting Password** and/or **Meeting Time**. Select the checkbox, then click **Invite Now** to invite the scribe to join as soon as possible or click **Invite Later** to schedule the scribe***.
 - To view upcoming meetings, click **List Invites**. To delete an invite for an upcoming meeting, select the invite then click **Delete**.
 - To log out, click **Logout**.
+
+<br>\*** You are responsible for complying with legal, corporate, and ethical restrictions that apply to meeting transcription and summarization.<br />
 
 ### Using the Meeting Platform
 - At the specified meeting time, your scribe will join the meeting's waiting room.
