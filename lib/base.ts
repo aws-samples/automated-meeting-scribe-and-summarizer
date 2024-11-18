@@ -76,7 +76,7 @@ export default class BaseStack extends Stack {
             embeddingsModel: bedrock.BedrockFoundationModel.TITAN_EMBED_TEXT_V2_1024
         });
 
-        const knowledgeSource = new bedrock.S3DataSource(this, 'summary_source', {
+        const knowledgeSource = new bedrock.S3DataSource(this, 'knowledgeSource', {
             bucket: this.knowledgeBucket,
             knowledgeBase: this.knowledgeBase,
             chunkingStrategy: bedrock.ChunkingStrategy.semantic({
@@ -108,7 +108,7 @@ export default class BaseStack extends Stack {
 
         const knowledgeScheduleGroup = new scheduler.CfnScheduleGroup(this, 'knowledgeScheduleGroup', {});
 
-        new scheduler.CfnSchedule(this, 'knowledge_schedule', {
+        new scheduler.CfnSchedule(this, 'knowledgeSchedule', {
             scheduleExpression: 'rate(1 hour)',
             flexibleTimeWindow: {
                 mode: 'OFF'
