@@ -1,6 +1,7 @@
 
 import {
     StackProps,
+    aws_ses as ses,
     aws_dynamodb as dynamodb,
     Stack,
     aws_ec2 as ec2,
@@ -17,7 +18,7 @@ import {
 import { Construct } from 'constructs';
 
 interface BackendStackProps extends StackProps {
-    email: string
+    identity: ses.EmailIdentity;
     table: dynamodb.TableV2;
     index: string;
 }
@@ -101,11 +102,7 @@ export default class BackendStack extends Stack {
             actions: ['bedrock:InvokeModel'],
             resources: [`arn:aws:bedrock:${this.region}::foundation-model/anthropic.*`],
         }));
-        taskRole.addToPolicy(new iam.PolicyStatement({
-            effect: iam.Effect.ALLOW,
-            actions: ['ses:SendRawEmail'],
-            resources: ['*'],
-        }));
+        props.identity.grantSendEmail(taskRole)
 
         const taskDefinition = new ecs.FargateTaskDefinition(this, 'taskDefinition', {
             cpu: 1024,
@@ -199,7 +196,7 @@ export default class BackendStack extends Stack {
                 CONTAINER_ID: containerId,
                 TABLE_NAME: props.table.tableName,
                 MEETING_INDEX: props.index,
-                EMAIL_SOURCE: props.email,
+                EMAIL_SOURCE: props.identity.emailIdentityName,
                 // VOCABULARY_NAME: 'lingo',
                 SCHEDULE_GROUP: meetingScheduleGroup.ref,
                 SCHEDULER_ROLE_ARN: eventbridgeSchedulerRole.roleArn,

@@ -5,6 +5,7 @@ import boto3
 from boto3.dynamodb.conditions import Key
 
 meeting = os.environ["MEETING"]
+# print(meeting)
 meeting_platform, meeting_id, meeting_password, meeting_time = meeting.split("#")
 
 datetime_difference = datetime.fromtimestamp(

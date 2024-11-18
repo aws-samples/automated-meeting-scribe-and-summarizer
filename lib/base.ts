@@ -2,17 +2,17 @@
 import {
     Stack,
     aws_s3 as s3,
-    CfnParameter,
+    aws_ses as ses,
     aws_dynamodb as dynamodb,
     StackProps,
-    aws_ses as ses,
+    CfnParameter,
     RemovalPolicy,
 } from "aws-cdk-lib";
 import { Construct } from 'constructs';
 
 export default class BaseStack extends Stack {
     public readonly loggingBucket: s3.Bucket;
-    public readonly email: CfnParameter;
+    public readonly identity: ses.EmailIdentity;
     public readonly table: dynamodb.TableV2;
     public readonly index: string;
 
@@ -27,15 +27,15 @@ export default class BaseStack extends Stack {
             objectOwnership: s3.ObjectOwnership.BUCKET_OWNER_PREFERRED,
         })
 
-        this.email = new CfnParameter(this, 'email', {
+        const email = new CfnParameter(this, 'email', {
             type: 'String',
             description: 'This address is used to send meeting transcripts, summaries, action items, etc.',
             allowedPattern: '^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}$',
             default: this.node.tryGetContext('email')
         });
 
-        new ses.EmailIdentity(this, 'identity', {
-            identity: ses.Identity.email(this.email.valueAsString),
+        this.identity = new ses.EmailIdentity(this, 'identity', {
+            identity: ses.Identity.email(email.valueAsString),
         });
 
         this.index = 'meeting_index';

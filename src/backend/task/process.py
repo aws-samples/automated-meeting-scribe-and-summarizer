@@ -3,10 +3,10 @@ import boto3
 import os
 import requests
 import re
-import json
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+import copy
 
 logs_message = "Check the CloudWatch logs for more information."
 
@@ -103,18 +103,19 @@ def email(chat, attachments: dict, transcript):
     for email_destination, meeting_name in zip(
         details.email_destinations, details.meeting_names
     ):
-        msg["To"] = email_destination
-        msg["Subject"] = f"{meeting_name} Follow-up"
+        msg_copy = copy.deepcopy(msg)
+        msg_copy["To"] = email_destination
+        msg_copy["Subject"] = f"{meeting_name} Follow-up"
 
         try:
             boto3.client("ses").send_raw_email(
                 Source=os.environ["EMAIL_SOURCE"],
                 Destinations=[email_destination],
                 RawMessage={
-                    "Data": msg.as_string(),
+                    "Data": msg_copy.as_string(),
                 },
             )
-            print("Email sent!")
+            print(f"Email sent to {email_destination}!")
         except Exception as exception:
             print(f"Error while sending email to {email_destination}: {exception}")
 

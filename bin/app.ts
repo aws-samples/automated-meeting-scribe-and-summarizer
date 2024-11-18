@@ -12,12 +12,12 @@ const baseStack = new BaseStack(app, 'base', {});
 
 new FrontendStack(app, 'frontend', {
   loggingBucket: baseStack.loggingBucket,
-  email: baseStack.email.valueAsString,
+  email: baseStack.identity.emailIdentityName,
   table: baseStack.table,
 });
 
 new BackendStack(app, 'backend', {
-  email: baseStack.email.valueAsString,
+  identity: baseStack.identity,
   table: baseStack.table,
   index: baseStack.index,
 });
