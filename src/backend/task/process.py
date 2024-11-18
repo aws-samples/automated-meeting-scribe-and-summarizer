@@ -106,14 +106,17 @@ def email(chat, attachments: dict, transcript):
         msg["To"] = email_destination
         msg["Subject"] = f"{meeting_name} Follow-up"
 
-        boto3.client("ses").send_raw_email(
-            Source=os.environ["EMAIL_SOURCE"],
-            Destinations=[email_destination],
-            RawMessage={
-                "Data": msg.as_string(),
-            },
-        )
-        print("Email sent!")
+        try:
+            boto3.client("ses").send_raw_email(
+                Source=os.environ["EMAIL_SOURCE"],
+                Destinations=[email_destination],
+                RawMessage={
+                    "Data": msg.as_string(),
+                },
+            )
+            print("Email sent!")
+        except Exception as exception:
+            print(f"Error while sending email to {email_destination}: {exception}")
 
 
 def encapsulate():
