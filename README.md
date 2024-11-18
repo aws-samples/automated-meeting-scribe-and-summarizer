@@ -25,10 +25,11 @@ Using this application's website, you can invite an AI-assisted scribe to your u
 
 ### Deployment
 - Open a terminal and set the working directory to the location where you want to clone this repository. Clone the repository using the command `git clone https://github.com/aws-samples/automated-meeting-scribe-and-summarizer.git`.
+- Use the command `npm install` to install the CDK [dependencies](https://docs.aws.amazon.com/cdk/v2/guide/work-with-cdk-typescript.html#work-with-cdk-typescript-dependencies).
 - Provide a [context value](https://docs.aws.amazon.com/cdk/v2/guide/context.html) for the [email](lib/base.ts) paramater.
-- [Deploy the CDK application](https://docs.aws.amazon.com/cdk/v2/guide/deploy.html#deploy-how-deploy) using [`cdk deploy --all`](https://docs.aws.amazon.com/cdk/v2/guide/ref-cli-cmd-deploy.html)**.
+- [Deploy the CDK application](https://docs.aws.amazon.com/cdk/v2/guide/deploy.html#deploy-how-deploy) using a command like [`cdk deploy --all`](https://docs.aws.amazon.com/cdk/v2/guide/ref-cli-cmd-deploy.html)**.
 
-<br>\** Per the [guidance for workload isolation on AWS](https://aws.amazon.com/solutions/guidance/workload-isolation-on-aws/), it is recommended that you deploy the CDK application in its own AWS account.<br />
+<br>\** Per the [guidance for workload isolation on AWS](https://aws.amazon.com/solutions/guidance/workload-isolation-on-aws/), it is recommended that you deploy the CDK application to its own AWS account.<br />
 
 ### Email Verification
 - Open the inbox of the email you entered. You can expect to receive two emails:
