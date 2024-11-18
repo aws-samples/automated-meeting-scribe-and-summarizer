@@ -17,6 +17,7 @@ import {
     aws_s3_deployment as s3_deployment,
     CfnOutput,
 } from "aws-cdk-lib";
+import { bedrock } from "@cdklabs/generative-ai-cdk-constructs";
 import { Construct } from 'constructs';
 import { execSync } from 'child_process';
 
@@ -24,6 +25,7 @@ interface FrontendStackProps extends StackProps {
     loggingBucket: s3.Bucket;
     email: string;
     table: dynamodb.TableV2;
+    knowledgeBase: bedrock.KnowledgeBase;
 }
 
 export default class FrontendStack extends Stack {
@@ -36,7 +38,7 @@ export default class FrontendStack extends Stack {
             blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
             enforceSSL: true,
             serverAccessLogsBucket: props.loggingBucket,
-            serverAccessLogsPrefix: 'website'
+            serverAccessLogsPrefix: 'website/'
         });
 
         function createManagedRule(
@@ -177,11 +179,25 @@ export default class FrontendStack extends Stack {
             environment: {
                 ALLOWED_ORIGINS: JSON.stringify(allowed_origins),
                 TABLE_NAME: props.table.tableName,
+                KNOWLEDGE_BASE_ID: props.knowledgeBase.knowledgeBaseId,
             },
             logRetention: logs.RetentionDays.FIVE_DAYS,
         });
 
         props.table.grantReadWriteData(proxyFunction)
+        proxyFunction.addToRolePolicy(new iam.PolicyStatement({
+            effect: iam.Effect.ALLOW,
+            actions: ['bedrock:InvokeModel'],
+            resources: [`arn:aws:bedrock:${this.region}::foundation-model/anthropic.*`],
+        }));
+        proxyFunction.addToRolePolicy(new iam.PolicyStatement({
+            effect: iam.Effect.ALLOW,
+            actions: [
+                'bedrock:Retrieve',
+                'bedrock:RetrieveAndGenerate',
+            ],
+            resources: [props.knowledgeBase.knowledgeBaseArn],
+        }));
 
         const restApi = new apigateway.LambdaRestApi(this, 'restApi', {
             handler: proxyFunction,

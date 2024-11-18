@@ -3,6 +3,7 @@ import {
     StackProps,
     aws_ses as ses,
     aws_dynamodb as dynamodb,
+    aws_s3 as s3,
     Stack,
     aws_ec2 as ec2,
     aws_logs as logs,
@@ -21,6 +22,7 @@ interface BackendStackProps extends StackProps {
     identity: ses.EmailIdentity;
     table: dynamodb.TableV2;
     index: string;
+    knowledgeBucket: s3.Bucket;
 }
 
 export default class BackendStack extends Stack {
@@ -102,6 +104,7 @@ export default class BackendStack extends Stack {
             actions: ['bedrock:InvokeModel'],
             resources: [`arn:aws:bedrock:${this.region}::foundation-model/anthropic.*`],
         }));
+        props.knowledgeBucket.grantWrite(taskRole)
         props.identity.grantSendEmail(taskRole)
 
         const taskDefinition = new ecs.FargateTaskDefinition(this, 'taskDefinition', {
@@ -198,6 +201,7 @@ export default class BackendStack extends Stack {
                 MEETING_INDEX: props.index,
                 EMAIL_SOURCE: props.identity.emailIdentityName,
                 // VOCABULARY_NAME: 'lingo',
+                KNOWLEDGE_BUCKET: props.knowledgeBucket.bucketName,
                 SCHEDULE_GROUP: meetingScheduleGroup.ref,
                 SCHEDULER_ROLE_ARN: eventbridgeSchedulerRole.roleArn,
             },

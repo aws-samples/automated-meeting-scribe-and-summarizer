@@ -15,6 +15,7 @@ import {
 import { FlashbarProvider } from './components/notifications';
 import CreateInvite from "./pages/create";
 import ListInvites from "./pages/list";
+import QueryMeetings from "./pages/query";
 
 const config = await (await fetch('./config.json')).json();
 Amplify.configure({
@@ -40,6 +41,10 @@ export function App({ signOut, user }: WithAuthenticatorProps) {
         {
             path: "/list",
             element: <ListInvites />
+        },
+        {
+            path: "/query",
+            element: <QueryMeetings />
         },
     ]);
 

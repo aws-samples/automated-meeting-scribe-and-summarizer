@@ -14,10 +14,12 @@ new FrontendStack(app, 'frontend', {
   loggingBucket: baseStack.loggingBucket,
   email: baseStack.identity.emailIdentityName,
   table: baseStack.table,
+  knowledgeBase: baseStack.knowledgeBase,
 });
 
 new BackendStack(app, 'backend', {
   identity: baseStack.identity,
   table: baseStack.table,
   index: baseStack.index,
+  knowledgeBucket: baseStack.knowledgeBucket,
 });

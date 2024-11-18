@@ -5,9 +5,13 @@ import {
     aws_ses as ses,
     aws_dynamodb as dynamodb,
     StackProps,
-    CfnParameter,
     RemovalPolicy,
+    CfnParameter,
+    Duration,
+    aws_iam as iam,
+    aws_scheduler as scheduler,
 } from "aws-cdk-lib";
+import { bedrock } from "@cdklabs/generative-ai-cdk-constructs";
 import { Construct } from 'constructs';
 
 export default class BaseStack extends Stack {
@@ -15,6 +19,8 @@ export default class BaseStack extends Stack {
     public readonly identity: ses.EmailIdentity;
     public readonly table: dynamodb.TableV2;
     public readonly index: string;
+    public readonly knowledgeBucket: s3.Bucket;
+    public readonly knowledgeBase: bedrock.KnowledgeBase;
 
     constructor(scope: Construct, id: string, props?: StackProps) {
         super(scope, id, props);
@@ -53,6 +59,70 @@ export default class BaseStack extends Stack {
             timeToLiveAttribute: 'meeting_expiration',
             dynamoStream: dynamodb.StreamViewType.NEW_IMAGE
         });
+
+        this.knowledgeBucket = new s3.Bucket(this, 'knowledgeBucket', {
+            autoDeleteObjects: true,
+            removalPolicy: RemovalPolicy.DESTROY,
+            blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+            enforceSSL: true,
+            serverAccessLogsBucket: this.loggingBucket,
+            serverAccessLogsPrefix: 'knowledge/',
+            lifecycleRules: [{
+                expiration: Duration.days(30)
+            }]
+        });
+
+        this.knowledgeBase = new bedrock.KnowledgeBase(this, "knowledgeBase", {
+            embeddingsModel: bedrock.BedrockFoundationModel.TITAN_EMBED_TEXT_V2_1024
+        });
+
+        const knowledgeSource = new bedrock.S3DataSource(this, 'summary_source', {
+            bucket: this.knowledgeBucket,
+            knowledgeBase: this.knowledgeBase,
+            chunkingStrategy: bedrock.ChunkingStrategy.semantic({
+                bufferSize: 1,
+                maxTokens: 300,
+                breakpointPercentileThreshold: 90,
+            })
+        })
+
+        const ingestionRole = new iam.Role(this, 'ingestionRole', {
+            assumedBy: new iam.CompositePrincipal(
+                new iam.ServicePrincipal('scheduler.amazonaws.com'),
+                new iam.ServicePrincipal('events.amazonaws.com')
+            ),
+            inlinePolicies: {
+                'ingestionPolicy': new iam.PolicyDocument({
+                    statements: [
+                        new iam.PolicyStatement({
+                            effect: iam.Effect.ALLOW,
+                            actions: [
+                                'bedrock:startIngestionJob',
+                            ],
+                            resources: [this.knowledgeBase.knowledgeBaseArn],
+                        }),
+                    ],
+                }),
+            },
+        });
+
+        const knowledgeScheduleGroup = new scheduler.CfnScheduleGroup(this, 'knowledgeScheduleGroup', {});
+
+        new scheduler.CfnSchedule(this, 'knowledge_schedule', {
+            scheduleExpression: 'rate(1 hour)',
+            flexibleTimeWindow: {
+                mode: 'OFF'
+            },
+            groupName: knowledgeScheduleGroup.ref,
+            target: {
+                arn: 'arn:aws:scheduler:::aws-sdk:bedrockagent:startIngestionJob',
+                roleArn: ingestionRole.roleArn,
+                input: JSON.stringify({
+                    KnowledgeBaseId: this.knowledgeBase.knowledgeBaseId,
+                    DataSourceId: knowledgeSource.dataSourceId
+                })
+            }
+        })
 
     }
 }

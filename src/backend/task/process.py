@@ -3,6 +3,7 @@ import boto3
 import os
 import requests
 import re
+import json
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -64,6 +65,30 @@ def summarize(transcript):
     except Exception as exception:
         print(f"{error_message}: {exception}")
         html = f"{error_message}. {logs_message}"
+    else:
+        content_key = f"{details.meeting}/summary.html"
+        try:
+            boto3.client("s3").put_object(
+                Bucket=os.environ["KNOWLEDGE_BUCKET"],
+                Key=content_key,
+                Body=html,
+                ContentType="text/html",
+            )
+            boto3.client("s3").put_object(
+                Bucket=os.environ["KNOWLEDGE_BUCKET"],
+                Key=f"{content_key}.metadata.json",
+                Body=json.dumps(
+                    {
+                        "metadataAttributes": {
+                            "meeting": details.meeting,
+                            "meeting_time": details.meeting_time,
+                        }
+                    }
+                ),
+                ContentType="application/json",
+            )
+        except Exception as exception:
+            print(f"{error_message}: {exception}")
 
     # print(html)
     return html

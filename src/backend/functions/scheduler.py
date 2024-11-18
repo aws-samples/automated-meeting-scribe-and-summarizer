@@ -71,6 +71,10 @@ def handler(event, context):
                             #     "Name": "VOCABULARY_NAME",
                             #     "Value": os.environ["VOCABULARY_NAME"],
                             # },
+                            {
+                                "Name": "KNOWLEDGE_BUCKET",
+                                "Value": os.environ["KNOWLEDGE_BUCKET"],
+                            },
                         ],
                     }
                 ]
