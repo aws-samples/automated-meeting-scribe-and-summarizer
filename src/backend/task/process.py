@@ -54,7 +54,7 @@ def summarize(transcript):
     error_message = "Error while outputting meeting notes"
     try:
         response = boto3.client("bedrock-runtime").converse(
-            modelId=os.environ["MODEL_ID"],
+            modelId="anthropic.claude-3-sonnet-20240229-v1:0",
             system=[{"text": system_prompt}],
             messages=[{"role": "user", "content": [{"text": prompt}]}],
             inferenceConfig={"maxTokens": 4096, "temperature": 0.9, "topP": 0.2},

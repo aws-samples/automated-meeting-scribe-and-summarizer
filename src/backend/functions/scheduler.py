@@ -71,10 +71,6 @@ def handler(event, context):
                             #     "Name": "VOCABULARY_NAME",
                             #     "Value": os.environ["VOCABULARY_NAME"],
                             # },
-                            {
-                                "Name": "MODEL_ID",
-                                "Value": os.environ["MODEL_ID"],
-                            },
                         ],
                     }
                 ]

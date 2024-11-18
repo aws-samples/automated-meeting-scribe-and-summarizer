@@ -18,8 +18,10 @@ import {
     CfnOutput,
 } from "aws-cdk-lib";
 import { Construct } from 'constructs';
+import { execSync } from 'child_process';
 
 interface FrontendStackProps extends StackProps {
+    logging_bucket: s3.Bucket;
     email: string;
     table: dynamodb.TableV2;
 }
@@ -31,9 +33,10 @@ export default class FrontendStack extends Stack {
         const website_bucket = new s3.Bucket(this, 'website_bucket', {
             autoDeleteObjects: true,
             removalPolicy: RemovalPolicy.DESTROY,
-            publicReadAccess: false,
             blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-            enforceSSL: true
+            enforceSSL: true,
+            serverAccessLogsBucket: props.logging_bucket,
+            serverAccessLogsPrefix: 'website'
         });
 
         function createManagedRule(
@@ -88,8 +91,16 @@ export default class FrontendStack extends Stack {
                     responsePagePath: '/index.html',
                     responseHttpStatus: 200,
                 },
+                {
+                    httpStatus: 403,
+                    responsePagePath: '/index.html',
+                    responseHttpStatus: 200,
+                }
             ],
-            webAclId: distribution_web_acl.attrArn
+            webAclId: distribution_web_acl.attrArn,
+            logBucket: props.logging_bucket,
+            logIncludesCookies: true,
+            logFilePrefix: 'distribution',
         });
 
         const post_confirmation_lambda = new lambda.Function(this, 'post_confirmation_lambda', {
@@ -133,7 +144,11 @@ export default class FrontendStack extends Stack {
 
         const user_pool_client = new cognito.UserPoolClient(this, 'user_pool_client', {
             userPool: user_pool,
-            preventUserExistenceErrors: true
+            preventUserExistenceErrors: true,
+            authFlows: {
+                userPassword: true,
+                userSrp: true,
+            },
         });
 
         new cognito.CfnUserPoolUser(this, 'user_pool_user', {
@@ -162,7 +177,8 @@ export default class FrontendStack extends Stack {
             environment: {
                 ALLOWED_ORIGINS: JSON.stringify(allowed_origins),
                 TABLE_NAME: props.table.tableName,
-            }
+            },
+            logRetention: logs.RetentionDays.FIVE_DAYS,
         });
 
         props.table.grantReadWriteData(proxy_function)
@@ -213,15 +229,21 @@ export default class FrontendStack extends Stack {
             webAclArn: rest_api_web_acl.attrArn
         });
 
-        const website_bundle = s3_deployment.Source.asset('./src/frontend', {
-            // exclude: ['dist', 'node_modules', 'config.json'],
+        const website_path = './src/frontend'
+        const website_bundle = s3_deployment.Source.asset(website_path, {
             bundling: {
                 image: lambda.Runtime.NODEJS_20_X.bundlingImage,
-                command: [
-                    'sh',
-                    '-c',
-                    'npm install && npm run build && cp -r dist/* /asset-output/'
-                ],
+                local: {
+                    tryBundle(output_directory: string) {
+                        execSync([
+                            `cd ${website_path}`,
+                            'npm install',
+                            'npm run build',
+                            `cp -r dist/* ${output_directory}/`
+                        ].join(' && '));
+                        return true;
+                    }
+                },
             },
         });
 

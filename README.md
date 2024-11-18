@@ -20,13 +20,13 @@ Using this application's website, you can invite an AI-assisted scribe to your u
 ## Getting Started
 
 ### Prerequisites
-- Install [Docker](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-docker.html#install-docker-instructions) and the [AWS CDK CLI](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html#getting_started_install) then complete the [prerequisites for CDK deployments](https://docs.aws.amazon.com/cdk/v2/guide/deploy.html#deploy-prerequisites)**.
+- Install [NPM](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm), [Docker](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-docker.html#install-docker-instructions), and the [AWS CDK CLI](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html#getting_started_install) then complete the [prerequisites for CDK deployments](https://docs.aws.amazon.com/cdk/v2/guide/deploy.html#deploy-prerequisites)**.
 - To interact with Claude 3 Sonnet on Bedrock, you need to [request access to the model](https://console.aws.amazon.com/bedrock/home?#/modelaccess). Make sure to read and accept the end-user license agreements or EULA.
 
 ### Deployment
 - Open a terminal and set the working directory to the location where you want to clone this repository. Clone the repository using the command `git clone https://github.com/aws-samples/automated-meeting-scribe-and-summarizer.git`.
 - Provide a [context value](https://docs.aws.amazon.com/cdk/v2/guide/context.html) for the [email](lib/base.ts) paramater.
-- [Deploy the CDK application](https://docs.aws.amazon.com/cdk/v2/guide/deploy.html#deploy-how-deploy)**.
+- [Deploy the CDK application](https://docs.aws.amazon.com/cdk/v2/guide/deploy.html#deploy-how-deploy) using [`cdk deploy --all`](https://docs.aws.amazon.com/cdk/v2/guide/ref-cli-cmd-deploy.html)**.
 
 <br>\** Per the [guidance for workload isolation on AWS](https://aws.amazon.com/solutions/guidance/workload-isolation-on-aws/), it is recommended that you deploy the CDK application in its own AWS account.<br />
 

@@ -1,19 +1,8 @@
-import subprocess
 import os
 from datetime import datetime, timezone
 from time import sleep
 import boto3
 from boto3.dynamodb.conditions import Key
-
-subprocess.run(
-    [
-        "pulseaudio",
-        "--start",
-        "--daemon",
-        "--exit-idle-time=-1",
-        "--log-target=syslog",
-    ]
-)
 
 meeting = os.environ["MEETING"]
 meeting_platform, meeting_id, meeting_password, meeting_time = meeting.split("#")

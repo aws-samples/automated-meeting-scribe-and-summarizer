@@ -1,6 +1,7 @@
 
 import {
     Stack,
+    aws_s3 as s3,
     CfnParameter,
     aws_dynamodb as dynamodb,
     StackProps,
@@ -10,12 +11,21 @@ import {
 import { Construct } from 'constructs';
 
 export default class DataStack extends Stack {
+    public readonly logging_bucket: s3.Bucket;
     public readonly email: CfnParameter;
     public readonly table: dynamodb.TableV2;
     public readonly index: string;
 
     constructor(scope: Construct, id: string, props?: StackProps) {
         super(scope, id, props);
+
+        this.logging_bucket = new s3.Bucket(this, 'logging_bucket', {
+            autoDeleteObjects: true,
+            removalPolicy: RemovalPolicy.DESTROY,
+            blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+            enforceSSL: true,
+            objectOwnership: s3.ObjectOwnership.BUCKET_OWNER_PREFERRED,
+        })
 
         this.email = new CfnParameter(this, 'email', {
             type: 'String',

@@ -4,11 +4,14 @@ USER root
 WORKDIR /srv
 COPY . /srv
 
-RUN apt update
-RUN pip3 install --upgrade pip
-RUN pip3 install -r requirements.txt
+RUN pip3 install --upgrade pip && \
+    pip3 install -r requirements.txt
 RUN playwright install --with-deps chromium
-RUN apt install ffmpeg -y
-RUN apt install pulseaudio -y
 
-ENTRYPOINT ["python", "/srv/meeting.py"]
+RUN apt-get update && \
+    apt-get install -y \
+    ffmpeg \
+    pulseaudio
+
+RUN chmod +x /srv/entry.sh
+ENTRYPOINT ["/srv/entry.sh"]

@@ -1,6 +1,7 @@
 
 import { Amplify } from 'aws-amplify';
-import { Authenticator } from '@aws-amplify/ui-react';
+import type { WithAuthenticatorProps } from '@aws-amplify/ui-react';
+import { withAuthenticator } from '@aws-amplify/ui-react';
 import '@aws-amplify/ui-react/styles.css';
 import TopNavigation from "@cloudscape-design/components/top-navigation"
 import '@cloudscape-design/global-styles/index.css';
@@ -16,7 +17,6 @@ import CreateInvite from "./pages/create";
 import ListInvites from "./pages/list";
 
 const config = await (await fetch('./config.json')).json();
-
 Amplify.configure({
     Auth: {
         Cognito: {
@@ -26,7 +26,7 @@ Amplify.configure({
     }
 });
 
-export default function App() {
+export function App({ signOut, user }: WithAuthenticatorProps) {
 
     const router = createBrowserRouter([
         {
@@ -44,25 +44,23 @@ export default function App() {
     ]);
 
     return (
-        <Authenticator>
-            {({ signOut, user }) => (
-                <FlashbarProvider>
-                    <TopNavigation
-                        identity={{
-                            href: "",
-                            title: user?.signInDetails?.loginId,
-                        }}
-                        utilities={[
-                            {
-                                type: "button",
-                                text: "Logout",
-                                onClick: () => signOut!(),
-                            },
-                        ]}
-                    />
-                    <RouterProvider router={router} />
-                </FlashbarProvider>
-            )}
-        </Authenticator>
+        <FlashbarProvider>
+            <TopNavigation
+                identity={{
+                    href: "/",
+                    title: user?.signInDetails?.loginId,
+                }}
+                utilities={[
+                    {
+                        type: "button",
+                        text: "Logout",
+                        onClick: () => signOut!(),
+                    },
+                ]}
+            />
+            <RouterProvider router={router} />
+        </FlashbarProvider>
     )
 }
+
+export default withAuthenticator(App);
