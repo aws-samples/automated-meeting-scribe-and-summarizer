@@ -58,7 +58,7 @@ def get_invites():
     response = table.query(
         KeyConditionExpression=Key("pk").eq(email),
         FilterExpression=Attr("meeting_expiration").gte(
-            int(time()) + expiration_seconds
+            int(time()) + expiration_seconds - 300  # 5 minutes
         ),
     )
     meetings = [
