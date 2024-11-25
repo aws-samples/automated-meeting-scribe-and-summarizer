@@ -1,20 +1,18 @@
 
-import { Amplify } from 'aws-amplify';
-import type { WithAuthenticatorProps } from '@aws-amplify/ui-react';
-import { withAuthenticator } from '@aws-amplify/ui-react';
-import '@aws-amplify/ui-react/styles.css';
-import TopNavigation from "@cloudscape-design/components/top-navigation"
-import '@cloudscape-design/global-styles/index.css';
-
 import {
     createBrowserRouter,
     RouterProvider,
     Navigate
 } from "react-router-dom";
-
-import { FlashbarProvider } from './components/notifications';
+import { Amplify } from 'aws-amplify';
+import { fetchAuthSession } from 'aws-amplify/auth';
+import { WithAuthenticatorProps, withAuthenticator } from '@aws-amplify/ui-react';
+import '@aws-amplify/ui-react/styles.css';
+import TopNavigation from "@cloudscape-design/components/top-navigation"
+import '@cloudscape-design/global-styles/index.css';
 import CreateInvite from "./pages/create";
 import ListInvites from "./pages/list";
+import { FlashbarProvider } from './components/notifications';
 
 const config = await (await fetch('./config.json')).json();
 Amplify.configure({
@@ -22,6 +20,23 @@ Amplify.configure({
         Cognito: {
             userPoolId: config.userPoolId,
             userPoolClientId: config.userPoolClientId
+        }
+    },
+    API: {
+        REST: {
+            restApi: {
+                endpoint: config.restApiUrl,
+            }
+        }
+    }
+}, {
+    API: {
+        REST: {
+            headers: async () => {
+                return {
+                    Authorization: `Bearer ${(await fetchAuthSession()).tokens?.idToken}`
+                };
+            }
         }
     }
 });
