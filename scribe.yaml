@@ -42,14 +42,13 @@ Resources:
                   - npm install -g aws-cdk
               pre_build:
                 commands:
-                  - cdk bootstrap --require-approval never
                   - npm install
               build:
                 commands:
-                  - cdk synth
+                  - cdk bootstrap
               post_build:
                 commands:
-                  - cdk deploy --all --require-approval never --context email=${Email}
+                  - cdk deploy --all --context email=${Email} --require-approval never
           - { Email: !Ref Email }
       # SourceVersion: dev
       Environment:

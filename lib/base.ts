@@ -5,6 +5,7 @@ import {
     aws_ses as ses,
     aws_dynamodb as dynamodb,
     StackProps,
+    CfnParameter,
     RemovalPolicy,
 } from "aws-cdk-lib";
 import { Construct } from 'constructs';
@@ -26,8 +27,14 @@ export default class BaseStack extends Stack {
             objectOwnership: s3.ObjectOwnership.BUCKET_OWNER_PREFERRED,
         })
 
+        const email = new CfnParameter(this, 'email', {
+            type: 'String',
+            allowedPattern: '^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}$',
+            default: this.node.tryGetContext('email')
+        });
+
         this.identity = new ses.EmailIdentity(this, 'identity', {
-            identity: ses.Identity.email(this.node.tryGetContext('email')),
+            identity: ses.Identity.email(email.valueAsString),
         });
 
         this.index = 'meeting_index';
