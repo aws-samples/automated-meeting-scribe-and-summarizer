@@ -66,9 +66,9 @@ export default class BackendStack extends Stack {
         vpc.addInterfaceEndpoint('transcribeEndpoint', {
             service: ec2.InterfaceVpcEndpointAwsService.TRANSCRIBE_STREAMING,
         });
-        vpc.addInterfaceEndpoint('comprehendEndpoint', {
-            service: ec2.InterfaceVpcEndpointAwsService.COMPREHEND,
-        });
+        // vpc.addInterfaceEndpoint('comprehendEndpoint', {
+        //     service: ec2.InterfaceVpcEndpointAwsService.COMPREHEND,
+        // });
         vpc.addInterfaceEndpoint('bedrockRuntimeEndpoint', {
             service: ec2.InterfaceVpcEndpointAwsService.BEDROCK_RUNTIME,
         });
