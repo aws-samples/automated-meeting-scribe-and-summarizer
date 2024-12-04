@@ -83,7 +83,7 @@ Resources:
                   - codebuild:StartBuild
                   - codebuild:BatchGetBuilds
                 Resource:
-                  - "*"
+                  - !GetAtt BuildProject.Arn
 
   BuildCustomResourceFunction:
     Type: AWS::Lambda::Function

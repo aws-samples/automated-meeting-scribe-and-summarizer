@@ -20,16 +20,29 @@ Using this application's website, you can invite an AI-assisted scribe to your u
 ## Getting Started
 
 ### Prerequisites
-- Install [NPM](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm), [Docker](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-docker.html#install-docker-instructions), and the [AWS CDK CLI](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html#getting_started_install) then complete the [prerequisites for CDK deployments](https://docs.aws.amazon.com/cdk/v2/guide/deploy.html#deploy-prerequisites)**.
-- To interact with Claude 3 Sonnet on Bedrock, you need to [request access to the model](https://console.aws.amazon.com/bedrock/home?#/modelaccess). Make sure to read and accept the end-user license agreements or EULA.
+To interact with Claude 3 Sonnet on Bedrock, you need to [request access to the model](https://console.aws.amazon.com/bedrock/home?#/modelaccess). Make sure to read and accept the end-user license agreements or EULA.
 
 ### Deployment
+Per the [guidance for workload isolation on AWS](https://aws.amazon.com/solutions/guidance/workload-isolation-on-aws/), it is recommended that you deploy the CDK application to its own AWS account.
+
+#### CloudFormation (Easy)
+This click-through option will build and deploy the CDK application using an AWS CodeBuild project created by AWS CloudFormation in your active account. The CodeBuild project is given administrator access to [bootstrap](https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping.html) the account if necessary.
+- Download [scribe.yaml](scribe.yaml).
+- Open the [CloudFormation console](https://console.aws.amazon.com/cloudformation/home?#/stacks/create) to create a stack.
+- Under **Template source**, select **Upload a template file** then click **Choose file**. 
+- Select **scribe.yaml** then click **Open**. 
+- Once the S3 URL populates, click **Next**. 
+- Enter a **Stack name** and **Email**, then click **Next**.
+    - This email address will be used to log in to the website as well as to send and receive meeting details. 
+- Click **I acknowledge that AWS CloudFormation might create IAM resources** then **Next**.
+- Click **Submit** to create the stack and others from the CDK application.
+
+#### CDK
+- Install [NPM](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm), [Docker](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-docker.html#install-docker-instructions), and the [AWS CDK CLI](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html#getting_started_install) then complete the [prerequisites for CDK deployments](https://docs.aws.amazon.com/cdk/v2/guide/deploy.html#deploy-prerequisites) if you have not previously done so.
 - Open a terminal and set the working directory to the location where you want to clone this repository. Clone the repository using the command `git clone https://github.com/aws-samples/automated-meeting-scribe-and-summarizer.git`.
 - Use the command `npm install` to install the CDK [dependencies](https://docs.aws.amazon.com/cdk/v2/guide/work-with-cdk-typescript.html#work-with-cdk-typescript-dependencies).
 - Provide a [context value](https://docs.aws.amazon.com/cdk/v2/guide/context.html) for the [email](lib/base.ts) paramater.
-- [Deploy the CDK application](https://docs.aws.amazon.com/cdk/v2/guide/deploy.html#deploy-how-deploy) using a command like [`cdk deploy --all`](https://docs.aws.amazon.com/cdk/v2/guide/ref-cli-cmd-deploy.html)**.
-
-<br>\** Per the [guidance for workload isolation on AWS](https://aws.amazon.com/solutions/guidance/workload-isolation-on-aws/), it is recommended that you deploy the CDK application to its own AWS account.<br />
+- [Deploy the CDK application](https://docs.aws.amazon.com/cdk/v2/guide/deploy.html#deploy-how-deploy) using a command like [`cdk deploy --all`](https://docs.aws.amazon.com/cdk/v2/guide/ref-cli-cmd-deploy.html).
 
 ### Email Verification
 - Open the inbox of the email you entered. You can expect to receive two emails:
@@ -40,17 +53,17 @@ Using this application's website, you can invite an AI-assisted scribe to your u
 - Optionally, you can [request to move out of the SES sandbox](https://docs.aws.amazon.com/ses/latest/dg/request-production-access.html) to email new users without additional verification.
 
 ### Accessing the Website
-- Once your deployment completes, you can find the CloudFront URL as an output in the terminal, or you can open the [CloudFormation console](https://console.aws.amazon.com/cloudformation/home) then click **frontend** followed by **Outputs**.
+- Open the [CloudFormation console](https://console.aws.amazon.com/cloudformation/home) then click **frontend** followed by **Outputs**.
 - Open the CloudFront URL in your browser to access the website.
 - Enter your username and password or create a new account.
     - Change your password and/or verify your email as needed.
 
 ### Using the Website
-- To invite a scribe to your upcoming meeting click **Create Invite**. Enter the **Meeting Name**, **Meeting ID**, and, optionally, the **Meeting Password** and/or **Meeting Time**. Select the checkbox, then click **Invite Now** to invite the scribe to join as soon as possible or click **Invite Later** to schedule the scribe***.
+- To invite a scribe to your upcoming meeting click **Create Invite**. Enter the **Meeting Name**, **Meeting ID**, and, optionally, the **Meeting Password** and/or **Meeting Time**. Select the checkbox, then click **Invite Now** to invite the scribe to join as soon as possible or click **Invite Later** to schedule the scribe**.
 - To view upcoming meetings, click **List Invites**. To delete an invite for an upcoming meeting, select the invite then click **Delete**.
 - To log out, click **Logout**.
 
-<br>\*** You are responsible for complying with legal, corporate, and ethical restrictions that apply to meeting transcription and summarization.<br />
+<br>\** You are responsible for complying with legal, corporate, and ethical restrictions that apply to meeting transcription and summarization.<br />
 
 ### Using the Meeting Platform
 - At the specified meeting time, your scribe will join the meeting's waiting room.
@@ -64,7 +77,7 @@ Using this application's website, you can invite an AI-assisted scribe to your u
 - After the meeting ends, if the start message was sent in the chat, you should receive a follow-up email with the meeting details.
 
 ## Clean-up
-- Use [`cdk destroy`](https://docs.aws.amazon.com/cdk/v2/guide/ref-cli-cmd-destroy.html), or open the [CloudFormation console](https://console.aws.amazon.com/cloudformation/home) then select each stack you created and click **Delete** twice.
+- Open the [CloudFormation console](https://console.aws.amazon.com/cloudformation/home) then select each stack you created and click **Delete** twice. Or, if applicable, use [`cdk destroy`](https://docs.aws.amazon.com/cdk/v2/guide/ref-cli-cmd-destroy.html).
 - Open the [SES console](https://console.aws.amazon.com/ses/home?#/identities), select unused identities, then click **Delete** followed by **Confirm**.
 
 ## Security
