@@ -31,30 +31,35 @@ Resources:
       Source:
         Type: GITHUB
         Location: https://github.com/aws-samples/automated-meeting-scribe-and-summarizer.git
-        BuildSpec: !Sub
-          - |
-            version: 0.2
-            phases:
-              install:
-                runtime-versions:
-                  nodejs: 20
-                commands:
-                  - npm install -g aws-cdk
-              pre_build:
-                commands:
-                  - npm install
-              build:
-                commands:
-                  - cdk bootstrap
-              post_build:
-                commands:
-                  - cdk deploy --all --context email=${Email} --require-approval never
-          - { Email: !Ref Email }
+        BuildSpec: |
+          version: 0.2
+          phases:
+            install:
+              runtime-versions:
+                nodejs: 20
+              commands:
+                - npm install -g aws-cdk
+            pre_build:
+              commands:
+                - npm install
+            build:
+              commands:
+                - cdk bootstrap
+            post_build:
+              commands:
+                - cdk deploy --all --require-approval never
       # SourceVersion: dev
       Environment:
         Type: ARM_CONTAINER
         Image: aws/codebuild/amazonlinux-aarch64-standard:3.0
         ComputeType: BUILD_GENERAL1_SMALL
+        EnvironmentVariables:
+          - Name: STACK_NAME
+            Value: !Ref "AWS::StackName"
+            Type: PLAINTEXT
+          - Name: EMAIL
+            Value: !Ref Email
+            Type: PLAINTEXT
       ServiceRole: !GetAtt BuildRole.Arn
       Artifacts:
         Type: NO_ARTIFACTS
@@ -82,6 +87,7 @@ Resources:
                 Action:
                   - codebuild:StartBuild
                   - codebuild:BatchGetBuilds
+                  - codebuild:DeleteProject
                 Resource:
                   - !GetAtt BuildProject.Arn
 
@@ -93,11 +99,12 @@ Resources:
       Timeout: 900
       Runtime: python3.12
       Code:
-        ZipFile: !Sub |
+        ZipFile: |
           import boto3
           from time import sleep
           import cfnresponse
           def handler(event, context):
+            build_id = ""
             request_type = event['RequestType']
             print(request_type)
             if request_type in ['Create', 'Update']:
@@ -113,10 +120,15 @@ Resources:
               #   sleep(15)
               #   status = client.batch_get_builds(ids=[build_id])['builds'][0]['buildStatus']
               #   print(status)
-            cfnresponse.send(event, context, cfnresponse.SUCCESS, {})
+              client.delete_project(name=event['ResourceProperties']['PROJECT'])
+            cfnresponse.send(event, context, cfnresponse.SUCCESS, {'buildId': build_id})
 
   BuildCustomResource:
     Type: AWS::CloudFormation::CustomResource
     Properties:
       ServiceToken: !GetAtt BuildCustomResourceFunction.Arn
       PROJECT: !Ref BuildProject
+
+Outputs:
+  BuildId:
+    Value: !GetAtt BuildCustomResource.buildId

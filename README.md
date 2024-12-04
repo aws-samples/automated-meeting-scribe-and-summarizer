@@ -1,7 +1,7 @@
 
 # Automated Meeting Scribe and Summarizer
 
-Using this application's website, you can invite an AI-assisted scribe to your upcoming Amazon Chime or Webex meeting(s) to get a follow-up email with the speaker list, chat history, attachments, and transcript, as well as a summary and action items. You don't even need to be present in a meeting for an invited scribe to join. Each scribe is linked to your email for identification. The scribe redacts sensitive personally identifiable information (PII) by default. And, all processing, from transcription to summarization, is done within the AWS account that the CDK is deployed to.
+Using this application's website, you can invite an AI-assisted scribe to your upcoming Amazon Chime or Webex meeting(s) to get a follow-up email with the speaker list, chat history, attachments, and transcript, as well as a summary and action items. You do not even need to be present in a meeting for an invited scribe to join. Each scribe is linked to your email for identification. The scribe redacts sensitive personally identifiable information (PII) by default. And, all processing, from transcription to summarization, is done within the AWS account that the CDK is deployed to.
 
 ## Architecture
 
@@ -25,8 +25,8 @@ To interact with Claude 3 Sonnet on Bedrock, you need to [request access to the 
 ### Deployment
 Per the [guidance for workload isolation on AWS](https://aws.amazon.com/solutions/guidance/workload-isolation-on-aws/), it is recommended that you deploy the CDK application to its own AWS account.
 
-#### CloudFormation (Easy)
-This click-through option will build and deploy the CDK application using an AWS CodeBuild project created by AWS CloudFormation in your active account. Warning: The CodeBuild project is given administrator access to [bootstrap](https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping.html) the account if necessary.
+#### CloudFormation (Easy Option)
+This click-through option will build and deploy the CDK application for you using an AWS CodeBuild project created by AWS CloudFormation in your active account. The CodeBuild project is given administrator access to [bootstrap](https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping.html) the account if necessary, but it is deleted shortly after the build is started.
 - Download [scribe.yaml](scribe.yaml).
 - Open the [CloudFormation console](https://console.aws.amazon.com/cloudformation/home?#/stacks/create) to create a stack.
 - Under **Template source**, select **Upload a template file** then click **Choose file**. 
@@ -41,7 +41,7 @@ This click-through option will build and deploy the CDK application using an AWS
 - Install [NPM](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm), [Docker](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-docker.html#install-docker-instructions), and the [AWS CDK CLI](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html#getting_started_install) then complete the [prerequisites for CDK deployments](https://docs.aws.amazon.com/cdk/v2/guide/deploy.html#deploy-prerequisites) if you have not previously done so.
 - Open a terminal and set the working directory to the location where you want to clone this repository. Clone the repository using the command `git clone https://github.com/aws-samples/automated-meeting-scribe-and-summarizer.git`.
 - Use the command `npm install` to install the CDK [dependencies](https://docs.aws.amazon.com/cdk/v2/guide/work-with-cdk-typescript.html#work-with-cdk-typescript-dependencies).
-- Provide a [context value](https://docs.aws.amazon.com/cdk/v2/guide/context.html) for the [email](lib/base.ts) paramater.
+- Export the environment variable for the SES [email identity](lib/base.ts) using a command like `export EMAIL=example@domain.com`.
 - [Deploy the CDK application](https://docs.aws.amazon.com/cdk/v2/guide/deploy.html#deploy-how-deploy) using a command like [`cdk deploy --all`](https://docs.aws.amazon.com/cdk/v2/guide/ref-cli-cmd-deploy.html).
 
 ### Email Verification
@@ -68,7 +68,7 @@ This click-through option will build and deploy the CDK application using an AWS
 ### Using the Meeting Platform
 - At the specified meeting time, your scribe will join the meeting's waiting room.
     - It will wait for up to five minutes in the waiting room.
-- Verify your scribe's name then admit it into the meeting. Do not admit a scribe you can't verify.
+- Verify your scribe's name then admit it into the meeting. Do not admit a scribe you cannot verify.
 - Once admitted, the scribe will introduce itself in the chat and list the users it was invited by. 
 - At any point thereafter, you can send the scribe command messages in the chat: 
     - "START" will start saving attendance, new messages and machine-generated captions.
