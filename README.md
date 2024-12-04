@@ -30,7 +30,7 @@ This click-through option will build and deploy the CDK application using an AWS
 - Download [scribe.yaml](scribe.yaml).
 - Open the [CloudFormation console](https://console.aws.amazon.com/cloudformation/home?#/stacks/create) to create a stack.
 - Under **Template source**, select **Upload a template file** then click **Choose file**. 
-- Select **scribe.yaml** then click **Open**. 
+- Navigate to your **Downloads** folder, select **scribe.yaml**, then click **Open**.
 - Once the S3 URL populates, click **Next**. 
 - Enter a **Stack name** and **Email**, then click **Next**.
     - This email address will be used to log in to the website as well as to send and receive meeting details. 
