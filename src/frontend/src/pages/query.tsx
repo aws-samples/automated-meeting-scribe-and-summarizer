@@ -1,7 +1,6 @@
 
 import { useState } from "react"
-import { apiCall } from '../api';
-
+import { post } from 'aws-amplify/api';
 import {
     AppLayout,
     ContentLayout,
@@ -14,7 +13,7 @@ import {
     Textarea
 } from "@cloudscape-design/components";
 import NavigationComponent from "../components/navigation";
-import { FlashbarComponent } from '../components/notifications';
+import { FlashbarComponent, FlashbarItem } from '../components/notifications';
 
 const Query = () => {
     const [navigationOpen, setNavigationOpen] = useState<boolean>(true);
@@ -23,7 +22,14 @@ const Query = () => {
     const [meetingResponse, setmeetingResponse] = useState("")
 
     const submitqueryForm = async () => {
-        const response = await apiCall('query-meetings', 'POST', meetingQuery);
+        const restOperation = post({
+            apiName: 'restApi',
+            path: 'query-meetings',
+            options: {
+                body: meetingQuery
+            }
+        })
+        const response = (await (await restOperation.response).body.json() as any) as FlashbarItem;
         setmeetingResponse(response.content)
         setmeetingQuery("")
     }

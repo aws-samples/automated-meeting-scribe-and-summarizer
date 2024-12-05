@@ -160,7 +160,7 @@ export default class FrontendStack extends Stack {
 
         const allowed_origins = [
             `https://${distribution.distributionDomainName}`,
-            'http://localhost:3000'
+            // 'http://localhost:3000'
         ];
 
         const proxyFunction = new lambda.Function(this, 'proxyFunction', {

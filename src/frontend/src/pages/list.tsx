@@ -1,9 +1,6 @@
 
 import { useState, useEffect } from "react"
-
-import { meetingPlatforms, Invite } from '../details'
-import { apiCall } from '../api';
-
+import { get, put } from 'aws-amplify/api';
 import {
     AppLayout,
     HelpPanel,
@@ -14,7 +11,12 @@ import {
     Box,
 } from "@cloudscape-design/components";
 import NavigationComponent from "../components/navigation";
-import { FlashbarComponent } from '../components/notifications';
+import { FlashbarItem, FlashbarComponent } from '../components/notifications';
+import { meetingPlatforms, Invite } from '../details'
+
+type Response = FlashbarItem & {
+    invites?: any;
+};
 
 const List = () => {
     const [navigationOpen, setNavigationOpen] = useState<boolean>(true);
@@ -24,8 +26,12 @@ const List = () => {
 
     useEffect(() => {
         const fetchMeetings = async () => {
-            const body = await apiCall('get-invites', 'GET');
-            setMeetings(body.invites || []);
+            const restOperation = get({
+                apiName: 'restApi',
+                path: 'get-invites'
+            });
+            const response = (await (await restOperation.response).body.json() as any) as Response;
+            setMeetings(response?.invites || []);
         };
         fetchMeetings();
     }, []);
@@ -52,7 +58,13 @@ const List = () => {
                                 <Button
                                     onClick={() => {
                                         if (selectedMeetings) {
-                                            apiCall('delete-invites', 'DELETE', [...selectedMeetings])
+                                            put({
+                                                apiName: 'restApi',
+                                                path: 'delete-invites',
+                                                options: {
+                                                    body: [...selectedMeetings]
+                                                }
+                                            })
                                             setMeetings(meetings.filter(meeting => !selectedMeetings.includes(meeting)))
                                             setSelectedMeetings([])
                                         }

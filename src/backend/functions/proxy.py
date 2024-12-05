@@ -80,7 +80,7 @@ def get_invites():
     }
 
 
-@app.delete("/delete-invites")
+@app.put("/delete-invites")
 def delete_invites():
     email = app.current_event.request_context.authorizer.claims.get("email")
     for data in app.current_event.json_body:

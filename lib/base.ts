@@ -6,7 +6,6 @@ import {
     aws_dynamodb as dynamodb,
     StackProps,
     RemovalPolicy,
-    CfnParameter,
     Duration,
     aws_iam as iam,
     aws_scheduler as scheduler,
@@ -33,15 +32,8 @@ export default class BaseStack extends Stack {
             objectOwnership: s3.ObjectOwnership.BUCKET_OWNER_PREFERRED,
         })
 
-        const email = new CfnParameter(this, 'email', {
-            type: 'String',
-            description: 'This address is used to send meeting transcripts, summaries, action items, etc.',
-            allowedPattern: '^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}$',
-            default: this.node.tryGetContext('email')
-        });
-
         this.identity = new ses.EmailIdentity(this, 'identity', {
-            identity: ses.Identity.email(email.valueAsString),
+            identity: ses.Identity.email(process.env.EMAIL!),
         });
 
         this.index = 'meeting_index';

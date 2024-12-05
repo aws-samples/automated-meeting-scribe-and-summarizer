@@ -1,9 +1,6 @@
 
 import { useState, useContext } from "react"
-
-import { Meeting, MeetingPlatform, meetingPlatforms } from "../details";
-import { apiCall } from '../api';
-
+import { post } from 'aws-amplify/api';
 import {
     AppLayout,
     HelpPanel,
@@ -21,7 +18,8 @@ import {
     Button,
 } from "@cloudscape-design/components";
 import NavigationComponent from "../components/navigation";
-import FlashbarContext, { FlashbarComponent } from '../components/notifications';
+import FlashbarContext, { FlashbarComponent, FlashbarItem } from '../components/notifications';
+import { Meeting, MeetingPlatform, meetingPlatforms } from "../details";
 
 const Create = () => {
     const [navigationOpen, setNavigationOpen] = useState<boolean>(true);
@@ -80,7 +78,14 @@ const Create = () => {
         setMeetingDate("")
         setMeetingTime("");
 
-        const response = await apiCall('post-invite', 'POST', meeting);
+        const restOperation = post({
+            apiName: 'restApi',
+            path: 'post-invite',
+            options: {
+                body: meeting
+            }
+        })
+        const response = (await (await restOperation.response).body.json() as any) as FlashbarItem;
         updateFlashbar(response.type, response.content)
     }
 
