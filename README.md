@@ -26,7 +26,7 @@ To interact with Claude 3 Sonnet on Bedrock, you need to [request access to the 
 Per the [guidance for workload isolation on AWS](https://aws.amazon.com/solutions/guidance/workload-isolation-on-aws/), it is recommended that you deploy the CDK application to its own AWS account.
 
 #### CloudFormation (Easy Option)
-This click-through option will build and deploy the CDK application for you using an AWS CodeBuild project created by AWS CloudFormation in your active account. The CodeBuild project is given administrator access to [bootstrap](https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping.html) the account if necessary, but it is deleted shortly after the build is started.
+This click-through option will build and deploy the CDK application for you using an AWS CodeBuild project created by AWS CloudFormation in your active account. The CodeBuild project is given [permissions to bootstrap](https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping-env.html#bootstrapping-env-permissions) the AWS environment if necessary, but it is deleted shortly after the build is started.
 - Download [scribe.yaml](scribe.yaml).
 - Open the [CloudFormation console](https://console.aws.amazon.com/cloudformation/home?#/stacks/create) to create a stack.
 - Under **Template source**, select **Upload a template file** then click **Choose file**. 
