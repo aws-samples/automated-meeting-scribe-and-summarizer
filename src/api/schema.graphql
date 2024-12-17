@@ -1,0 +1,33 @@
+
+type Invite {
+    name: String!
+    platform: String!
+    id: String!
+    password: String!
+    time: Int!
+    scribe: String!
+}
+
+input CreateInvite {
+    name: String!
+    platform: String!
+    id: String!
+    password: String!
+    time: Int!
+}
+
+input DeleteInviteInput {
+    platform: String!
+    id: String!
+    password: String!
+    time: String!
+}
+
+type Mutation {
+    createInvite(input: CreateInvite!): String
+    deleteInvite(input: DeleteInviteInput!): String
+}
+
+type Query {
+    getInvites: [Invite]
+}

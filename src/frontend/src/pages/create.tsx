@@ -1,6 +1,6 @@
 
 import { useState, useContext } from "react"
-import { post } from 'aws-amplify/api';
+import { generateClient } from 'aws-amplify/api';
 import {
     AppLayout,
     HelpPanel,
@@ -18,7 +18,7 @@ import {
     Button,
 } from "@cloudscape-design/components";
 import NavigationComponent from "../components/navigation";
-import FlashbarContext, { FlashbarComponent, FlashbarItem } from '../components/notifications';
+import FlashbarContext, { FlashbarComponent } from '../components/notifications';
 import { Meeting, MeetingPlatform, meetingPlatforms } from "../details";
 
 const Create = () => {
@@ -78,15 +78,20 @@ const Create = () => {
         setMeetingDate("")
         setMeetingTime("");
 
-        const restOperation = post({
-            apiName: 'restApi',
-            path: 'post-invite',
-            options: {
-                body: meeting
-            }
-        })
-        const response = (await (await restOperation.response).body.json() as any) as FlashbarItem;
-        updateFlashbar(response.type, response.content)
+        const client = generateClient();
+        try {
+            const response = await client.graphql({
+                query: createMeeting,
+                variables: {
+                    input: meeting
+                }
+            });
+            updateFlashbar('success', response.data.createMeeting);
+        } catch (error) {
+            const errorMessage = 'Failed to create invite.'
+            console.error(errorMessage, error);
+            updateFlashbar('error', errorMessage);
+        }
     }
 
     return (

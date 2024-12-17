@@ -11,7 +11,7 @@ import {
     Duration,
     aws_iam as iam,
     aws_cognito as cognito,
-    aws_apigateway as apigateway,
+    aws_appsync as appsync,
     aws_logs as logs,
     aws_wafv2 as waf,
     aws_s3_deployment as s3_deployment,
@@ -156,77 +156,41 @@ export default class FrontendStack extends Stack {
             username: props.email,
         })
 
-        const allowed_origins = [
-            `https://${distribution.distributionDomainName}`,
-            // 'http://localhost:3000'
-        ];
-
-        const proxyFunction = new lambda.Function(this, 'proxyFunction', {
-            runtime: lambda.Runtime.PYTHON_3_12,
-            architecture: lambda.Architecture.ARM_64,
-            handler: 'proxy.handler',
-            timeout: Duration.minutes(2),
-            code: lambda.Code.fromAsset('./src/backend/functions'),
-            layers: [
-                lambda.LayerVersion.fromLayerVersionArn(
-                    this,
-                    'PowerToolsLayer',
-                    `arn:aws:lambda:${this.region}:017000801446:layer:AWSLambdaPowertoolsPythonV2-Arm64:78`
-                )
-            ],
-            environment: {
-                ALLOWED_ORIGINS: JSON.stringify(allowed_origins),
-                TABLE_NAME: props.table.tableName,
+        const api = new appsync.GraphqlApi(this, 'api', {
+            name: 'graphApi',
+            definition: appsync.Definition.fromFile('./src/api/schema.graphql'),
+            authorizationConfig: {
+                defaultAuthorization: {
+                    authorizationType: appsync.AuthorizationType.USER_POOL,
+                    userPoolConfig: {
+                        userPool: userPool,
+                    }
+                }
             },
-            logRetention: logs.RetentionDays.FIVE_DAYS,
+            logConfig: {
+                retention: logs.RetentionDays.FIVE_DAYS,
+            },
+            xrayEnabled: true,
         });
 
-        props.table.grantReadWriteData(proxyFunction)
-
-        const restApi = new apigateway.LambdaRestApi(this, 'restApi', {
-            handler: proxyFunction,
-            proxy: true,
-            defaultMethodOptions: {
-                authorizationType: apigateway.AuthorizationType.COGNITO,
-                authorizer: new apigateway.CognitoUserPoolsAuthorizer(this, 'authorizer', {
-                    cognitoUserPools: [userPool]
-                }),
-            },
-            defaultCorsPreflightOptions: {
-                allowCredentials: true,
-                allowOrigins: allowed_origins,
-                allowMethods: apigateway.Cors.ALL_METHODS,
-                allowHeaders: apigateway.Cors.DEFAULT_HEADERS,
-            },
-            deployOptions: {
-                accessLogDestination: new apigateway.LogGroupLogDestination(
-                    new logs.LogGroup(this, 'restApiLogGroup', {
-                        removalPolicy: RemovalPolicy.DESTROY,
-                        retention: logs.RetentionDays.FIVE_DAYS,
-                    })
-                ),
-                loggingLevel: apigateway.MethodLoggingLevel.INFO,
-            },
+        const source = api.addDynamoDbDataSource('source', props.table);
+        source.createResolver('getInvitesResolver', {
+            typeName: 'Query',
+            fieldName: 'getInvites',
+            runtime: appsync.FunctionRuntime.JS_1_0_0,
+            code: appsync.Code.fromAsset('./src/api/resolvers/getInvites.js')
         });
-
-        const restApiWebAcl = new waf.CfnWebACL(this, 'restApiWebAcl', {
-            defaultAction: { allow: {} },
-            scope: 'REGIONAL',
-            visibilityConfig: {
-                metricName: 'restApiWebAcl',
-                sampledRequestsEnabled: true,
-                cloudWatchMetricsEnabled: true,
-            },
-            rules: [
-                createManagedRule('Api', 'AWSManagedRulesAmazonIpReputationList', 0),
-                createManagedRule('Api', 'AWSManagedRulesCommonRuleSet', 1),
-                createManagedRule('Api', 'AWSManagedRulesKnownBadInputsRuleSet', 2)
-            ]
+        source.createResolver('createInviteResolver', {
+            typeName: 'Mutation',
+            fieldName: 'createInvite',
+            runtime: appsync.FunctionRuntime.JS_1_0_0,
+            code: appsync.Code.fromAsset('./src/api/resolvers/createInvite.js')
         });
-
-        new waf.CfnWebACLAssociation(this, 'restApiWebAclAssociation', {
-            resourceArn: restApi.deploymentStage.stageArn,
-            webAclArn: restApiWebAcl.attrArn
+        source.createResolver('deleteInviteResolver', {
+            typeName: 'Mutation',
+            fieldName: 'deleteInvite',
+            runtime: appsync.FunctionRuntime.JS_1_0_0,
+            code: appsync.Code.fromAsset('./src/api/resolvers/deleteInvite.js')
         });
 
         const websitePath = './src/frontend'
@@ -250,7 +214,7 @@ export default class FrontendStack extends Stack {
         const config = {
             userPoolId: userPool.userPoolId,
             userPoolClientId: userPoolClient.userPoolClientId,
-            restApiUrl: restApi.url
+            graphApiUrl: api.graphqlUrl,
         };
 
         new s3_deployment.BucketDeployment(this, 'websiteDeployment', {

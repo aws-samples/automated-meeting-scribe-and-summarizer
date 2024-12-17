@@ -5,7 +5,6 @@ import {
     Navigate
 } from "react-router-dom";
 import { Amplify } from 'aws-amplify';
-import { fetchAuthSession } from 'aws-amplify/auth';
 import { WithAuthenticatorProps, withAuthenticator } from '@aws-amplify/ui-react';
 import '@aws-amplify/ui-react/styles.css';
 import TopNavigation from "@cloudscape-design/components/top-navigation"
@@ -23,20 +22,9 @@ Amplify.configure({
         }
     },
     API: {
-        REST: {
-            restApi: {
-                endpoint: config.restApiUrl,
-            }
-        }
-    }
-}, {
-    API: {
-        REST: {
-            headers: async () => {
-                return {
-                    Authorization: `Bearer ${(await fetchAuthSession()).tokens?.idToken}`
-                };
-            }
+        GraphQL: {
+            endpoint: config.graphApiUrl,
+            defaultAuthMode: 'userPool'
         }
     }
 });

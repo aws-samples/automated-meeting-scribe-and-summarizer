@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react"
-import { get, put } from 'aws-amplify/api';
+import { generateClient } from 'aws-amplify/api';
 import {
     AppLayout,
     HelpPanel,
@@ -14,24 +14,24 @@ import NavigationComponent from "../components/navigation";
 import { FlashbarItem, FlashbarComponent } from '../components/notifications';
 import { meetingPlatforms, Invite } from '../details'
 
-type Response = FlashbarItem & {
-    invites?: any;
-};
-
 const List = () => {
     const [navigationOpen, setNavigationOpen] = useState<boolean>(true);
+
+    const client = generateClient()
 
     const [meetings, setMeetings] = useState<Invite[]>([]);
     const [selectedMeetings, setSelectedMeetings] = useState<Invite[]>();
 
     useEffect(() => {
         const fetchMeetings = async () => {
-            const restOperation = get({
-                apiName: 'restApi',
-                path: 'get-invites'
-            });
-            const response = (await (await restOperation.response).body.json() as any) as Response;
-            setMeetings(response?.invites || []);
+            try {
+                const { data } = await client.graphql<GetInvitesQuery>({
+                    query: queries.getInvites
+                });
+                setMeetings(data.getInvites || []);
+            } catch (error) {
+                console.error('Failed to get invites.', error);
+            }
         };
         fetchMeetings();
     }, []);
@@ -58,15 +58,23 @@ const List = () => {
                                 <Button
                                     onClick={() => {
                                         if (selectedMeetings) {
-                                            put({
-                                                apiName: 'restApi',
-                                                path: 'delete-invites',
-                                                options: {
-                                                    body: [...selectedMeetings]
-                                                }
-                                            })
-                                            setMeetings(meetings.filter(meeting => !selectedMeetings.includes(meeting)))
-                                            setSelectedMeetings([])
+                                            selectedMeetings.forEach(meeting => {
+                                                client.graphql({
+                                                    query: mutations.deleteMeeting,
+                                                    variables: {
+                                                        input: {
+                                                            platform: meeting.platform,
+                                                            id: meeting.id,
+                                                            password: meeting.password,
+                                                            time: meeting.time
+                                                        }
+                                                    }
+                                                }).catch(error => {
+                                                    console.error('Failed to delete meeting.', error);
+                                                });
+                                            });
+                                            setMeetings(meetings.filter(meeting => !selectedMeetings.includes(meeting)));
+                                            setSelectedMeetings([]);
                                         }
                                     }}
                                     disabled={!selectedMeetings || selectedMeetings.length === 0}
