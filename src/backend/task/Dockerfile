@@ -1,12 +1,12 @@
 
-FROM public.ecr.aws/docker/library/python:3.12
+FROM public.ecr.aws/docker/library/node:20-slim
 USER root
 WORKDIR /srv
 COPY . /srv
 
-RUN pip3 install --upgrade pip && \
-    pip3 install -r requirements.txt
-RUN playwright install --with-deps chromium
+RUN npm install && \
+    npm run build
+RUN npx playwright install --with-deps chromium
 
 RUN apt-get update && \
     apt-get install -y \
