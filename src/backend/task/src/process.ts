@@ -71,7 +71,7 @@ async function summarize(transcript: string): Promise<string> {
         // console.log(html)
         return html;
     } catch (error) {
-        console.error(`${errorMessage}:`, error);
+        console.log(`${errorMessage}:`, error);
         return `${errorMessage}. ${logsMessage}`;
     }
 }
@@ -126,7 +126,7 @@ async function sendEmail(chat: string | null, attachments: Record<string, string
             await transport.sendMail(mailOptions);
             console.log(`Email sent to ${emailDestination}!`);
         } catch (error) {
-            console.error(`Error while sending email to ${emailDestination}:`, error);
+            console.log(`Error while sending email to ${emailDestination}:`, error);
         }
     }
 }

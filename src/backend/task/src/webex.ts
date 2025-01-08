@@ -25,6 +25,13 @@ export default class Webex {
         await meetingTextElement?.type(details.meeting_id);
         await meetingTextElement?.press("Enter");
 
+        if (details.meeting_password) {
+            console.log("Entering meeting password.");
+            const passwordTextElement = await page.waitForSelector("#meetingInfoPassword");
+            await passwordTextElement?.type(details.meeting_password);
+            await passwordTextElement?.press("Enter");
+        }
+
         console.log("Launching app.");
         try {
             await page.waitForSelector(".meet_message_H1");
@@ -48,7 +55,8 @@ export default class Webex {
         const emailTextElement = await frame.waitForSelector(
             'input[aria-labelledby="emailLabel"]'
         );
-        await emailTextElement?.type(process.env.EMAIL_SOURCE!);
+        // await emailTextElement?.type(process.env.EMAIL_SOURCE!);
+        await emailTextElement?.type("bot@scribe.tools.aws.dev")
         await emailTextElement?.press("Enter");
 
         console.log("Clicking cookie button.");
@@ -88,8 +96,8 @@ export default class Webex {
         console.log("Listening for speaker changes.")
         await page.evaluate(
             ({ iframe }) => {
-                const iFrame = document.querySelector(iframe);
-                const iFrameDocument = iFrame?.ownerDocument;
+                const iFrame = document.querySelector(iframe) as HTMLIFrameElement;
+                const iFrameDocument = iFrame?.contentDocument;
                 const targetNode = iFrameDocument?.querySelector('div[class*="layout-layout-content-left"]');
 
                 const config = { attributes: true, subtree: true };
@@ -112,30 +120,29 @@ export default class Webex {
             { iframe: this.iframe }
         );
 
-        await page.exposeFunction("messageChange", async (sender: string, message: string) => {
-            if (!sender?.startsWith("Scribe")) {
-                if (message.includes(details.end_command)) {
-                    console.log("Your scribe has been removed from the meeting.");
-                    await page.goto("about:blank");
-                } else if (details.start && message.includes(details.pause_command)) {
-                    details.start = false;
-                    console.log(details.pause_messages[0]);
-                    await this.sendMessages(frame, details.pause_messages);
-                } else if (!details.start && message.includes(details.start_command)) {
-                    details.start = true;
-                    console.log(details.start_messages[0]);
-                    await this.sendMessages(frame, details.start_messages);
-                } else if (details.start) {
-                    details.messages.push(message);
-                }
+        await page.exposeFunction("messageChange", async (message: string) => {
+            if (message.includes(details.end_command)) {
+                console.log("Your scribe has been removed from the meeting.");
+                await page.goto("about:blank");
+            } else if (details.start && message.includes(details.pause_command)) {
+                details.start = false;
+                console.log(details.pause_messages[0]);
+                await this.sendMessages(frame, details.pause_messages);
+            } else if (!details.start && message.includes(details.start_command)) {
+                details.start = true;
+                console.log(details.start_messages[0]);
+                await this.sendMessages(frame, details.start_messages);
+            } else if (details.start) {
+                details.messages.push(message);
             }
         });
         console.log("Listening for message changes.")
         await page.evaluate(
             ({ iframe }) => {
-                const iFrame = document.querySelector(iframe);
-                const iFrameDocument = iFrame?.ownerDocument;
+                const iFrame = document.querySelector(iframe) as HTMLIFrameElement;
+                const iFrameDocument = iFrame?.contentDocument;
                 const targetNode = iFrameDocument?.querySelector('div[class^="style-chat-box"]');
+
                 const config = { childList: true, subtree: true };
 
                 const callback = (mutationList: MutationRecord[]) => {
@@ -144,8 +151,8 @@ export default class Webex {
                     if (addedNode) {
                         const sender = addedNode.querySelector('h3[class^="style-chat-label"]')?.textContent;
                         const message = addedNode.querySelector('span[class^="style-chat-msg"]')?.textContent;
-                        if (sender && message) {
-                            (window as any).messageChange(sender, message);
+                        if (!sender!.startsWith("from Scribe")) {
+                            (window as any).messageChange(message);
                         }
                     }
                 };
@@ -158,7 +165,7 @@ export default class Webex {
 
         console.log("Waiting for meeting end.");
         try {
-            await page.waitForSelector('.style-end-message-2PkYs', {
+            await frame.waitForSelector('.style-end-message-2PkYs', {
                 timeout: details.meeting_timeout
             });
             console.log("Meeting ended.");

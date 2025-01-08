@@ -48,7 +48,7 @@ export class Details {
         this.meetingNames = response.Items?.map((item: any) => item.meeting_name.S) || [];
         this.emailDestinations = emailDestinations;
         this.intro_messages = [
-            `Hello! I am Amazon's AI-assisted scribe. I was invited by ${emailStrings}.`,
+            `Hello! I am an AI-assisted scribe. I was invited by ${emailStrings}.`,
             `If all other participants consent to my use, send "${this.start_command}" in the chat ` +
             `to start saving new speakers, messages, and machine-generated captions.`,
             `If you do not consent to my use, send "${this.end_command}" in the chat ` +
