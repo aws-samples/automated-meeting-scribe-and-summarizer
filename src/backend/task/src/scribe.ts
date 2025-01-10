@@ -8,11 +8,9 @@ import { details } from './details';
 
 export class TranscriptionService {
     private process: any;
-    private startTime!: number;
+    private startTime: number | null = null;
     private readonly channels = 1;
     private readonly sampleRate = 16000; // in hertz
-    private readonly chunkDuration = 50; // in milliseconds
-    private readonly chunkSize = this.chunkDuration / 1000 * this.sampleRate * 2; // in bytes
 
     private async * audioStream() {
         this.process = spawn('ffmpeg', [
@@ -20,21 +18,20 @@ export class TranscriptionService {
             '-i', 'default',
             '-ac', String(this.channels),
             '-ar', String(this.sampleRate),
-            '-blocksize', String(this.chunkSize),
             '-acodec', 'pcm_s16le',
             '-f', 's16le',
             '-loglevel', 'warning',
             '-'
         ]);
 
-        this.startTime = Date.now();
         try {
             for await (const chunk of this.process.stdout) {
                 if (!details.start) {
-                    yield { AudioEvent: { AudioChunk: Buffer.alloc(this.chunkSize) } };
+                    yield { AudioEvent: { AudioChunk: Buffer.alloc(chunk.length) } };
                 } else {
                     yield { AudioEvent: { AudioChunk: chunk } };
                 }
+                if (!this.startTime) { this.startTime = Date.now(); }
             }
         } catch (error) {
             console.log('Process error:', error);
@@ -72,7 +69,7 @@ export class TranscriptionService {
                         const word = item.Content
                         const wordType = item.Type
                         if (wordType === 'pronunciation') {
-                            const timestamp = this.startTime + (item.StartTime! * 1000);
+                            const timestamp = this.startTime! + (item.StartTime! * 1000);
                             const label = `(${item.Speaker})`
                             const speaker = details.speakers.find(s => s.timestamp <= timestamp)?.name ?? "Unknown";
                             // console.log(`[${this.formatTimestamp(timestamp)}] ${speaker}: ${word}`)
