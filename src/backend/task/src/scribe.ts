@@ -10,20 +10,20 @@ export class TranscriptionService {
     private process: any;
     private startTime!: number;
     private readonly channels = 1;
-    private readonly sampleRate = 16000; // in Hz
-    private readonly chunkDuration = 100; // in milliseconds
+    private readonly sampleRate = 16000; // in hertz
+    private readonly chunkDuration = 50; // in milliseconds
     private readonly chunkSize = this.chunkDuration / 1000 * this.sampleRate * 2; // in bytes
 
     private async * audioStream() {
         this.process = spawn('ffmpeg', [
-            '-loglevel', 'warning',
             '-f', 'pulse',
             '-i', 'default',
-            '-acodec', 'pcm_s16le',
             '-ac', String(this.channels),
             '-ar', String(this.sampleRate),
-            '-f', 's16le',
             '-blocksize', String(this.chunkSize),
+            '-acodec', 'pcm_s16le',
+            '-f', 's16le',
+            '-loglevel', 'warning',
             '-'
         ]);
 
@@ -54,14 +54,14 @@ export class TranscriptionService {
     async startTranscription() {
         const client = new TranscribeStreamingClient({});
         const command = new StartStreamTranscriptionCommand({
+            AudioStream: this.audioStream(),
+            MediaSampleRateHertz: this.sampleRate,
+            MediaEncoding: 'pcm',
             LanguageCode: 'en-US',
             // IdentifyLanguage: true,
             // IdentifyMultipleLanguages: true,
             // LanguageOptions: 'en-US,es-US',
-            MediaSampleRateHertz: this.sampleRate,
-            MediaEncoding: 'pcm',
             ShowSpeakerLabel: true,
-            AudioStream: this.audioStream()
         });
         const response = await client.send(command);
 
@@ -75,7 +75,7 @@ export class TranscriptionService {
                             const timestamp = this.startTime + (item.StartTime! * 1000);
                             const label = `(${item.Speaker})`
                             const speaker = details.speakers.find(s => s.timestamp <= timestamp)?.name ?? "Unknown";
-                            // console.log(`[${this.formatTimestamp(timestamp)} | ${item.StartTime!}] ${speaker}: ${word}`)
+                            // console.log(`[${this.formatTimestamp(timestamp)}] ${speaker}: ${word}`)
                             if (
                                 details.captions.length === 0 ||
                                 !details.captions[details.captions.length - 1].split(": ")[0].includes(speaker)
