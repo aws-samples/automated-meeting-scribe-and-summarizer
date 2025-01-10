@@ -15,7 +15,7 @@ const main = async () => {
     transcriptionService.startTranscription().catch(console.error);
 
     const browser: Browser = await chromium.launch({
-        headless: true,
+        // headless: false,
         ignoreDefaultArgs: ['--mute-audio'],
         args: [
             '--window-size=1920,1080',

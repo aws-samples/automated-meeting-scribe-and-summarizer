@@ -25,13 +25,6 @@ export default class Webex {
         await meetingTextElement?.type(details.meetingId);
         await meetingTextElement?.press("Enter");
 
-        if (details.meetingPassword) {
-            console.log("Entering meeting password.");
-            const passwordTextElement = await page.waitForSelector("#meetingInfoPassword");
-            await passwordTextElement?.type(details.meetingPassword);
-            await passwordTextElement?.press("Enter");
-        }
-
         console.log("Launching app.");
         try {
             await page.waitForSelector(".meet_message_H1");
@@ -108,7 +101,10 @@ export default class Webex {
                             const childNode = mutation.target as HTMLElement;
                             const pattern = /.*videoitem-in-speaking.*/;
                             if (childNode.classList.value.match(pattern)) {
-                                (window as any).speakerChange(childNode.textContent);
+                                const nameElement = childNode.querySelector('[class^="videoitem-full-name-content"]');
+                                if (nameElement) {
+                                    (window as any).speakerChange(nameElement.textContent);
+                                }
                             }
                         }
                     }
