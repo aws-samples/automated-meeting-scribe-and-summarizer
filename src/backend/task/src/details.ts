@@ -14,10 +14,10 @@ export class Details {
     }
 
     public meeting = process.env.MEETING!
-    public meeting_platform: string = this.meeting.split('#')[0];
-    public meeting_id: string = this.meeting.split('#')[1];
-    public meeting_password: string = this.meeting.split('#')[2];
-    public meeting_time: number = parseInt(this.meeting.split('#')[3]);
+    public meetingPlatform: string = this.meeting.split('#')[0];
+    public meetingId: string = this.meeting.split('#')[1];
+    public meetingPassword: string = this.meeting.split('#')[2];
+    public meetingTime: number = parseInt(this.meeting.split('#')[3]);
 
     public emailDestinations: string[] = [];
     public meetingNames: string[] = [];
@@ -47,35 +47,35 @@ export class Details {
 
         this.meetingNames = response.Items?.map((item: any) => item.meeting_name.S) || [];
         this.emailDestinations = emailDestinations;
-        this.intro_messages = [
+        this.introMessages = [
             `Hello! I am an AI-assisted scribe. I was invited by ${emailStrings}.`,
-            `If all other participants consent to my use, send "${this.start_command}" in the chat ` +
+            `If all other participants consent to my use, send "${this.startCommand}" in the chat ` +
             `to start saving new speakers, messages, and machine-generated captions.`,
-            `If you do not consent to my use, send "${this.end_command}" in the chat ` +
+            `If you do not consent to my use, send "${this.endCommand}" in the chat ` +
             `to remove me from this meeting.`
         ]
     }
 
-    public scribe_name: string = process.env.SCRIBE_NAME || '';
-    public scribe_identity: string = `Scribe [${this.scribe_name}]`;
+    public scribeName: string = process.env.SCRIBE_NAME || '';
+    public scribeIdentity: string = `Scribe [${this.scribeName}]`;
 
-    public waiting_timeout: number = 300000;  // 5 minutes
-    public meeting_timeout: number = 21600000;  // 6 hours
+    public waitingTimeout: number = 300000;  // 5 minutes
+    public meetingTimeout: number = 21600000;  // 6 hours
 
     public start: boolean = false;
 
-    public start_command: string = 'START';
-    public pause_command: string = 'PAUSE';
-    public end_command: string = 'END';
+    public startCommand: string = 'START';
+    public pauseCommand: string = 'PAUSE';
+    public endCommand: string = 'END';
 
-    public intro_messages: string[] = [];
-    public start_messages: string[] = [
+    public introMessages: string[] = [];
+    public startMessages: string[] = [
         'Saving new speakers, messages, and machine-generated captions.',
-        `Send "${this.pause_command}" in the chat to stop saving meeting details.`
+        `Send "${this.pauseCommand}" in the chat to stop saving meeting details.`
     ];
-    public pause_messages: string[] = [
+    public pauseMessages: string[] = [
         'Not saving speakers, messages, or machine-generated captions.',
-        `Send "${this.start_command}" in the chat to start saving meeting details.`
+        `Send "${this.startCommand}" in the chat to start saving meeting details.`
     ];
 
     public messages: string[] = [];

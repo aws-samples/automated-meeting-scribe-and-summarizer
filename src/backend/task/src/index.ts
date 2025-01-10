@@ -8,7 +8,7 @@ import { encapsulate } from './process';
 
 const main = async () => {
     const currentTimestamp = Math.floor(Date.now() / 1000);
-    const timestampDiff = Math.max(0, (details.meeting_time - currentTimestamp - 10) * 1000);
+    const timestampDiff = Math.max(0, (details.meetingTime - currentTimestamp - 10) * 1000);
     console.log(`Sleeping ${timestampDiff / 1000} seconds.`);
     await new Promise(resolve => setTimeout(resolve, timestampDiff));
 
@@ -32,9 +32,9 @@ const main = async () => {
     page.setDefaultTimeout(20000);
 
     let meeting: any;
-    if (details.meeting_platform === "Chime") {
+    if (details.meetingPlatform === "Chime") {
         meeting = new Chime();
-    } else if (details.meeting_platform === "Webex") {
+    } else if (details.meetingPlatform === "Webex") {
         meeting = new Webex();
     }
     await meeting.initialize(page);

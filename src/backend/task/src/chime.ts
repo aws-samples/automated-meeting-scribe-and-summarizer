@@ -18,13 +18,13 @@ export default class Chime {
 
     public async initialize(page: Page): Promise<void> {
         console.log("Getting meeting link.");
-        await page.goto(`https://app.chime.aws/meetings/${details.meeting_id}`);
+        await page.goto(`https://app.chime.aws/meetings/${details.meetingId}`);
 
         console.log("Entering name.");
         try {
             const nameTextElement = await page.waitForSelector("#name");
             if (nameTextElement) {
-                await nameTextElement.type(details.scribe_identity);
+                await nameTextElement.type(details.scribeIdentity);
                 await nameTextElement.press("Tab");
                 await page.keyboard.press("Enter");
             }
@@ -47,7 +47,7 @@ export default class Chime {
         try {
             const chatPanelElement = await page.waitForSelector(
                 'button[data-testid="button"][aria-label^="Open chat panel"]',
-                { timeout: details.waiting_timeout }
+                { timeout: details.waitingTimeout }
             );
             await chatPanelElement?.click();
         } catch (error) {
@@ -58,7 +58,7 @@ export default class Chime {
         await new Promise(resolve => setTimeout(resolve, 1000));
 
         console.log("Sending introduction messages.");
-        await this.sendMessages(page, details.intro_messages);
+        await this.sendMessages(page, details.introMessages);
 
         console.log("Opening attendees panel.");
         const attendeesPanelElement = await page.waitForSelector(
@@ -124,18 +124,18 @@ export default class Chime {
             }
             this.prevSender = sender;
 
-            if (text === details.end_command) {
+            if (text === details.endCommand) {
                 console.log("Your scribe has been removed from the meeting.");
                 await page.goto("about:blank");
-            } else if (details.start && text === details.pause_command) {
+            } else if (details.start && text === details.pauseCommand) {
                 details.start = false;
-                console.log(details.pause_messages[0]);
-                await this.sendMessages(page, details.pause_messages);
-            } else if (!details.start && text === details.start_command) {
+                console.log(details.pauseMessages[0]);
+                await this.sendMessages(page, details.pauseMessages);
+            } else if (!details.start && text === details.startCommand) {
                 details.start = true;
-                console.log(details.start_messages[0]);
-                await this.sendMessages(page, details.start_messages);
-            } else if (details.start && sender !== "Amazon Chime" && !sender?.includes(details.scribe_name)) {
+                console.log(details.startMessages[0]);
+                await this.sendMessages(page, details.startMessages);
+            } else if (details.start && sender !== "Amazon Chime" && !sender?.includes(details.scribeName)) {
                 const timestamp = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
                 let message = `[${timestamp}] ${sender}: `;
 
@@ -176,7 +176,7 @@ export default class Chime {
         try {
             await page.waitForSelector('button[id="endMeeting"]', {
                 state: "detached",
-                timeout: details.meeting_timeout
+                timeout: details.meetingTimeout
             });
             console.log("Meeting ended.");
         } catch (error) {

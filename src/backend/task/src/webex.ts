@@ -22,13 +22,13 @@ export default class Webex {
 
         console.log("Entering meeting ID.");
         const meetingTextElement = await page.waitForSelector("#join-meeting-form");
-        await meetingTextElement?.type(details.meeting_id);
+        await meetingTextElement?.type(details.meetingId);
         await meetingTextElement?.press("Enter");
 
-        if (details.meeting_password) {
+        if (details.meetingPassword) {
             console.log("Entering meeting password.");
             const passwordTextElement = await page.waitForSelector("#meetingInfoPassword");
-            await passwordTextElement?.type(details.meeting_password);
+            await passwordTextElement?.type(details.meetingPassword);
             await passwordTextElement?.press("Enter");
         }
 
@@ -49,7 +49,7 @@ export default class Webex {
         const nameTextElement = await frame.waitForSelector(
             'input[aria-labelledby="nameLabel"]'
         );
-        await nameTextElement?.type(details.scribe_identity);
+        await nameTextElement?.type(details.scribeIdentity);
 
         console.log("Entering email.");
         const emailTextElement = await frame.waitForSelector(
@@ -79,7 +79,7 @@ export default class Webex {
         try {
             const chatPanelElement = await frame.waitForSelector(
                 'text="Chat"',
-                { timeout: details.waiting_timeout }
+                { timeout: details.waitingTimeout }
             );
             await chatPanelElement?.click();
         } catch {
@@ -90,7 +90,7 @@ export default class Webex {
         await new Promise(resolve => setTimeout(resolve, 1000));
 
         console.log("Sending introduction messages.");
-        await this.sendMessages(frame, details.intro_messages);
+        await this.sendMessages(frame, details.introMessages);
 
         await page.exposeFunction("speakerChange", transcriptionService.speakerChange);
         console.log("Listening for speaker changes.")
@@ -121,17 +121,17 @@ export default class Webex {
         );
 
         await page.exposeFunction("messageChange", async (message: string) => {
-            if (message.includes(details.end_command)) {
+            if (message.includes(details.endCommand)) {
                 console.log("Your scribe has been removed from the meeting.");
                 await page.goto("about:blank");
-            } else if (details.start && message.includes(details.pause_command)) {
+            } else if (details.start && message.includes(details.pauseCommand)) {
                 details.start = false;
-                console.log(details.pause_messages[0]);
-                await this.sendMessages(frame, details.pause_messages);
-            } else if (!details.start && message.includes(details.start_command)) {
+                console.log(details.pauseMessages[0]);
+                await this.sendMessages(frame, details.pauseMessages);
+            } else if (!details.start && message.includes(details.startCommand)) {
                 details.start = true;
-                console.log(details.start_messages[0]);
-                await this.sendMessages(frame, details.start_messages);
+                console.log(details.startMessages[0]);
+                await this.sendMessages(frame, details.startMessages);
             } else if (details.start) {
                 details.messages.push(message);
             }
@@ -166,7 +166,7 @@ export default class Webex {
         console.log("Waiting for meeting end.");
         try {
             await frame.waitForSelector('.style-end-message-2PkYs', {
-                timeout: details.meeting_timeout
+                timeout: details.meetingTimeout
             });
             console.log("Meeting ended.");
         } catch (error) {

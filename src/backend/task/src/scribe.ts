@@ -8,26 +8,26 @@ import { details } from './details';
 
 export class TranscriptionService {
     private process: any;
-    private readonly startTime = Math.floor(Date.now() / 1000);
-    private readonly frameRate = 16000;
+    private startTime!: number;
     private readonly channels = 1;
-    private readonly chunkSize = 1024;
+    private readonly sampleRate = 16000; // in Hz
+    private readonly chunkDuration = 100; // in milliseconds
+    private readonly chunkSize = this.chunkDuration / 1000 * this.sampleRate * 2; // in bytes
 
     private async * audioStream() {
         this.process = spawn('ffmpeg', [
             '-loglevel', 'warning',
             '-f', 'pulse',
             '-i', 'default',
-            // '-f', 'avfoundation',
-            // '-i', ':0',
             '-acodec', 'pcm_s16le',
             '-ac', String(this.channels),
-            '-ar', String(this.frameRate),
+            '-ar', String(this.sampleRate),
             '-f', 's16le',
             '-blocksize', String(this.chunkSize),
             '-'
         ]);
 
+        this.startTime = Date.now();
         try {
             for await (const chunk of this.process.stdout) {
                 if (!details.start) {
@@ -42,10 +42,11 @@ export class TranscriptionService {
     }
 
     private formatTimestamp(timestamp: number): string {
-        const dateTime = new Date(timestamp * 1000);
+        const dateTime = new Date(timestamp);
         return dateTime.toLocaleTimeString('en-US', {
             hour: '2-digit',
             minute: '2-digit',
+            // second: '2-digit',
             hour12: false
         });
     }
@@ -55,9 +56,9 @@ export class TranscriptionService {
         const command = new StartStreamTranscriptionCommand({
             LanguageCode: 'en-US',
             // IdentifyLanguage: true,
-            // LanguageOptions: 'en-US,es-US',
             // IdentifyMultipleLanguages: true,
-            MediaSampleRateHertz: this.frameRate,
+            // LanguageOptions: 'en-US,es-US',
+            MediaSampleRateHertz: this.sampleRate,
             MediaEncoding: 'pcm',
             ShowSpeakerLabel: true,
             AudioStream: this.audioStream()
@@ -65,17 +66,16 @@ export class TranscriptionService {
         const response = await client.send(command);
 
         for await (const event of response.TranscriptResultStream ?? []) {
-            const results = event.TranscriptEvent?.Transcript?.Results ?? [];
-            for (const result of results ?? []) {
+            for (const result of event.TranscriptEvent?.Transcript?.Results ?? []) {
                 if (result.IsPartial === false) {
                     for (const item of result.Alternatives?.[0]?.Items ?? []) {
                         const word = item.Content
                         const wordType = item.Type
                         if (wordType === 'pronunciation') {
-                            const timestamp = this.startTime + item.StartTime!
+                            const timestamp = this.startTime + (item.StartTime! * 1000);
                             const label = `(${item.Speaker})`
-                            const speaker = details.speakers.find(s => s.timestamp <= timestamp)?.name ?? "No one";
-                            // console.log(`[${this.formatTimestamp(timestamp)}] ${speaker}: ${word}`)
+                            const speaker = details.speakers.find(s => s.timestamp <= timestamp)?.name ?? "Unknown";
+                            // console.log(`[${this.formatTimestamp(timestamp)} | ${item.StartTime!}] ${speaker}: ${word}`)
                             if (
                                 details.captions.length === 0 ||
                                 !details.captions[details.captions.length - 1].split(": ")[0].includes(speaker)
@@ -102,7 +102,7 @@ export class TranscriptionService {
     }
 
     speakerChange = async (speaker: string) => {
-        const timestamp = Math.floor(Date.now() / 1000);
+        const timestamp = Date.now();
         details.speakers.push({ name: speaker, timestamp });
         // console.log(`[${this.formatTimestamp(timestamp)}] ${speaker}`)
     }
