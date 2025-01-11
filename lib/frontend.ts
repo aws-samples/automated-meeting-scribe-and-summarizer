@@ -1,24 +1,24 @@
-
 import {
     StackProps,
+    aws_s3 as s3,
     aws_dynamodb as dynamodb,
     Stack,
+    aws_appsync as appsync,
+    RemovalPolicy,
+    aws_wafv2 as waf,
     aws_cloudfront as cloudfront,
     aws_cloudfront_origins as cloudfront_origins,
-    aws_s3 as s3,
-    RemovalPolicy,
     aws_lambda as lambda,
     Duration,
     aws_iam as iam,
-    aws_cognito as cognito,
-    aws_apigateway as apigateway,
     aws_logs as logs,
-    aws_wafv2 as waf,
+    aws_cognito as cognito,
     aws_s3_deployment as s3_deployment,
     CfnOutput,
 } from "aws-cdk-lib";
-import { Construct } from 'constructs';
-import { execSync } from 'child_process';
+import { Construct } from "constructs";
+import { execSync } from "child_process";
+import { createManagedRules } from "./utils/rules";
 
 interface FrontendStackProps extends StackProps {
     loggingBucket: s3.Bucket;
@@ -27,98 +27,88 @@ interface FrontendStackProps extends StackProps {
 }
 
 export default class FrontendStack extends Stack {
+    public readonly graphApi: appsync.GraphqlApi;
+
     constructor(scope: Construct, id: string, props: FrontendStackProps) {
         super(scope, id, props);
 
-        const websiteBucket = new s3.Bucket(this, 'websiteBucket', {
+        const websiteBucket = new s3.Bucket(this, "websiteBucket", {
             autoDeleteObjects: true,
             removalPolicy: RemovalPolicy.DESTROY,
             blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
             enforceSSL: true,
             serverAccessLogsBucket: props.loggingBucket,
-            serverAccessLogsPrefix: 'website/'
+            serverAccessLogsPrefix: "website/",
         });
 
-        function createManagedRule(
-            prefix: string,
-            name: string,
-            priority: number
-        ): waf.CfnWebACL.RuleProperty {
-            const ruleName = `${prefix}-${name}`
-            return {
-                name: ruleName,
-                priority: priority,
-                overrideAction: { none: {} },
-                statement: {
-                    managedRuleGroupStatement: {
-                        vendorName: 'AWS',
-                        name: name
-                    }
-                },
+        const distributionWebAcl = new waf.CfnWebACL(
+            this,
+            "distributionWebAcl",
+            {
+                defaultAction: { allow: {} },
+                scope: "CLOUDFRONT",
                 visibilityConfig: {
-                    metricName: ruleName,
+                    metricName: "distributionWebAcl",
                     sampledRequestsEnabled: true,
                     cloudWatchMetricsEnabled: true,
-                }
+                },
+                rules: createManagedRules("Distribution", [
+                    "AWSManagedRulesAmazonIpReputationList",
+                    "AWSManagedRulesCommonRuleSet",
+                    "AWSManagedRulesKnownBadInputsRuleSet",
+                ]),
             }
-        }
+        );
 
-        const distributionWebAcl = new waf.CfnWebACL(this, 'distributionWebAcl', {
-            defaultAction: { allow: {} },
-            scope: 'CLOUDFRONT',
-            visibilityConfig: {
-                metricName: 'distributionWebAcl',
-                sampledRequestsEnabled: true,
-                cloudWatchMetricsEnabled: true,
-            },
-            rules: [
-                createManagedRule('Distribution', 'AWSManagedRulesAmazonIpReputationList', 0),
-                createManagedRule('Distribution', 'AWSManagedRulesCommonRuleSet', 1),
-                createManagedRule('Distribution', 'AWSManagedRulesKnownBadInputsRuleSet', 2)
-            ]
-        });
-
-        const distribution = new cloudfront.Distribution(this, 'distribution', {
-            defaultRootObject: 'index.html',
+        const distribution = new cloudfront.Distribution(this, "distribution", {
+            defaultRootObject: "index.html",
             defaultBehavior: {
-                origin: cloudfront_origins.S3BucketOrigin.withOriginAccessControl(websiteBucket),
-                viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+                origin: cloudfront_origins.S3BucketOrigin.withOriginAccessControl(
+                    websiteBucket
+                ),
+                viewerProtocolPolicy:
+                    cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
                 allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
             },
             errorResponses: [
                 {
                     httpStatus: 404,
-                    responsePagePath: '/index.html',
+                    responsePagePath: "/index.html",
                     responseHttpStatus: 200,
                 },
                 {
                     httpStatus: 403,
-                    responsePagePath: '/index.html',
+                    responsePagePath: "/index.html",
                     responseHttpStatus: 200,
-                }
+                },
             ],
             webAclId: distributionWebAcl.attrArn,
             logBucket: props.loggingBucket,
             logIncludesCookies: true,
-            logFilePrefix: 'distribution',
+            logFilePrefix: "distribution",
         });
 
-        const postConfirmationLambda = new lambda.Function(this, 'postConfirmationLambda', {
-            runtime: lambda.Runtime.PYTHON_3_12,
-            architecture: lambda.Architecture.ARM_64,
-            timeout: Duration.minutes(2),
-            handler: 'confirm.handler',
-            code: lambda.Code.fromAsset('./src/backend/functions'),
-            initialPolicy: [
-                new iam.PolicyStatement({
-                    effect: iam.Effect.ALLOW,
-                    actions: ['ses:GetAccount', 'ses:VerifyEmailIdentity'],
-                    resources: ['*']
-                })
-            ]
-        });
+        const postConfirmationLambda = new lambda.Function(
+            this,
+            "postConfirmationLambda",
+            {
+                runtime: lambda.Runtime.PYTHON_3_12,
+                architecture: lambda.Architecture.ARM_64,
+                timeout: Duration.minutes(2),
+                handler: "confirm.handler",
+                code: lambda.Code.fromAsset("./src/backend/functions"),
+                initialPolicy: [
+                    new iam.PolicyStatement({
+                        effect: iam.Effect.ALLOW,
+                        actions: ["ses:GetAccount", "ses:VerifyEmailIdentity"],
+                        resources: ["*"],
+                    }),
+                ],
+                logRetention: logs.RetentionDays.FIVE_DAYS,
+            }
+        );
 
-        const userPool = new cognito.UserPool(this, 'userPool', {
+        const userPool = new cognito.UserPool(this, "userPool", {
             removalPolicy: RemovalPolicy.DESTROY,
             selfSignUpEnabled: true,
             signInAliases: { email: true },
@@ -128,121 +118,126 @@ export default class FrontendStack extends Stack {
                 requireDigits: true,
                 requireSymbols: true,
                 requireUppercase: true,
-                tempPasswordValidity: Duration.days(1)
+                tempPasswordValidity: Duration.days(1),
             },
             mfa: cognito.Mfa.OPTIONAL,
             mfaSecondFactor: {
                 otp: true,
-                sms: false
+                sms: false,
             },
             accountRecovery: cognito.AccountRecovery.EMAIL_ONLY,
-            advancedSecurityMode: cognito.AdvancedSecurityMode.ENFORCED,
+            // advancedSecurityMode: cognito.AdvancedSecurityMode.ENFORCED,
             lambdaTriggers: {
-                postConfirmation: postConfirmationLambda
-            }
-        });
-
-        const userPoolClient = new cognito.UserPoolClient(this, 'userPoolClient', {
-            userPool: userPool,
-            preventUserExistenceErrors: true,
-            authFlows: {
-                userPassword: true,
-                userSrp: true,
+                postConfirmation: postConfirmationLambda,
             },
         });
 
-        new cognito.CfnUserPoolUser(this, 'userPoolUser', {
+        const userPoolClient = new cognito.UserPoolClient(
+            this,
+            "userPoolClient",
+            {
+                userPool: userPool,
+                preventUserExistenceErrors: true,
+                authFlows: {
+                    userPassword: true,
+                    userSrp: true,
+                },
+            }
+        );
+
+        new cognito.CfnUserPoolUser(this, "userPoolUser", {
             userPoolId: userPool.userPoolId,
             username: props.email,
-        })
-
-        const allowed_origins = [
-            `https://${distribution.distributionDomainName}`,
-            // 'http://localhost:3000'
-        ];
-
-        const proxyFunction = new lambda.Function(this, 'proxyFunction', {
-            runtime: lambda.Runtime.PYTHON_3_12,
-            architecture: lambda.Architecture.ARM_64,
-            handler: 'proxy.handler',
-            timeout: Duration.minutes(2),
-            code: lambda.Code.fromAsset('./src/backend/functions'),
-            layers: [
-                lambda.LayerVersion.fromLayerVersionArn(
-                    this,
-                    'PowerToolsLayer',
-                    `arn:aws:lambda:${this.region}:017000801446:layer:AWSLambdaPowertoolsPythonV2-Arm64:78`
-                )
-            ],
-            environment: {
-                ALLOWED_ORIGINS: JSON.stringify(allowed_origins),
-                TABLE_NAME: props.table.tableName,
-            },
-            logRetention: logs.RetentionDays.FIVE_DAYS,
         });
 
-        props.table.grantReadWriteData(proxyFunction)
-
-        const restApi = new apigateway.LambdaRestApi(this, 'restApi', {
-            handler: proxyFunction,
-            proxy: true,
-            defaultMethodOptions: {
-                authorizationType: apigateway.AuthorizationType.COGNITO,
-                authorizer: new apigateway.CognitoUserPoolsAuthorizer(this, 'authorizer', {
-                    cognitoUserPools: [userPool]
-                }),
+        this.graphApi = new appsync.GraphqlApi(this, "graphApi", {
+            name: "graphApi",
+            definition: appsync.Definition.fromFile("./src/api/schema.graphql"),
+            authorizationConfig: {
+                defaultAuthorization: {
+                    authorizationType: appsync.AuthorizationType.USER_POOL,
+                    userPoolConfig: {
+                        userPool: userPool,
+                    },
+                },
+                additionalAuthorizationModes: [
+                    {
+                        authorizationType: appsync.AuthorizationType.IAM,
+                    },
+                ],
             },
-            defaultCorsPreflightOptions: {
-                allowCredentials: true,
-                allowOrigins: allowed_origins,
-                allowMethods: apigateway.Cors.ALL_METHODS,
-                allowHeaders: apigateway.Cors.DEFAULT_HEADERS,
+            logConfig: {
+                fieldLogLevel: appsync.FieldLogLevel.ALL,
+                retention: logs.RetentionDays.FIVE_DAYS,
             },
-            deployOptions: {
-                accessLogDestination: new apigateway.LogGroupLogDestination(
-                    new logs.LogGroup(this, 'restApiLogGroup', {
-                        removalPolicy: RemovalPolicy.DESTROY,
-                        retention: logs.RetentionDays.FIVE_DAYS,
-                    })
-                ),
-                loggingLevel: apigateway.MethodLoggingLevel.INFO,
-            },
+            xrayEnabled: true,
         });
 
-        const restApiWebAcl = new waf.CfnWebACL(this, 'restApiWebAcl', {
+        const source = this.graphApi.addDynamoDbDataSource(
+            "source",
+            props.table
+        );
+        source.createResolver("getInvitesResolver", {
+            typeName: "Query",
+            fieldName: "getInvites",
+            runtime: appsync.FunctionRuntime.JS_1_0_0,
+            code: appsync.Code.fromAsset(
+                "./src/api/resolvers/queries/getInvites.js"
+            ),
+        });
+        source.createResolver("createInviteResolver", {
+            typeName: "Mutation",
+            fieldName: "createInvite",
+            runtime: appsync.FunctionRuntime.JS_1_0_0,
+            code: appsync.Code.fromAsset(
+                "./src/api/resolvers/mutations/createInvite.js"
+            ),
+        });
+        source.createResolver("deleteInviteResolver", {
+            typeName: "Mutation",
+            fieldName: "deleteInvite",
+            runtime: appsync.FunctionRuntime.JS_1_0_0,
+            code: appsync.Code.fromAsset(
+                "./src/api/resolvers/mutations/deleteInvite.js"
+            ),
+        });
+
+        const graphApiWebAcl = new waf.CfnWebACL(this, "graphApiWebAcl", {
             defaultAction: { allow: {} },
-            scope: 'REGIONAL',
+            scope: "REGIONAL",
             visibilityConfig: {
-                metricName: 'restApiWebAcl',
+                metricName: "graphApiWebAcl",
                 sampledRequestsEnabled: true,
                 cloudWatchMetricsEnabled: true,
             },
-            rules: [
-                createManagedRule('Api', 'AWSManagedRulesAmazonIpReputationList', 0),
-                createManagedRule('Api', 'AWSManagedRulesCommonRuleSet', 1),
-                createManagedRule('Api', 'AWSManagedRulesKnownBadInputsRuleSet', 2)
-            ]
+            rules: createManagedRules("Api", [
+                "AWSManagedRulesAmazonIpReputationList",
+                "AWSManagedRulesCommonRuleSet",
+                "AWSManagedRulesKnownBadInputsRuleSet",
+            ]),
         });
 
-        new waf.CfnWebACLAssociation(this, 'restApiWebAclAssociation', {
-            resourceArn: restApi.deploymentStage.stageArn,
-            webAclArn: restApiWebAcl.attrArn
+        new waf.CfnWebACLAssociation(this, "graphApiWebAclAssociation", {
+            resourceArn: this.graphApi.arn,
+            webAclArn: graphApiWebAcl.attrArn,
         });
 
-        const websitePath = './src/frontend'
+        const websitePath = "./src/frontend";
         const websiteBundle = s3_deployment.Source.asset(websitePath, {
             bundling: {
                 image: lambda.Runtime.NODEJS_20_X.bundlingImage,
                 local: {
                     tryBundle(outputDirectory: string) {
-                        execSync([
-                            `cd ${websitePath}`,
-                            'npm install',
-                            'npm run build',
-                            `cp -r dist/* ${outputDirectory}/`
-                        ].join(' && '));
+                        execSync(
+                            [
+                                `cd ${websitePath}`,
+                                "npm install",
+                                "npm run build",
+                                `cp -r dist/* ${outputDirectory}/`,
+                            ].join(" && ")
+                        );
                         return true;
-                    }
+                    },
                 },
             },
         });
@@ -250,34 +245,29 @@ export default class FrontendStack extends Stack {
         const config = {
             userPoolId: userPool.userPoolId,
             userPoolClientId: userPoolClient.userPoolClientId,
-            restApiUrl: restApi.url
+            graphApiUrl: this.graphApi.graphqlUrl,
         };
 
-        new s3_deployment.BucketDeployment(this, 'websiteDeployment', {
+        new s3_deployment.BucketDeployment(this, "websiteDeployment", {
             sources: [
                 websiteBundle,
-                s3_deployment.Source.jsonData('config.json', config)
+                s3_deployment.Source.jsonData("config.json", config),
             ],
             destinationBucket: websiteBucket,
             distribution: distribution,
-        })
-
-        new CfnOutput(this, 'email', {
-            value: props.email,
         });
 
-        new CfnOutput(this, 'url', {
+        new CfnOutput(this, "url", {
             value: distribution.distributionDomainName,
-            description: 'CloudFront URL'
+            description: "CloudFront URL",
         });
 
-        new CfnOutput(this, 'userPoolId', {
+        new CfnOutput(this, "userPoolId", {
             value: userPool.userPoolId,
         });
 
-        new CfnOutput(this, 'userPoolClientId', {
+        new CfnOutput(this, "userPoolClientId", {
             value: userPoolClient.userPoolClientId,
         });
-
     }
 }

@@ -57,6 +57,10 @@ def handler(event, context):
                                     "S"
                                 ],
                             },
+                            {
+                                "Name": "API_URL",
+                                "Value": os.environ["API_URL"],
+                            },
                             {"Name": "TABLE", "Value": os.environ["TABLE_NAME"]},
                             {
                                 "Name": "MEETING_INDEX",

@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite --port 3000",
     "build": "tsc && vite build",
-    "preview": "vite preview --port 3000"
+    "preview": "vite preview --port 3000",
+    "generate": "amplify codegen"
   },
   "dependencies": {
     "@aws-amplify/ui-react": "^6.7.0",

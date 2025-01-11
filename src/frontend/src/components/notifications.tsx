@@ -1,8 +1,7 @@
-
-import { createContext, useContext, useState } from 'react';
 import Flashbar from "@cloudscape-design/components/flashbar";
+import { createContext, useContext, useState } from "react";
 
-type FlashbarType = 'error' | 'info' | 'warning' | 'success';
+type FlashbarType = "error" | "info" | "warning" | "success";
 
 export interface FlashbarItem {
     type: FlashbarType;
@@ -15,11 +14,15 @@ const FlashbarContext = createContext<{
     handleDismiss: (index: number) => void;
 }>({
     flashbarItems: [],
-    updateFlashbar: () => { },
-    handleDismiss: () => { },
+    updateFlashbar: () => {},
+    handleDismiss: () => {},
 });
 
-export const FlashbarProvider = ({ children }: { children: React.ReactNode }) => {
+export const FlashbarProvider = ({
+    children,
+}: {
+    children: React.ReactNode;
+}) => {
     const [flashbarItems, setFlashbarItems] = useState<FlashbarItem[]>([]);
 
     const updateFlashbar = (type: FlashbarType, content: string) => {
@@ -27,7 +30,9 @@ export const FlashbarProvider = ({ children }: { children: React.ReactNode }) =>
     };
 
     const handleDismiss = (index: number) => {
-        setFlashbarItems((prevItems) => prevItems.filter((_, i) => i !== index));
+        setFlashbarItems((prevItems) =>
+            prevItems.filter((_, i) => i !== index)
+        );
     };
 
     const contextValue = {
@@ -51,11 +56,11 @@ export const FlashbarComponent = () => {
             items={flashbarItems.map((item, index) => ({
                 type: item.type,
                 dismissible: true,
-                dismissLabel: 'Dismiss',
+                dismissLabel: "Dismiss",
                 onDismiss: () => handleDismiss(index),
                 content: item.content,
             }))}
-        // stackItems
+            // stackItems
         />
     );
 };

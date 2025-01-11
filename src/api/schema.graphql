@@ -1,0 +1,33 @@
+type Invite {
+    name: String!
+    platform: String!
+    id: String!
+    password: String
+    time: Int!
+    status: String!
+    scribe: String
+}
+
+input CreateInvite {
+    name: String!
+    platform: String!
+    id: String!
+    password: String
+    time: Int!
+}
+
+input DeleteInvite {
+    platform: String!
+    id: String!
+    password: String
+    time: Int!
+}
+
+type Mutation {
+    createInvite(input: CreateInvite!): String @aws_cognito_user_pools
+    deleteInvite(input: DeleteInvite!): String @aws_cognito_user_pools
+}
+
+type Query {
+    getInvites: [Invite] @aws_cognito_user_pools
+}
