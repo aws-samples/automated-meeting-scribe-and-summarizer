@@ -12,7 +12,7 @@ const main = async () => {
     console.log(`Sleeping ${timestampDiff / 1000} seconds.`);
     await new Promise(resolve => setTimeout(resolve, timestampDiff));
 
-    transcriptionService.startTranscription().catch(console.error);
+    transcriptionService.startTranscription();
 
     const browser: Browser = await chromium.launch({
         // headless: false,
@@ -40,10 +40,10 @@ const main = async () => {
     await meeting.initialize(page);
 
     await browser.close()
-    transcriptionService.stopTranscription().catch(console.error);
+    transcriptionService.stopTranscription();
 
     await encapsulate()
     process.exit(0)
 };
 
-main().catch(console.error);
+main();
