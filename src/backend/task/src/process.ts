@@ -1,28 +1,38 @@
-
-import { details } from './details';
-import { ComprehendClient, DetectPiiEntitiesCommand } from "@aws-sdk/client-comprehend";
-import { BedrockRuntimeClient, ConverseCommand } from "@aws-sdk/client-bedrock-runtime";
-import * as aws from '@aws-sdk/client-ses'
-import * as nodemailer from 'nodemailer';
+import { details } from "./details";
+import {
+    ComprehendClient,
+    DetectPiiEntitiesCommand,
+} from "@aws-sdk/client-comprehend";
+import {
+    BedrockRuntimeClient,
+    ConverseCommand,
+} from "@aws-sdk/client-bedrock-runtime";
+import * as aws from "@aws-sdk/client-ses";
+import * as nodemailer from "nodemailer";
 
 const logsMessage = "Check the CloudWatch logs for more information.";
 
-async function redactPii(text: string, piiExceptions: string[]): Promise<string> {
+async function redactPii(
+    text: string,
+    piiExceptions: string[]
+): Promise<string> {
     if (!text) return text;
 
     const comprehendClient = new ComprehendClient();
     const command = new DetectPiiEntitiesCommand({
         Text: text,
-        LanguageCode: 'en'
+        LanguageCode: "en",
     });
     const response = await comprehendClient.send(command);
 
     let resultText = text;
-    response.Entities?.forEach(entity => {
+    response.Entities?.forEach((entity) => {
         const entityType = entity.Type;
-        if (entityType &&
+        if (
+            entityType &&
             !piiExceptions.includes(entityType) &&
-            (entity.Score || 0) >= 0.999) {
+            (entity.Score || 0) >= 0.999
+        ) {
             const pii = text.slice(entity.BeginOffset, entity.EndOffset);
             resultText = resultText.replace(pii, `[${entityType}]`);
         }
@@ -56,18 +66,18 @@ async function summarize(transcript: string): Promise<string> {
     try {
         const bedrockClient = new BedrockRuntimeClient();
         const command = new ConverseCommand({
-            modelId: 'anthropic.claude-3-sonnet-20240229-v1:0',
+            modelId: "anthropic.claude-3-sonnet-20240229-v1:0",
             system: [{ text: systemPrompt }],
-            messages: [{ role: 'user', content: [{ text: prompt }] }],
+            messages: [{ role: "user", content: [{ text: prompt }] }],
             inferenceConfig: {
                 maxTokens: 4096,
                 temperature: 0.9,
-                topP: 0.2
-            }
+                topP: 0.2,
+            },
         });
         const response = await bedrockClient.send(command);
-        const responseText = response.output?.message?.content?.[0]?.text ?? '';
-        const html = responseText.match(/<html>(.*?)<\/html>/s)?.[1] ?? '';
+        const responseText = response.output?.message?.content?.[0]?.text ?? "";
+        const html = responseText.match(/<html>(.*?)<\/html>/s)?.[1] ?? "";
         // console.log(html)
         return html;
     } catch (error) {
@@ -76,10 +86,14 @@ async function summarize(transcript: string): Promise<string> {
     }
 }
 
-async function sendEmail(chat: string | null, attachments: Record<string, string>, transcript: string | null): Promise<void> {
+async function sendEmail(
+    chat: string | null,
+    attachments: Record<string, string>,
+    transcript: string | null
+): Promise<void> {
     const ses = new aws.SES();
     const transport = nodemailer.createTransport({
-        SES: { ses, aws }
+        SES: { ses, aws },
     });
 
     let html: string;
@@ -98,19 +112,19 @@ async function sendEmail(chat: string | null, attachments: Record<string, string
             to: emailDestination,
             subject: `${meetingName} Follow-up`,
             html: html,
-            attachments: []
+            attachments: [],
         };
 
         if (transcript) {
             mailOptions.attachments?.push({
-                filename: 'transcript.txt',
-                content: transcript
+                filename: "transcript.txt",
+                content: transcript,
             });
         }
         if (chat) {
             mailOptions.attachments?.push({
-                filename: 'chat.txt',
-                content: chat
+                filename: "chat.txt",
+                content: chat,
             });
         }
         for (const [fileName, link] of Object.entries(attachments)) {
@@ -118,7 +132,7 @@ async function sendEmail(chat: string | null, attachments: Record<string, string
             const buffer = await response.arrayBuffer();
             mailOptions.attachments?.push({
                 filename: fileName,
-                content: Buffer.from(buffer)
+                content: Buffer.from(buffer),
             });
         }
 
@@ -126,7 +140,10 @@ async function sendEmail(chat: string | null, attachments: Record<string, string
             await transport.sendMail(mailOptions);
             console.log(`Email sent to ${emailDestination}!`);
         } catch (error) {
-            console.log(`Error while sending email to ${emailDestination}:`, error);
+            console.log(
+                `Error while sending email to ${emailDestination}:`,
+                error
+            );
         }
     }
 }
@@ -149,7 +166,10 @@ export async function encapsulate(): Promise<void> {
     ];
 
     const chat = await redactPii(details.messages.join("\n"), piiExceptions);
-    const transcript = await redactPii(details.captions.join("\n\n"), piiExceptions);
+    const transcript = await redactPii(
+        details.captions.join("\n\n"),
+        piiExceptions
+    );
 
     // console.log("Chat:", chat);
     // console.log("Transcript:", transcript);

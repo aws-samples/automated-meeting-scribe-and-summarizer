@@ -1,7 +1,6 @@
-
-import { Page } from 'playwright';
-import { transcriptionService } from './scribe';
-import { details } from './details';
+import { Page } from "playwright";
+import { transcriptionService } from "./scribe";
+import { details } from "./details";
 
 export default class Chime {
     private async sendMessages(page: Page, messages: string[]): Promise<void> {
@@ -14,7 +13,7 @@ export default class Chime {
         }
     }
 
-    private prevSender: string = '';
+    private prevSender: string = "";
 
     public async initialize(page: Page): Promise<void> {
         console.log("Getting meeting link.");
@@ -34,7 +33,9 @@ export default class Chime {
         }
 
         console.log("Clicking mute button.");
-        const muteCheckboxElement = await page.waitForSelector('text="Join muted"');
+        const muteCheckboxElement = await page.waitForSelector(
+            'text="Join muted"'
+        );
         await muteCheckboxElement?.click();
 
         console.log("Clicking join button.");
@@ -55,7 +56,7 @@ export default class Chime {
             return;
         }
 
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
 
         console.log("Sending introduction messages.");
         await this.sendMessages(page, details.introMessages);
@@ -72,13 +73,18 @@ export default class Chime {
                 page.goto("about:blank");
             }
         });
-        console.log("Listening for attendee changes.")
+        console.log("Listening for attendee changes.");
         await page.evaluate(() => {
-            const targetNode = document.querySelector('button[data-testid="collapse-container"][aria-label^="Present"]');
+            const targetNode = document.querySelector(
+                'button[data-testid="collapse-container"][aria-label^="Present"]'
+            );
             const config = { characterData: true, subtree: true };
 
             const callback = (mutationList: MutationRecord[]) => {
-                const number = parseInt(mutationList[mutationList.length - 1].target.textContent || "0");
+                const number = parseInt(
+                    mutationList[mutationList.length - 1].target.textContent ||
+                        "0"
+                );
                 (window as any).attendeeChange(number);
             };
 
@@ -86,10 +92,15 @@ export default class Chime {
             if (targetNode) observer.observe(targetNode, config);
         });
 
-        await page.exposeFunction("speakerChange", transcriptionService.speakerChange);
-        console.log("Listening for speaker changes.")
+        await page.exposeFunction(
+            "speakerChange",
+            transcriptionService.speakerChange
+        );
+        console.log("Listening for speaker changes.");
         await page.evaluate(() => {
-            const targetNode = document.querySelector('.activeSpeakerCell ._3yg3rB2Xb_sfSzRXkm8QT-');
+            const targetNode = document.querySelector(
+                ".activeSpeakerCell ._3yg3rB2Xb_sfSzRXkm8QT-"
+            );
 
             if (targetNode) {
                 const initialSpeaker = targetNode.textContent;
@@ -113,57 +124,84 @@ export default class Chime {
             if (targetNode) observer.observe(targetNode, config);
         });
 
-        await page.exposeFunction("messageChange", async (
-            sender: string | null,
-            text: string | null,
-            attachmentTitle: string | null,
-            attachmentHref: string | null
-        ) => {
-            if (!sender) {
-                sender = this.prevSender;
-            }
-            this.prevSender = sender;
-
-            if (text === details.endCommand) {
-                console.log("Your scribe has been removed from the meeting.");
-                await page.goto("about:blank");
-            } else if (details.start && text === details.pauseCommand) {
-                details.start = false;
-                console.log(details.pauseMessages[0]);
-                await this.sendMessages(page, details.pauseMessages);
-            } else if (!details.start && text === details.startCommand) {
-                details.start = true;
-                console.log(details.startMessages[0]);
-                await this.sendMessages(page, details.startMessages);
-            } else if (details.start && sender !== "Amazon Chime" && !sender?.includes(details.scribeName)) {
-                const timestamp = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
-                let message = `[${timestamp}] ${sender}: `;
-
-                if (attachmentTitle && attachmentHref) {
-                    details.attachments[attachmentTitle] = attachmentHref;
-                    message += text ? `${text} | ${attachmentTitle}` : attachmentTitle;
-                } else if (text) {
-                    message += text;
+        await page.exposeFunction(
+            "messageChange",
+            async (
+                sender: string | null,
+                text: string | null,
+                attachmentTitle: string | null,
+                attachmentHref: string | null
+            ) => {
+                if (!sender) {
+                    sender = this.prevSender;
                 }
+                this.prevSender = sender;
 
-                details.messages.push(message);
+                if (text === details.endCommand) {
+                    console.log(
+                        "Your scribe has been removed from the meeting."
+                    );
+                    await page.goto("about:blank");
+                } else if (details.start && text === details.pauseCommand) {
+                    details.start = false;
+                    console.log(details.pauseMessages[0]);
+                    await this.sendMessages(page, details.pauseMessages);
+                } else if (!details.start && text === details.startCommand) {
+                    details.start = true;
+                    console.log(details.startMessages[0]);
+                    await this.sendMessages(page, details.startMessages);
+                } else if (
+                    details.start &&
+                    sender !== "Amazon Chime" &&
+                    !sender?.includes(details.scribeName)
+                ) {
+                    const timestamp = new Date().toLocaleTimeString("en-US", {
+                        hour12: false,
+                        hour: "2-digit",
+                        minute: "2-digit",
+                    });
+                    let message = `[${timestamp}] ${sender}: `;
+
+                    if (attachmentTitle && attachmentHref) {
+                        details.attachments[attachmentTitle] = attachmentHref;
+                        message += text
+                            ? `${text} | ${attachmentTitle}`
+                            : attachmentTitle;
+                    } else if (text) {
+                        message += text;
+                    }
+
+                    details.messages.push(message);
+                }
             }
-        });
-        console.log("Listening for message changes.")
+        );
+        console.log("Listening for message changes.");
         await page.evaluate(() => {
-            const targetNode = document.querySelector('._2B9DdDvc2PdUbvEGXfOU20');
+            const targetNode = document.querySelector(
+                "._2B9DdDvc2PdUbvEGXfOU20"
+            );
             const config = { childList: true, subtree: true };
 
             const callback = (mutationList: MutationRecord[]) => {
                 for (const mutation of mutationList) {
                     const addedNode = mutation.addedNodes[0] as Element;
                     if (addedNode) {
-                        const sender = addedNode.querySelector('h3[data-testid="chat-bubble-sender-name"]')?.textContent;
-                        const text = addedNode.querySelector('.Linkify')?.textContent;
-                        const attachmentElement = addedNode.querySelector('.SLFfm3Dwo5MfFzks4uM11') as HTMLAnchorElement;
+                        const sender = addedNode.querySelector(
+                            'h3[data-testid="chat-bubble-sender-name"]'
+                        )?.textContent;
+                        const text =
+                            addedNode.querySelector(".Linkify")?.textContent;
+                        const attachmentElement = addedNode.querySelector(
+                            ".SLFfm3Dwo5MfFzks4uM11"
+                        ) as HTMLAnchorElement;
                         const attachmentTitle = attachmentElement?.title;
                         const attachmentHref = attachmentElement?.href;
-                        (window as any).messageChange(sender, text, attachmentTitle, attachmentHref);
+                        (window as any).messageChange(
+                            sender,
+                            text,
+                            attachmentTitle,
+                            attachmentHref
+                        );
                     }
                 }
             };
@@ -176,7 +214,7 @@ export default class Chime {
         try {
             await page.waitForSelector('button[id="endMeeting"]', {
                 state: "detached",
-                timeout: details.meetingTimeout
+                timeout: details.meetingTimeout,
             });
             console.log("Meeting ended.");
         } catch (error) {
@@ -185,5 +223,4 @@ export default class Chime {
             details.start = false;
         }
     }
-
 }
