@@ -17,16 +17,6 @@ export type DeleteInvite = {
   time: number,
 };
 
-export type UpdateInvite = {
-  email: string,
-  platform: string,
-  id: string,
-  password?: string | null,
-  time: number,
-  status: string,
-  scribe: string,
-};
-
 export type Invite = {
   __typename: "Invite",
   name: string,
@@ -52,23 +42,6 @@ export type DeleteInviteMutationVariables = {
 
 export type DeleteInviteMutation = {
   deleteInvite?: string | null,
-};
-
-export type UpdateInviteMutationVariables = {
-  input: UpdateInvite,
-};
-
-export type UpdateInviteMutation = {
-  updateInvite?:  {
-    __typename: "Invite",
-    name: string,
-    platform: string,
-    id: string,
-    password?: string | null,
-    time: number,
-    status: string,
-    scribe?: string | null,
-  } | null,
 };
 
 export type GetInvitesQueryVariables = {

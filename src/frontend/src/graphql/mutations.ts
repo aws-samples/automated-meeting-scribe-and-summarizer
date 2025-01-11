@@ -22,19 +22,3 @@ export const deleteInvite = /* GraphQL */ `mutation DeleteInvite($input: DeleteI
   APITypes.DeleteInviteMutationVariables,
   APITypes.DeleteInviteMutation
 >;
-export const updateInvite = /* GraphQL */ `mutation UpdateInvite($input: UpdateInvite!) {
-  updateInvite(input: $input) {
-    name
-    platform
-    id
-    password
-    time
-    status
-    scribe
-    __typename
-  }
-}
-` as GeneratedMutation<
-  APITypes.UpdateInviteMutationVariables,
-  APITypes.UpdateInviteMutation
->;

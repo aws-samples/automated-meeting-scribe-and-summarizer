@@ -152,7 +152,7 @@ export default class FrontendStack extends Stack {
 
         this.graphApi = new appsync.GraphqlApi(this, "graphApi", {
             name: "graphApi",
-            definition: appsync.Definition.fromFile("./src/api/schema.graphql"),
+            definition: appsync.Definition.fromFile("./src/schema.graphql"),
             authorizationConfig: {
                 defaultAuthorization: {
                     authorizationType: appsync.AuthorizationType.USER_POOL,
@@ -173,33 +173,41 @@ export default class FrontendStack extends Stack {
             xrayEnabled: true,
         });
 
-        const source = this.graphApi.addDynamoDbDataSource(
-            "source",
-            props.table
-        );
-        source.createResolver("getInvitesResolver", {
-            typeName: "Query",
-            fieldName: "getInvites",
-            runtime: appsync.FunctionRuntime.JS_1_0_0,
-            code: appsync.Code.fromAsset(
-                "./src/api/resolvers/queries/getInvites.js"
-            ),
+        const sourceFunction = new lambda.Function(this, "sourceFunction", {
+            runtime: lambda.Runtime.PYTHON_3_12,
+            architecture: lambda.Architecture.ARM_64,
+            handler: "source.handler",
+            timeout: Duration.minutes(2),
+            code: lambda.Code.fromAsset("./src/backend/functions"),
+            layers: [
+                lambda.LayerVersion.fromLayerVersionArn(
+                    this,
+                    "PowerToolsLayer",
+                    `arn:aws:lambda:${this.region}:017000801446:layer:AWSLambdaPowertoolsPythonV2-Arm64:78`
+                ),
+            ],
+            environment: {
+                TABLE_NAME: props.table.tableName,
+            },
+            logRetention: logs.RetentionDays.FIVE_DAYS,
         });
-        source.createResolver("createInviteResolver", {
+        props.table.grantReadWriteData(sourceFunction);
+
+        const apiSource = this.graphApi.addLambdaDataSource(
+            "apiSource",
+            sourceFunction
+        );
+        apiSource.createResolver("createInviteResolver", {
             typeName: "Mutation",
             fieldName: "createInvite",
-            runtime: appsync.FunctionRuntime.JS_1_0_0,
-            code: appsync.Code.fromAsset(
-                "./src/api/resolvers/mutations/createInvite.js"
-            ),
         });
-        source.createResolver("deleteInviteResolver", {
+        apiSource.createResolver("getInvitesResolver", {
+            typeName: "Query",
+            fieldName: "getInvites",
+        });
+        apiSource.createResolver("deleteInviteResolver", {
             typeName: "Mutation",
             fieldName: "deleteInvite",
-            runtime: appsync.FunctionRuntime.JS_1_0_0,
-            code: appsync.Code.fromAsset(
-                "./src/api/resolvers/mutations/deleteInvite.js"
-            ),
         });
 
         const graphApiWebAcl = new waf.CfnWebACL(this, "graphApiWebAcl", {
