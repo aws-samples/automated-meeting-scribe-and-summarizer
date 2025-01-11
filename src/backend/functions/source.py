@@ -18,12 +18,12 @@ expiration_seconds = 60 * 5  # 5 minutes
 @app.resolver(type_name="Mutation", field_name="createInvite")
 def create_invite(input):
     email = app.current_event.identity.claims.get("email")
-    meeting_time = input["time"]
+    meeting_time = input["meeting"]["time"]
     meeting = "#".join(
         [
-            input["platform"],
-            input["id"],
-            input["password"],
+            input["meeting"]["platform"],
+            input["meeting"]["id"],
+            input["meeting"]["password"],
             str(meeting_time),
         ]
     )
@@ -59,10 +59,12 @@ def get_invites():
     meetings = [
         {
             "name": item["meeting_name"],
-            "platform": item["sk"].split("#")[0],
-            "id": item["sk"].split("#")[1],
-            "password": item["sk"].split("#")[2],
-            "time": item["sk"].split("#")[3],
+            "meeting": {
+                "platform": item["sk"].split("#")[0],
+                "id": item["sk"].split("#")[1],
+                "password": item["sk"].split("#")[2],
+                "time": item["sk"].split("#")[3],
+            },
             "scribe": item["scribe_name"],
             "status": item["scribe_status"],
         }

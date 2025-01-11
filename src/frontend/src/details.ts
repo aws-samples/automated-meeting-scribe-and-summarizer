@@ -4,28 +4,30 @@
 
 export type CreateInvite = {
   name: string,
-  platform: string,
-  id: string,
-  password?: string | null,
-  time: number,
+  meeting: MeetingInput,
 };
 
-export type DeleteInvite = {
+export type MeetingInput = {
   platform: string,
   id: string,
-  password?: string | null,
+  password: string,
   time: number,
 };
 
 export type Invite = {
   __typename: "Invite",
   name: string,
+  meeting: Meeting,
+  scribe: string,
+  status: string,
+};
+
+export type Meeting = {
+  __typename: "Meeting",
   platform: string,
   id: string,
-  password?: string | null,
+  password: string,
   time: number,
-  status: string,
-  scribe?: string | null,
 };
 
 export type CreateInviteMutationVariables = {
@@ -37,7 +39,7 @@ export type CreateInviteMutation = {
 };
 
 export type DeleteInviteMutationVariables = {
-  input: DeleteInvite,
+  input: MeetingInput,
 };
 
 export type DeleteInviteMutation = {
@@ -51,11 +53,14 @@ export type GetInvitesQuery = {
   getInvites?:  Array< {
     __typename: "Invite",
     name: string,
-    platform: string,
-    id: string,
-    password?: string | null,
-    time: number,
+    meeting:  {
+      __typename: "Meeting",
+      platform: string,
+      id: string,
+      password: string,
+      time: number,
+    },
+    scribe: string,
     status: string,
-    scribe?: string | null,
   } | null > | null,
 };

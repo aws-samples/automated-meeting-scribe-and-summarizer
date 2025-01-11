@@ -15,7 +15,7 @@ export const createInvite = /* GraphQL */ `mutation CreateInvite($input: CreateI
   APITypes.CreateInviteMutationVariables,
   APITypes.CreateInviteMutation
 >;
-export const deleteInvite = /* GraphQL */ `mutation DeleteInvite($input: DeleteInvite!) {
+export const deleteInvite = /* GraphQL */ `mutation DeleteInvite($input: MeetingInput!) {
   deleteInvite(input: $input)
 }
 ` as GeneratedMutation<

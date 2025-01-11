@@ -11,12 +11,15 @@ type GeneratedQuery<InputType, OutputType> = string & {
 export const getInvites = /* GraphQL */ `query GetInvites {
   getInvites {
     name
-    platform
-    id
-    password
-    time
-    status
+    meeting {
+      platform
+      id
+      password
+      time
+      __typename
+    }
     scribe
+    status
     __typename
   }
 }

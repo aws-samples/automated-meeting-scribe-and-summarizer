@@ -20,7 +20,6 @@ import NavigationComponent from "../components/navigation";
 import FlashbarContext, {
     FlashbarComponent,
 } from "../components/notifications";
-import { CreateInvite } from "../details";
 import * as mutations from "../graphql/mutations";
 import { MeetingPlatform, meetingPlatforms } from "../platform";
 
@@ -73,33 +72,23 @@ const Create = () => {
             );
         }
 
-        const meeting: CreateInvite = {
-            platform: meetingPlatform.value,
-            id: meetingId.replace(/ /g, ""),
-            password: meetingPassword,
-            name: meetingName,
-            time: Math.floor(
-                new Date(meetingDateTime.toUTCString()).getTime() / 1000
-            ),
-        };
-
-        setMeetingId("");
-        setMeetingPassword("");
-        setMeetingName("");
-        setMeetingDate("");
-        setMeetingTime("");
-
         const client = generateClient();
         try {
             const response = await client.graphql({
                 query: mutations.createInvite,
                 variables: {
                     input: {
-                        platform: meeting.platform,
-                        id: meeting.id,
-                        password: meeting.password,
-                        time: meeting.time,
-                        name: meeting.name,
+                        name: meetingName,
+                        meeting: {
+                            platform: meetingPlatform.value,
+                            id: meetingId.replace(/ /g, ""),
+                            password: meetingPassword,
+                            time: Math.floor(
+                                new Date(
+                                    meetingDateTime.toUTCString()
+                                ).getTime() / 1000
+                            ),
+                        },
                     },
                 },
             });
@@ -109,6 +98,12 @@ const Create = () => {
             console.error(errorMessage, error);
             updateFlashbar("error", errorMessage);
         }
+
+        setMeetingId("");
+        setMeetingPassword("");
+        setMeetingName("");
+        setMeetingDate("");
+        setMeetingTime("");
     };
 
     return (

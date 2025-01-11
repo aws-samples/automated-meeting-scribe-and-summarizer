@@ -1,31 +1,32 @@
-type Invite {
-    name: String!
+type Meeting {
     platform: String!
     id: String!
-    password: String
+    password: String!
     time: Int!
+}
+
+input MeetingInput {
+    platform: String!
+    id: String!
+    password: String!
+    time: Int!
+}
+
+type Invite {
+    name: String!
+    meeting: Meeting!
+    scribe: String!
     status: String!
-    scribe: String
 }
 
 input CreateInvite {
     name: String!
-    platform: String!
-    id: String!
-    password: String
-    time: Int!
-}
-
-input DeleteInvite {
-    platform: String!
-    id: String!
-    password: String
-    time: Int!
+    meeting: MeetingInput!
 }
 
 type Mutation {
     createInvite(input: CreateInvite!): String @aws_cognito_user_pools
-    deleteInvite(input: DeleteInvite!): String @aws_cognito_user_pools
+    deleteInvite(input: MeetingInput!): String @aws_cognito_user_pools
 }
 
 type Query {
