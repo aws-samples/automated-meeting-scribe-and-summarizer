@@ -231,7 +231,7 @@ export default class BackendStack extends Stack {
                 handler: "scheduler.handler",
                 role: lambdaSchedulerRole,
                 timeout: Duration.minutes(2),
-                code: lambda.Code.fromAsset("./src/backend/functions"),
+                code: lambda.Code.fromAsset("./src/backend/function"),
                 environment: {
                     TASK_DEFINITION_ARN: taskDefinition.taskDefinitionArn,
                     ECS_CLUSTER_ARN: cluster.clusterArn,
