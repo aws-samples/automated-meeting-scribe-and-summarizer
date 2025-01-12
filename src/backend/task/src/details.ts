@@ -24,7 +24,7 @@ export class Details {
         const response = await this.client.send(
             new QueryCommand({
                 TableName: process.env.TABLE,
-                IndexName: process.env.MEETING_INDEX,
+                IndexName: process.env.TABLE_INDEX,
                 KeyConditionExpression: "sk = :meeting",
                 ExpressionAttributeValues: {
                     ":meeting": { S: this.meeting },

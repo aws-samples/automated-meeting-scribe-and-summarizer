@@ -8,22 +8,97 @@ type GeneratedQuery<InputType, OutputType> = string & {
   __generatedQueryOutput: OutputType;
 };
 
-export const getInvites = /* GraphQL */ `query GetInvites {
-  getInvites {
+export const getMeeting = /* GraphQL */ `query GetMeeting($uid: ID!) {
+  getMeeting(uid: $uid) {
+    uid
     name
-    meeting {
-      platform
-      id
-      password
-      time
-      __typename
-    }
+    id
+    platform
+    password
+    time
     scribe
     status
+    users
+    createdAt
+    updatedAt
     __typename
   }
 }
 ` as GeneratedQuery<
-  APITypes.GetInvitesQueryVariables,
-  APITypes.GetInvitesQuery
+  APITypes.GetMeetingQueryVariables,
+  APITypes.GetMeetingQuery
+>;
+export const listMeetings = /* GraphQL */ `query ListMeetings(
+  $uid: ID
+  $filter: ModelMeetingFilterInput
+  $limit: Int
+  $nextToken: String
+  $sortDirection: ModelSortDirection
+) {
+  listMeetings(
+    uid: $uid
+    filter: $filter
+    limit: $limit
+    nextToken: $nextToken
+    sortDirection: $sortDirection
+  ) {
+    items {
+      uid
+      name
+      id
+      platform
+      password
+      time
+      scribe
+      status
+      users
+      createdAt
+      updatedAt
+      __typename
+    }
+    nextToken
+    __typename
+  }
+}
+` as GeneratedQuery<
+  APITypes.ListMeetingsQueryVariables,
+  APITypes.ListMeetingsQuery
+>;
+export const meetingsByIdAndPlatformAndPasswordAndTime = /* GraphQL */ `query MeetingsByIdAndPlatformAndPasswordAndTime(
+  $id: String!
+  $platformPasswordTime: ModelMeetingMeetingIndexCompositeKeyConditionInput
+  $sortDirection: ModelSortDirection
+  $filter: ModelMeetingFilterInput
+  $limit: Int
+  $nextToken: String
+) {
+  meetingsByIdAndPlatformAndPasswordAndTime(
+    id: $id
+    platformPasswordTime: $platformPasswordTime
+    sortDirection: $sortDirection
+    filter: $filter
+    limit: $limit
+    nextToken: $nextToken
+  ) {
+    items {
+      uid
+      name
+      id
+      platform
+      password
+      time
+      scribe
+      status
+      users
+      createdAt
+      updatedAt
+      __typename
+    }
+    nextToken
+    __typename
+  }
+}
+` as GeneratedQuery<
+  APITypes.MeetingsByIdAndPlatformAndPasswordAndTimeQueryVariables,
+  APITypes.MeetingsByIdAndPlatformAndPasswordAndTimeQuery
 >;

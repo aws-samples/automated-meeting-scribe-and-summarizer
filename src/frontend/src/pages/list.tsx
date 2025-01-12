@@ -11,7 +11,7 @@ import { generateClient } from "aws-amplify/api";
 import { useEffect, useState } from "react";
 import NavigationComponent from "../components/navigation";
 import { FlashbarComponent } from "../components/notifications";
-import { Invite } from "../details";
+import { Meeting } from "../details";
 import * as mutations from "../graphql/mutations";
 import * as queries from "../graphql/queries";
 import { meetingPlatforms } from "../platform";
@@ -21,22 +21,18 @@ const List = () => {
 
     const client = generateClient();
 
-    const [invites, setInvites] = useState<Invite[]>([]);
-    const [selectedInvites, setSelectedInvites] = useState<Invite[]>();
+    const [meetings, setMeetings] = useState<Meeting[]>([]);
+    const [selectedMeetings, setSelectedMeetings] = useState<Meeting[]>();
 
     useEffect(() => {
         const fetchMeetings = async () => {
             try {
                 const { data } = await client.graphql({
-                    query: queries.getInvites,
+                    query: queries.listMeetings,
                 });
-                setInvites(
-                    data.getInvites?.filter(
-                        (invite): invite is Invite => invite !== null
-                    ) ?? []
-                );
+                setMeetings(data.listMeetings?.items || []);
             } catch (error) {
-                console.error("Failed to get invites.", error);
+                console.error("Failed to get meetings.", error);
             }
         };
         fetchMeetings();
@@ -63,30 +59,19 @@ const List = () => {
                 <ContentLayout
                     header={
                         <Header
-                            counter={"[" + invites.length.toString() + "]"}
+                            counter={"[" + meetings.length.toString() + "]"}
                             actions={
                                 <Button
                                     onClick={() => {
-                                        if (selectedInvites) {
-                                            selectedInvites.forEach(
-                                                (invite) => {
-                                                    const {
-                                                        platform,
-                                                        id,
-                                                        password,
-                                                        time,
-                                                    } = invite.meeting;
+                                        if (selectedMeetings) {
+                                            selectedMeetings.forEach(
+                                                (meeting) => {
                                                     client
                                                         .graphql({
-                                                            query: mutations.deleteInvite,
+                                                            query: mutations.deleteMeeting,
                                                             variables: {
                                                                 input: {
-                                                                    platform:
-                                                                        platform,
-                                                                    id: id,
-                                                                    password:
-                                                                        password,
-                                                                    time: time,
+                                                                    uid: meeting.uid,
                                                                 },
                                                             },
                                                         })
@@ -98,20 +83,20 @@ const List = () => {
                                                         });
                                                 }
                                             );
-                                            setInvites(
-                                                invites.filter(
-                                                    (invite) =>
-                                                        !selectedInvites.includes(
-                                                            invite
+                                            setMeetings(
+                                                meetings.filter(
+                                                    (meeting) =>
+                                                        !selectedMeetings.includes(
+                                                            meeting
                                                         )
                                                 )
                                             );
-                                            setSelectedInvites([]);
+                                            setSelectedMeetings([]);
                                         }
                                     }}
                                     disabled={
-                                        !selectedInvites ||
-                                        selectedInvites.length === 0
+                                        !selectedMeetings ||
+                                        selectedMeetings.length === 0
                                     }
                                 >
                                     Delete
@@ -124,39 +109,38 @@ const List = () => {
                 >
                     <Cards
                         onSelectionChange={({ detail }) =>
-                            setSelectedInvites(detail?.selectedItems ?? [])
+                            setSelectedMeetings(detail?.selectedItems ?? [])
                         }
-                        selectedItems={selectedInvites}
+                        selectedItems={selectedMeetings}
                         cardDefinition={{
-                            header: (invite) => invite.name,
+                            header: (meeting) => meeting.name,
                             sections: [
                                 {
                                     id: "meeting_platform",
                                     header: "Meeting Platform",
-                                    content: (invite) =>
+                                    content: (meeting) =>
                                         meetingPlatforms.find(
                                             (platform) =>
                                                 platform.value ===
-                                                invite.meeting.platform
+                                                meeting.platform
                                         )?.label,
                                 },
                                 {
                                     id: "meeting_id",
                                     header: "Meeting ID",
-                                    content: (invite) => invite.meeting.id,
+                                    content: (meeting) => meeting.id,
                                 },
                                 {
                                     id: "meeting_password",
                                     header: "Meeting Password",
-                                    content: (invite) =>
-                                        invite.meeting.password,
+                                    content: (meeting) => meeting.password,
                                 },
                                 {
                                     id: "meeting_time",
                                     header: "Meeting Time",
-                                    content: (invite) => {
+                                    content: (meeting) => {
                                         const meetingDateTime = new Date(
-                                            invite.meeting.time * 1000
+                                            meeting.time * 1000
                                         );
                                         const options: Intl.DateTimeFormatOptions =
                                             {
@@ -176,12 +160,12 @@ const List = () => {
                                 {
                                     id: "scribe_status",
                                     header: "Scribe Status",
-                                    content: (invite) => invite.status,
+                                    content: (meeting) => meeting.status,
                                 },
                                 {
                                     id: "scribe_name",
                                     header: "Scribe Name",
-                                    content: (invite) => invite.scribe,
+                                    content: (meeting) => meeting.scribe,
                                 },
                             ],
                         }}
@@ -190,8 +174,8 @@ const List = () => {
                             { minWidth: 500, cards: 3 },
                             { minWidth: 1000, cards: 6 },
                         ]}
-                        items={invites}
-                        loadingText="Loading invites"
+                        items={meetings}
+                        loadingText="Loading meetings"
                         selectionType="multi"
                         visibleSections={[
                             "meeting_platform",
@@ -205,7 +189,7 @@ const List = () => {
                                 textAlign="center"
                                 color="inherit"
                             >
-                                No invites
+                                No meetings
                             </Box>
                         }
                     />

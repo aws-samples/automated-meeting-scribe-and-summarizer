@@ -1,34 +1,11 @@
-type Meeting {
-    platform: String!
-    id: String!
-    password: String!
-    time: Int!
-}
-
-input MeetingInput {
-    platform: String!
-    id: String!
-    password: String!
-    time: Int!
-}
-
-type Invite {
+type Meeting @model @auth(rules: [{ allow: owner, ownerField: "users" }]) {
+    uid: ID! @primaryKey
     name: String!
-    meeting: Meeting!
-    scribe: String!
-    status: String!
-}
-
-input CreateInvite {
-    name: String!
-    meeting: MeetingInput!
-}
-
-type Mutation {
-    createInvite(input: CreateInvite!): String @aws_cognito_user_pools
-    deleteInvite(input: MeetingInput!): String @aws_cognito_user_pools
-}
-
-type Query {
-    getInvites: [Invite] @aws_cognito_user_pools
+    id: String!
+    platform: String!
+    password: String
+    time: AWSTimestamp!
+    scribe: String
+    status: String
+    users: [String]
 }

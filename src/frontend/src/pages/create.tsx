@@ -16,6 +16,7 @@ import {
 } from "@cloudscape-design/components";
 import { generateClient } from "aws-amplify/api";
 import { useContext, useState } from "react";
+import { v4 as uuidv4 } from "uuid";
 import NavigationComponent from "../components/navigation";
 import FlashbarContext, {
     FlashbarComponent,
@@ -72,38 +73,37 @@ const Create = () => {
             );
         }
 
+        const input = {
+            uid: uuidv4(),
+            name: meetingName,
+            platform: meetingPlatform.value,
+            id: meetingId.replace(/ /g, ""),
+            password: meetingPassword,
+            time: Math.floor(
+                new Date(meetingDateTime.toUTCString()).getTime() / 1000
+            ),
+        };
+
+        setMeetingName("");
+        setMeetingId("");
+        setMeetingPassword("");
+        setMeetingDate("");
+        setMeetingTime("");
+
         const client = generateClient();
         try {
-            const response = await client.graphql({
-                query: mutations.createInvite,
+            await client.graphql({
+                query: mutations.createMeeting,
                 variables: {
-                    input: {
-                        name: meetingName,
-                        meeting: {
-                            platform: meetingPlatform.value,
-                            id: meetingId.replace(/ /g, ""),
-                            password: meetingPassword,
-                            time: Math.floor(
-                                new Date(
-                                    meetingDateTime.toUTCString()
-                                ).getTime() / 1000
-                            ),
-                        },
-                    },
+                    input: input,
                 },
             });
-            updateFlashbar("success", response.data.createInvite);
+            updateFlashbar("success", `${input.name} invite created!`);
         } catch (error) {
             const errorMessage = "Failed to create invite.";
             console.error(errorMessage, error);
             updateFlashbar("error", errorMessage);
         }
-
-        setMeetingId("");
-        setMeetingPassword("");
-        setMeetingName("");
-        setMeetingDate("");
-        setMeetingTime("");
     };
 
     return (

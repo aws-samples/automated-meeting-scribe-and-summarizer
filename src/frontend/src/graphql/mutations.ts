@@ -8,17 +8,72 @@ type GeneratedMutation<InputType, OutputType> = string & {
   __generatedMutationOutput: OutputType;
 };
 
-export const createInvite = /* GraphQL */ `mutation CreateInvite($input: CreateInvite!) {
-  createInvite(input: $input)
+export const createMeeting = /* GraphQL */ `mutation CreateMeeting(
+  $input: CreateMeetingInput!
+  $condition: ModelMeetingConditionInput
+) {
+  createMeeting(input: $input, condition: $condition) {
+    uid
+    name
+    id
+    platform
+    password
+    time
+    scribe
+    status
+    users
+    createdAt
+    updatedAt
+    __typename
+  }
 }
 ` as GeneratedMutation<
-  APITypes.CreateInviteMutationVariables,
-  APITypes.CreateInviteMutation
+  APITypes.CreateMeetingMutationVariables,
+  APITypes.CreateMeetingMutation
 >;
-export const deleteInvite = /* GraphQL */ `mutation DeleteInvite($input: MeetingInput!) {
-  deleteInvite(input: $input)
+export const updateMeeting = /* GraphQL */ `mutation UpdateMeeting(
+  $input: UpdateMeetingInput!
+  $condition: ModelMeetingConditionInput
+) {
+  updateMeeting(input: $input, condition: $condition) {
+    uid
+    name
+    id
+    platform
+    password
+    time
+    scribe
+    status
+    users
+    createdAt
+    updatedAt
+    __typename
+  }
 }
 ` as GeneratedMutation<
-  APITypes.DeleteInviteMutationVariables,
-  APITypes.DeleteInviteMutation
+  APITypes.UpdateMeetingMutationVariables,
+  APITypes.UpdateMeetingMutation
+>;
+export const deleteMeeting = /* GraphQL */ `mutation DeleteMeeting(
+  $input: DeleteMeetingInput!
+  $condition: ModelMeetingConditionInput
+) {
+  deleteMeeting(input: $input, condition: $condition) {
+    uid
+    name
+    id
+    platform
+    password
+    time
+    scribe
+    status
+    users
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedMutation<
+  APITypes.DeleteMeetingMutationVariables,
+  APITypes.DeleteMeetingMutation
 >;
