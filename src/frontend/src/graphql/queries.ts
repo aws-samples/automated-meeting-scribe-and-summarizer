@@ -17,7 +17,7 @@ export const getMeeting = /* GraphQL */ `query GetMeeting($uid: ID!) {
     password
     time
     status
-    user
+    users
     createdAt
     updatedAt
     __typename
@@ -49,7 +49,7 @@ export const listMeetings = /* GraphQL */ `query ListMeetings(
       password
       time
       status
-      user
+      users
       createdAt
       updatedAt
       __typename

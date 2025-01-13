@@ -8,11 +8,8 @@ type GeneratedSubscription<InputType, OutputType> = string & {
   __generatedSubscriptionOutput: OutputType;
 };
 
-export const onCreateMeeting = /* GraphQL */ `subscription OnCreateMeeting(
-  $filter: ModelSubscriptionMeetingFilterInput
-  $user: String
-) {
-  onCreateMeeting(filter: $filter, user: $user) {
+export const onCreateMeeting = /* GraphQL */ `subscription OnCreateMeeting($filter: ModelSubscriptionMeetingFilterInput) {
+  onCreateMeeting(filter: $filter) {
     uid
     name
     id
@@ -20,7 +17,7 @@ export const onCreateMeeting = /* GraphQL */ `subscription OnCreateMeeting(
     password
     time
     status
-    user
+    users
     createdAt
     updatedAt
     __typename
@@ -30,11 +27,8 @@ export const onCreateMeeting = /* GraphQL */ `subscription OnCreateMeeting(
   APITypes.OnCreateMeetingSubscriptionVariables,
   APITypes.OnCreateMeetingSubscription
 >;
-export const onUpdateMeeting = /* GraphQL */ `subscription OnUpdateMeeting(
-  $filter: ModelSubscriptionMeetingFilterInput
-  $user: String
-) {
-  onUpdateMeeting(filter: $filter, user: $user) {
+export const onUpdateMeeting = /* GraphQL */ `subscription OnUpdateMeeting($filter: ModelSubscriptionMeetingFilterInput) {
+  onUpdateMeeting(filter: $filter) {
     uid
     name
     id
@@ -42,7 +36,7 @@ export const onUpdateMeeting = /* GraphQL */ `subscription OnUpdateMeeting(
     password
     time
     status
-    user
+    users
     createdAt
     updatedAt
     __typename
@@ -52,11 +46,8 @@ export const onUpdateMeeting = /* GraphQL */ `subscription OnUpdateMeeting(
   APITypes.OnUpdateMeetingSubscriptionVariables,
   APITypes.OnUpdateMeetingSubscription
 >;
-export const onDeleteMeeting = /* GraphQL */ `subscription OnDeleteMeeting(
-  $filter: ModelSubscriptionMeetingFilterInput
-  $user: String
-) {
-  onDeleteMeeting(filter: $filter, user: $user) {
+export const onDeleteMeeting = /* GraphQL */ `subscription OnDeleteMeeting($filter: ModelSubscriptionMeetingFilterInput) {
+  onDeleteMeeting(filter: $filter) {
     uid
     name
     id
@@ -64,7 +55,7 @@ export const onDeleteMeeting = /* GraphQL */ `subscription OnDeleteMeeting(
     password
     time
     status
-    user
+    users
     createdAt
     updatedAt
     __typename

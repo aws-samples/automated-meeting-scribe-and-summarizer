@@ -1,7 +1,7 @@
 type Meeting
     @model
     @auth(
-        rules: [{ allow: owner, ownerField: "user", identityClaim: "email" }]
+        rules: [{ allow: owner, ownerField: "users", identityClaim: "email" }]
     ) {
     uid: ID! @primaryKey
     name: String!
@@ -10,5 +10,5 @@ type Meeting
     password: String
     time: AWSTimestamp!
     status: String
-    user: String
+    users: [String]
 }

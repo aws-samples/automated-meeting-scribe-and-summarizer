@@ -26,6 +26,11 @@ export default class BackendStack extends Stack {
         super(scope, id, props);
 
         const table = props.graphApi.resources.tables.Meeting;
+        props.graphApi.resources.cfnResources.cfnTables.Meeting.timeToLiveSpecification =
+            {
+                enabled: true,
+                attributeName: "time",
+            };
 
         const vpc = new ec2.Vpc(this, "vpc", {
             ipAddresses: ec2.IpAddresses.cidr("10.0.0.0/16"),

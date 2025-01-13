@@ -69,6 +69,7 @@ export class TranscriptionService {
             // IdentifyMultipleLanguages: true,
             // LanguageOptions: 'en-US,es-US',
             ShowSpeakerLabel: true,
+            VocabularyName: process.env.VOCABULARY_NAME,
         });
         const response = await client.send(command);
 

@@ -61,7 +61,7 @@ export class Details {
         this.meetingTime = parseInt(meeting["time"].N!);
         this.meetingPassword = meeting["password"]?.S;
 
-        const emailDestinations = [meeting["user"].S!];
+        const emailDestinations = meeting["users"].L!.map((item) => item.S!);
         this.emailDestinations = emailDestinations;
         if (emailDestinations.length === 1) {
             this.emailStrings = emailDestinations[0];

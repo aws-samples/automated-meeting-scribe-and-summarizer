@@ -20,7 +20,7 @@ export const createMeeting = /* GraphQL */ `mutation CreateMeeting(
     password
     time
     status
-    user
+    users
     createdAt
     updatedAt
     __typename
@@ -42,7 +42,7 @@ export const updateMeeting = /* GraphQL */ `mutation UpdateMeeting(
     password
     time
     status
-    user
+    users
     createdAt
     updatedAt
     __typename
@@ -64,7 +64,7 @@ export const deleteMeeting = /* GraphQL */ `mutation DeleteMeeting(
     password
     time
     status
-    user
+    users
     createdAt
     updatedAt
     __typename

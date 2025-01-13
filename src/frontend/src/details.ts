@@ -10,7 +10,7 @@ export type CreateMeetingInput = {
   password?: string | null,
   time: number,
   status?: string | null,
-  user?: string | null,
+  users?: Array< string | null > | null,
 };
 
 export type ModelMeetingConditionInput = {
@@ -19,7 +19,7 @@ export type ModelMeetingConditionInput = {
   password?: ModelStringInput | null,
   time?: ModelIntInput | null,
   status?: ModelStringInput | null,
-  user?: ModelStringInput | null,
+  users?: ModelStringInput | null,
   and?: Array< ModelMeetingConditionInput | null > | null,
   or?: Array< ModelMeetingConditionInput | null > | null,
   not?: ModelMeetingConditionInput | null,
@@ -88,7 +88,7 @@ export type Meeting = {
   password?: string | null,
   time: number,
   status?: string | null,
-  user?: string | null,
+  users?: Array< string | null > | null,
   createdAt: string,
   updatedAt: string,
 };
@@ -101,7 +101,7 @@ export type UpdateMeetingInput = {
   password?: string | null,
   time?: number | null,
   status?: string | null,
-  user?: string | null,
+  users?: Array< string | null > | null,
 };
 
 export type DeleteMeetingInput = {
@@ -116,7 +116,7 @@ export type ModelMeetingFilterInput = {
   password?: ModelStringInput | null,
   time?: ModelIntInput | null,
   status?: ModelStringInput | null,
-  user?: ModelStringInput | null,
+  users?: ModelStringInput | null,
   createdAt?: ModelStringInput | null,
   updatedAt?: ModelStringInput | null,
   and?: Array< ModelMeetingFilterInput | null > | null,
@@ -164,7 +164,7 @@ export type ModelSubscriptionMeetingFilterInput = {
   updatedAt?: ModelSubscriptionStringInput | null,
   and?: Array< ModelSubscriptionMeetingFilterInput | null > | null,
   or?: Array< ModelSubscriptionMeetingFilterInput | null > | null,
-  user?: ModelStringInput | null,
+  users?: ModelStringInput | null,
 };
 
 export type ModelSubscriptionIDInput = {
@@ -224,7 +224,7 @@ export type CreateMeetingMutation = {
     password?: string | null,
     time: number,
     status?: string | null,
-    user?: string | null,
+    users?: Array< string | null > | null,
     createdAt: string,
     updatedAt: string,
   } | null,
@@ -245,7 +245,7 @@ export type UpdateMeetingMutation = {
     password?: string | null,
     time: number,
     status?: string | null,
-    user?: string | null,
+    users?: Array< string | null > | null,
     createdAt: string,
     updatedAt: string,
   } | null,
@@ -266,7 +266,7 @@ export type DeleteMeetingMutation = {
     password?: string | null,
     time: number,
     status?: string | null,
-    user?: string | null,
+    users?: Array< string | null > | null,
     createdAt: string,
     updatedAt: string,
   } | null,
@@ -286,7 +286,7 @@ export type GetMeetingQuery = {
     password?: string | null,
     time: number,
     status?: string | null,
-    user?: string | null,
+    users?: Array< string | null > | null,
     createdAt: string,
     updatedAt: string,
   } | null,
@@ -312,7 +312,7 @@ export type ListMeetingsQuery = {
       password?: string | null,
       time: number,
       status?: string | null,
-      user?: string | null,
+      users?: Array< string | null > | null,
       createdAt: string,
       updatedAt: string,
     } | null >,
@@ -322,7 +322,6 @@ export type ListMeetingsQuery = {
 
 export type OnCreateMeetingSubscriptionVariables = {
   filter?: ModelSubscriptionMeetingFilterInput | null,
-  user?: string | null,
 };
 
 export type OnCreateMeetingSubscription = {
@@ -335,7 +334,7 @@ export type OnCreateMeetingSubscription = {
     password?: string | null,
     time: number,
     status?: string | null,
-    user?: string | null,
+    users?: Array< string | null > | null,
     createdAt: string,
     updatedAt: string,
   } | null,
@@ -343,7 +342,6 @@ export type OnCreateMeetingSubscription = {
 
 export type OnUpdateMeetingSubscriptionVariables = {
   filter?: ModelSubscriptionMeetingFilterInput | null,
-  user?: string | null,
 };
 
 export type OnUpdateMeetingSubscription = {
@@ -356,7 +354,7 @@ export type OnUpdateMeetingSubscription = {
     password?: string | null,
     time: number,
     status?: string | null,
-    user?: string | null,
+    users?: Array< string | null > | null,
     createdAt: string,
     updatedAt: string,
   } | null,
@@ -364,7 +362,6 @@ export type OnUpdateMeetingSubscription = {
 
 export type OnDeleteMeetingSubscriptionVariables = {
   filter?: ModelSubscriptionMeetingFilterInput | null,
-  user?: string | null,
 };
 
 export type OnDeleteMeetingSubscription = {
@@ -377,7 +374,7 @@ export type OnDeleteMeetingSubscription = {
     password?: string | null,
     time: number,
     status?: string | null,
-    user?: string | null,
+    users?: Array< string | null > | null,
     createdAt: string,
     updatedAt: string,
   } | null,
