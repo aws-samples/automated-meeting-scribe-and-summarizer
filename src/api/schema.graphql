@@ -1,11 +1,14 @@
-type Meeting @model @auth(rules: [{ allow: owner, ownerField: "users" }]) {
+type Meeting
+    @model
+    @auth(
+        rules: [{ allow: owner, ownerField: "user", identityClaim: "email" }]
+    ) {
     uid: ID! @primaryKey
     name: String!
     id: String!
     platform: String!
     password: String
     time: AWSTimestamp!
-    scribe: String
     status: String
-    users: [String]
+    user: String
 }

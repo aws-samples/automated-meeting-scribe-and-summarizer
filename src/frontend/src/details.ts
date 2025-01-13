@@ -9,9 +9,8 @@ export type CreateMeetingInput = {
   platform: string,
   password?: string | null,
   time: number,
-  scribe?: string | null,
   status?: string | null,
-  users?: Array< string | null > | null,
+  user?: string | null,
 };
 
 export type ModelMeetingConditionInput = {
@@ -19,9 +18,8 @@ export type ModelMeetingConditionInput = {
   platform?: ModelStringInput | null,
   password?: ModelStringInput | null,
   time?: ModelIntInput | null,
-  scribe?: ModelStringInput | null,
   status?: ModelStringInput | null,
-  users?: ModelStringInput | null,
+  user?: ModelStringInput | null,
   and?: Array< ModelMeetingConditionInput | null > | null,
   or?: Array< ModelMeetingConditionInput | null > | null,
   not?: ModelMeetingConditionInput | null,
@@ -89,9 +87,8 @@ export type Meeting = {
   platform: string,
   password?: string | null,
   time: number,
-  scribe?: string | null,
   status?: string | null,
-  users?: Array< string | null > | null,
+  user?: string | null,
   createdAt: string,
   updatedAt: string,
 };
@@ -103,9 +100,8 @@ export type UpdateMeetingInput = {
   platform?: string | null,
   password?: string | null,
   time?: number | null,
-  scribe?: string | null,
   status?: string | null,
-  users?: Array< string | null > | null,
+  user?: string | null,
 };
 
 export type DeleteMeetingInput = {
@@ -119,9 +115,8 @@ export type ModelMeetingFilterInput = {
   platform?: ModelStringInput | null,
   password?: ModelStringInput | null,
   time?: ModelIntInput | null,
-  scribe?: ModelStringInput | null,
   status?: ModelStringInput | null,
-  users?: ModelStringInput | null,
+  user?: ModelStringInput | null,
   createdAt?: ModelStringInput | null,
   updatedAt?: ModelStringInput | null,
   and?: Array< ModelMeetingFilterInput | null > | null,
@@ -157,22 +152,6 @@ export type ModelMeetingConnection = {
   nextToken?: string | null,
 };
 
-export type ModelMeetingMeetingIndexCompositeKeyConditionInput = {
-  eq?: ModelMeetingMeetingIndexCompositeKeyInput | null,
-  le?: ModelMeetingMeetingIndexCompositeKeyInput | null,
-  lt?: ModelMeetingMeetingIndexCompositeKeyInput | null,
-  ge?: ModelMeetingMeetingIndexCompositeKeyInput | null,
-  gt?: ModelMeetingMeetingIndexCompositeKeyInput | null,
-  between?: Array< ModelMeetingMeetingIndexCompositeKeyInput | null > | null,
-  beginsWith?: ModelMeetingMeetingIndexCompositeKeyInput | null,
-};
-
-export type ModelMeetingMeetingIndexCompositeKeyInput = {
-  platform?: string | null,
-  password?: string | null,
-  time?: number | null,
-};
-
 export type ModelSubscriptionMeetingFilterInput = {
   uid?: ModelSubscriptionIDInput | null,
   name?: ModelSubscriptionStringInput | null,
@@ -180,13 +159,12 @@ export type ModelSubscriptionMeetingFilterInput = {
   platform?: ModelSubscriptionStringInput | null,
   password?: ModelSubscriptionStringInput | null,
   time?: ModelSubscriptionIntInput | null,
-  scribe?: ModelSubscriptionStringInput | null,
   status?: ModelSubscriptionStringInput | null,
   createdAt?: ModelSubscriptionStringInput | null,
   updatedAt?: ModelSubscriptionStringInput | null,
   and?: Array< ModelSubscriptionMeetingFilterInput | null > | null,
   or?: Array< ModelSubscriptionMeetingFilterInput | null > | null,
-  users?: ModelStringInput | null,
+  user?: ModelStringInput | null,
 };
 
 export type ModelSubscriptionIDInput = {
@@ -245,9 +223,8 @@ export type CreateMeetingMutation = {
     platform: string,
     password?: string | null,
     time: number,
-    scribe?: string | null,
     status?: string | null,
-    users?: Array< string | null > | null,
+    user?: string | null,
     createdAt: string,
     updatedAt: string,
   } | null,
@@ -267,9 +244,8 @@ export type UpdateMeetingMutation = {
     platform: string,
     password?: string | null,
     time: number,
-    scribe?: string | null,
     status?: string | null,
-    users?: Array< string | null > | null,
+    user?: string | null,
     createdAt: string,
     updatedAt: string,
   } | null,
@@ -289,9 +265,8 @@ export type DeleteMeetingMutation = {
     platform: string,
     password?: string | null,
     time: number,
-    scribe?: string | null,
     status?: string | null,
-    users?: Array< string | null > | null,
+    user?: string | null,
     createdAt: string,
     updatedAt: string,
   } | null,
@@ -310,9 +285,8 @@ export type GetMeetingQuery = {
     platform: string,
     password?: string | null,
     time: number,
-    scribe?: string | null,
     status?: string | null,
-    users?: Array< string | null > | null,
+    user?: string | null,
     createdAt: string,
     updatedAt: string,
   } | null,
@@ -337,39 +311,8 @@ export type ListMeetingsQuery = {
       platform: string,
       password?: string | null,
       time: number,
-      scribe?: string | null,
       status?: string | null,
-      users?: Array< string | null > | null,
-      createdAt: string,
-      updatedAt: string,
-    } | null >,
-    nextToken?: string | null,
-  } | null,
-};
-
-export type MeetingsByIdAndPlatformAndPasswordAndTimeQueryVariables = {
-  id: string,
-  platformPasswordTime?: ModelMeetingMeetingIndexCompositeKeyConditionInput | null,
-  sortDirection?: ModelSortDirection | null,
-  filter?: ModelMeetingFilterInput | null,
-  limit?: number | null,
-  nextToken?: string | null,
-};
-
-export type MeetingsByIdAndPlatformAndPasswordAndTimeQuery = {
-  meetingsByIdAndPlatformAndPasswordAndTime?:  {
-    __typename: "ModelMeetingConnection",
-    items:  Array< {
-      __typename: "Meeting",
-      uid: string,
-      name: string,
-      id: string,
-      platform: string,
-      password?: string | null,
-      time: number,
-      scribe?: string | null,
-      status?: string | null,
-      users?: Array< string | null > | null,
+      user?: string | null,
       createdAt: string,
       updatedAt: string,
     } | null >,
@@ -379,6 +322,7 @@ export type MeetingsByIdAndPlatformAndPasswordAndTimeQuery = {
 
 export type OnCreateMeetingSubscriptionVariables = {
   filter?: ModelSubscriptionMeetingFilterInput | null,
+  user?: string | null,
 };
 
 export type OnCreateMeetingSubscription = {
@@ -390,9 +334,8 @@ export type OnCreateMeetingSubscription = {
     platform: string,
     password?: string | null,
     time: number,
-    scribe?: string | null,
     status?: string | null,
-    users?: Array< string | null > | null,
+    user?: string | null,
     createdAt: string,
     updatedAt: string,
   } | null,
@@ -400,6 +343,7 @@ export type OnCreateMeetingSubscription = {
 
 export type OnUpdateMeetingSubscriptionVariables = {
   filter?: ModelSubscriptionMeetingFilterInput | null,
+  user?: string | null,
 };
 
 export type OnUpdateMeetingSubscription = {
@@ -411,9 +355,8 @@ export type OnUpdateMeetingSubscription = {
     platform: string,
     password?: string | null,
     time: number,
-    scribe?: string | null,
     status?: string | null,
-    users?: Array< string | null > | null,
+    user?: string | null,
     createdAt: string,
     updatedAt: string,
   } | null,
@@ -421,6 +364,7 @@ export type OnUpdateMeetingSubscription = {
 
 export type OnDeleteMeetingSubscriptionVariables = {
   filter?: ModelSubscriptionMeetingFilterInput | null,
+  user?: string | null,
 };
 
 export type OnDeleteMeetingSubscription = {
@@ -432,9 +376,8 @@ export type OnDeleteMeetingSubscription = {
     platform: string,
     password?: string | null,
     time: number,
-    scribe?: string | null,
     status?: string | null,
-    users?: Array< string | null > | null,
+    user?: string | null,
     createdAt: string,
     updatedAt: string,
   } | null,

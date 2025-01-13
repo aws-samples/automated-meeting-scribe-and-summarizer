@@ -6,6 +6,7 @@ import Webex from "./webex";
 import { encapsulate } from "./process";
 
 const main = async () => {
+    await details.queryMeeting();
     const currentTimestamp = Math.floor(Date.now() / 1000);
     const timestampDiff = Math.max(
         0,
@@ -45,7 +46,7 @@ const main = async () => {
     transcriptionService.stopTranscription();
 
     await encapsulate();
-    process.exit(0);
+    return;
 };
 
 main();

@@ -162,11 +162,6 @@ const List = () => {
                                     header: "Scribe Status",
                                     content: (meeting) => meeting.status,
                                 },
-                                {
-                                    id: "scribe_name",
-                                    header: "Scribe Name",
-                                    content: (meeting) => meeting.scribe,
-                                },
                             ],
                         }}
                         cardsPerRow={[
@@ -181,7 +176,6 @@ const List = () => {
                             "meeting_platform",
                             "meeting_id",
                             "meeting_time",
-                            "scribe_name",
                         ]}
                         empty={
                             <Box

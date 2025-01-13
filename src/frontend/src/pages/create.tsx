@@ -78,10 +78,10 @@ const Create = () => {
             name: meetingName,
             platform: meetingPlatform.value,
             id: meetingId.replace(/ /g, ""),
-            password: meetingPassword,
             time: Math.floor(
                 new Date(meetingDateTime.toUTCString()).getTime() / 1000
             ),
+            ...(meetingPassword ? { password: meetingPassword } : {}),
         };
 
         setMeetingName("");

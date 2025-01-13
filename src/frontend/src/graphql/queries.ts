@@ -16,9 +16,8 @@ export const getMeeting = /* GraphQL */ `query GetMeeting($uid: ID!) {
     platform
     password
     time
-    scribe
     status
-    users
+    user
     createdAt
     updatedAt
     __typename
@@ -49,9 +48,8 @@ export const listMeetings = /* GraphQL */ `query ListMeetings(
       platform
       password
       time
-      scribe
       status
-      users
+      user
       createdAt
       updatedAt
       __typename
@@ -63,42 +61,4 @@ export const listMeetings = /* GraphQL */ `query ListMeetings(
 ` as GeneratedQuery<
   APITypes.ListMeetingsQueryVariables,
   APITypes.ListMeetingsQuery
->;
-export const meetingsByIdAndPlatformAndPasswordAndTime = /* GraphQL */ `query MeetingsByIdAndPlatformAndPasswordAndTime(
-  $id: String!
-  $platformPasswordTime: ModelMeetingMeetingIndexCompositeKeyConditionInput
-  $sortDirection: ModelSortDirection
-  $filter: ModelMeetingFilterInput
-  $limit: Int
-  $nextToken: String
-) {
-  meetingsByIdAndPlatformAndPasswordAndTime(
-    id: $id
-    platformPasswordTime: $platformPasswordTime
-    sortDirection: $sortDirection
-    filter: $filter
-    limit: $limit
-    nextToken: $nextToken
-  ) {
-    items {
-      uid
-      name
-      id
-      platform
-      password
-      time
-      scribe
-      status
-      users
-      createdAt
-      updatedAt
-      __typename
-    }
-    nextToken
-    __typename
-  }
-}
-` as GeneratedQuery<
-  APITypes.MeetingsByIdAndPlatformAndPasswordAndTimeQueryVariables,
-  APITypes.MeetingsByIdAndPlatformAndPasswordAndTimeQuery
 >;

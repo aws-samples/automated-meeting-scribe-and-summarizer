@@ -8,17 +8,19 @@ type GeneratedSubscription<InputType, OutputType> = string & {
   __generatedSubscriptionOutput: OutputType;
 };
 
-export const onCreateMeeting = /* GraphQL */ `subscription OnCreateMeeting($filter: ModelSubscriptionMeetingFilterInput) {
-  onCreateMeeting(filter: $filter) {
+export const onCreateMeeting = /* GraphQL */ `subscription OnCreateMeeting(
+  $filter: ModelSubscriptionMeetingFilterInput
+  $user: String
+) {
+  onCreateMeeting(filter: $filter, user: $user) {
     uid
     name
     id
     platform
     password
     time
-    scribe
     status
-    users
+    user
     createdAt
     updatedAt
     __typename
@@ -28,17 +30,19 @@ export const onCreateMeeting = /* GraphQL */ `subscription OnCreateMeeting($filt
   APITypes.OnCreateMeetingSubscriptionVariables,
   APITypes.OnCreateMeetingSubscription
 >;
-export const onUpdateMeeting = /* GraphQL */ `subscription OnUpdateMeeting($filter: ModelSubscriptionMeetingFilterInput) {
-  onUpdateMeeting(filter: $filter) {
+export const onUpdateMeeting = /* GraphQL */ `subscription OnUpdateMeeting(
+  $filter: ModelSubscriptionMeetingFilterInput
+  $user: String
+) {
+  onUpdateMeeting(filter: $filter, user: $user) {
     uid
     name
     id
     platform
     password
     time
-    scribe
     status
-    users
+    user
     createdAt
     updatedAt
     __typename
@@ -48,17 +52,19 @@ export const onUpdateMeeting = /* GraphQL */ `subscription OnUpdateMeeting($filt
   APITypes.OnUpdateMeetingSubscriptionVariables,
   APITypes.OnUpdateMeetingSubscription
 >;
-export const onDeleteMeeting = /* GraphQL */ `subscription OnDeleteMeeting($filter: ModelSubscriptionMeetingFilterInput) {
-  onDeleteMeeting(filter: $filter) {
+export const onDeleteMeeting = /* GraphQL */ `subscription OnDeleteMeeting(
+  $filter: ModelSubscriptionMeetingFilterInput
+  $user: String
+) {
+  onDeleteMeeting(filter: $filter, user: $user) {
     uid
     name
     id
     platform
     password
     time
-    scribe
     status
-    users
+    user
     createdAt
     updatedAt
     __typename

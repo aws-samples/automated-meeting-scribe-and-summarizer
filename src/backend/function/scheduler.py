@@ -11,6 +11,7 @@ from datetime import datetime, timedelta, timezone
 
 logging = Logger(service="meeting-scheduler")
 scheduler_client = boto3.client("scheduler")
+ecs_client = boto3.client("ecs")
 
 
 def lowercase_dictionary(object):
@@ -65,7 +66,7 @@ def handler(event: DynamoDBStreamEvent, context: LambdaContext):
                                 },
                                 {
                                     "Name": "MEETING_UID",
-                                    "Value": meeting["uid"],
+                                    "Value": uid,
                                 },
                                 {
                                     "Name": "EMAIL_SOURCE",
@@ -100,7 +101,7 @@ def handler(event: DynamoDBStreamEvent, context: LambdaContext):
                 )
             else:
                 logging.info("now")
-                boto3.client("ecs").run_task(**lowercase_dictionary(ecs_params))
+                ecs_client.run_task(**lowercase_dictionary(ecs_params))
 
         elif record.event_name.REMOVE:
             logging.info("unschedule")
