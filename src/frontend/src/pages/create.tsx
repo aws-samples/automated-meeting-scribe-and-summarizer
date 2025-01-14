@@ -16,6 +16,7 @@ import {
 } from "@cloudscape-design/components";
 import { generateClient } from "aws-amplify/api";
 import { useContext, useState } from "react";
+import { CreateInviteInput } from "../api";
 import NavigationComponent from "../components/navigation";
 import FlashbarContext, {
     FlashbarComponent,
@@ -72,7 +73,7 @@ const Create = () => {
             );
         }
 
-        const input = {
+        const input: CreateInviteInput = {
             name: inviteName,
             meetingPlatform: meetingPlatform.value,
             meetingId: meetingId.replace(/ /g, ""),

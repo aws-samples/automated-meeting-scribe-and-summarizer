@@ -77,7 +77,7 @@ This click-through option will build and deploy the CDK application for you usin
 
 -   At the specified meeting time, your scribe will join the meeting's waiting room.
     -   It will wait for up to five minutes in the waiting room.
--   Verify your scribe's name then admit it into the meeting. Do not admit a scribe you cannot verify.
+-   Verify the scribe's linked email then admit it into the meeting. Do not admit a scribe you cannot verify.
 -   Once admitted, the scribe will introduce itself in the chat and list the users it was invited by.
 -   At any point thereafter, you can send the scribe command messages in the chat:
     -   "START" will start saving attendance, new messages and machine-generated captions.

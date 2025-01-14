@@ -5,11 +5,11 @@ projects:
       - src/graphql/**/*.ts
     excludes:
       - ./amplify/**
-      - src/details.ts
+      - src/api.ts
     extensions:
       amplify:
         codeGenTarget: typescript
-        generatedFileName: src/details.ts
+        generatedFileName: src/api.ts
         docsFilePath: src/graphql
         frontend: javascript
         framework: react

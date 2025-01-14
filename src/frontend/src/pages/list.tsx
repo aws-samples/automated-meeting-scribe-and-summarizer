@@ -9,9 +9,9 @@ import {
 } from "@cloudscape-design/components";
 import { generateClient } from "aws-amplify/api";
 import { useEffect, useState } from "react";
+import { Invite } from "../api";
 import NavigationComponent from "../components/navigation";
 import { FlashbarComponent } from "../components/notifications";
-import { Invite } from "../details";
 import * as mutations from "../graphql/mutations";
 import * as queries from "../graphql/queries";
 import { meetingPlatforms } from "../platform";
