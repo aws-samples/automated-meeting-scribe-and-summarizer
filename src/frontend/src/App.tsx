@@ -6,13 +6,16 @@ import "@aws-amplify/ui-react/styles.css";
 import TopNavigation from "@cloudscape-design/components/top-navigation";
 import "@cloudscape-design/global-styles/index.css";
 import { Amplify } from "aws-amplify";
+import { generateClient } from "aws-amplify/api";
 import { fetchAuthSession } from "aws-amplify/auth";
+import { useContext, useEffect } from "react";
 import {
     createBrowserRouter,
     Navigate,
     RouterProvider,
 } from "react-router-dom";
-import { FlashbarProvider } from "./components/notifications";
+import FlashbarContext, { FlashbarProvider } from "./components/notifications";
+import { onUpdateInvite } from "./graphql/subscriptions";
 import CreateInvite from "./pages/create";
 import ListInvites from "./pages/list";
 
@@ -48,6 +51,32 @@ Amplify.configure(
 );
 
 export function App({ signOut, user }: WithAuthenticatorProps) {
+    const client = generateClient();
+    const { updateFlashbar } = useContext(FlashbarContext);
+    useEffect(() => {
+        const subscription = client
+            .graphql({
+                query: onUpdateInvite,
+            })
+            .subscribe({
+                next: ({ data }) => {
+                    updateFlashbar(
+                        "info",
+                        `${data.onUpdateInvite.name}'s status updated to ${data.onUpdateInvite.status}.`
+                    );
+                },
+                error: (error) => {
+                    console.error("Subscription error:", error);
+                },
+            });
+
+        return () => {
+            if (subscription) {
+                subscription.unsubscribe();
+            }
+        };
+    }, []);
+
     const router = createBrowserRouter([
         {
             path: "/",
