@@ -2,28 +2,52 @@
 /* eslint-disable */
 // this is an auto generated file. This will be overwritten
 
-import * as APITypes from "../details";
+import * as APITypes from "../api";
 type GeneratedQuery<InputType, OutputType> = string & {
   __generatedQueryInput: InputType;
   __generatedQueryOutput: OutputType;
 };
 
-export const getInvites = /* GraphQL */ `query GetInvites {
-  getInvites {
+export const getInvite = /* GraphQL */ `query GetInvite($id: ID!) {
+  getInvite(id: $id) {
     name
-    meeting {
-      platform
+    meetingPlatform
+    meetingId
+    meetingPassword
+    meetingTime
+    status
+    users
+    id
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedQuery<APITypes.GetInviteQueryVariables, APITypes.GetInviteQuery>;
+export const listInvites = /* GraphQL */ `query ListInvites(
+  $filter: ModelInviteFilterInput
+  $limit: Int
+  $nextToken: String
+) {
+  listInvites(filter: $filter, limit: $limit, nextToken: $nextToken) {
+    items {
+      name
+      meetingPlatform
+      meetingId
+      meetingPassword
+      meetingTime
+      status
+      users
       id
-      password
-      time
+      createdAt
+      updatedAt
       __typename
     }
-    scribe
-    status
+    nextToken
     __typename
   }
 }
 ` as GeneratedQuery<
-  APITypes.GetInvitesQueryVariables,
-  APITypes.GetInvitesQuery
+  APITypes.ListInvitesQueryVariables,
+  APITypes.ListInvitesQuery
 >;

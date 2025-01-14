@@ -9,9 +9,9 @@ import {
 } from "@cloudscape-design/components";
 import { generateClient } from "aws-amplify/api";
 import { useEffect, useState } from "react";
+import { Invite } from "../api";
 import NavigationComponent from "../components/navigation";
 import { FlashbarComponent } from "../components/notifications";
-import { Invite } from "../details";
 import * as mutations from "../graphql/mutations";
 import * as queries from "../graphql/queries";
 import { meetingPlatforms } from "../platform";
@@ -28,13 +28,9 @@ const List = () => {
         const fetchMeetings = async () => {
             try {
                 const { data } = await client.graphql({
-                    query: queries.getInvites,
+                    query: queries.listInvites,
                 });
-                setInvites(
-                    data.getInvites?.filter(
-                        (invite): invite is Invite => invite !== null
-                    ) ?? []
-                );
+                setInvites(data.listInvites?.items || []);
             } catch (error) {
                 console.error("Failed to get invites.", error);
             }
@@ -70,23 +66,12 @@ const List = () => {
                                         if (selectedInvites) {
                                             selectedInvites.forEach(
                                                 (invite) => {
-                                                    const {
-                                                        platform,
-                                                        id,
-                                                        password,
-                                                        time,
-                                                    } = invite.meeting;
                                                     client
                                                         .graphql({
                                                             query: mutations.deleteInvite,
                                                             variables: {
                                                                 input: {
-                                                                    platform:
-                                                                        platform,
-                                                                    id: id,
-                                                                    password:
-                                                                        password,
-                                                                    time: time,
+                                                                    id: invite.id,
                                                                 },
                                                             },
                                                         })
@@ -137,26 +122,25 @@ const List = () => {
                                         meetingPlatforms.find(
                                             (platform) =>
                                                 platform.value ===
-                                                invite.meeting.platform
+                                                invite.meetingPlatform
                                         )?.label,
                                 },
                                 {
                                     id: "meeting_id",
                                     header: "Meeting ID",
-                                    content: (invite) => invite.meeting.id,
+                                    content: (invite) => invite.meetingId,
                                 },
                                 {
                                     id: "meeting_password",
                                     header: "Meeting Password",
-                                    content: (invite) =>
-                                        invite.meeting.password,
+                                    content: (invite) => invite.meetingPassword,
                                 },
                                 {
                                     id: "meeting_time",
                                     header: "Meeting Time",
                                     content: (invite) => {
                                         const meetingDateTime = new Date(
-                                            invite.meeting.time * 1000
+                                            invite.meetingTime * 1000
                                         );
                                         const options: Intl.DateTimeFormatOptions =
                                             {
@@ -178,11 +162,6 @@ const List = () => {
                                     header: "Scribe Status",
                                     content: (invite) => invite.status,
                                 },
-                                {
-                                    id: "scribe_name",
-                                    header: "Scribe Name",
-                                    content: (invite) => invite.scribe,
-                                },
                             ],
                         }}
                         cardsPerRow={[
@@ -197,7 +176,6 @@ const List = () => {
                             "meeting_platform",
                             "meeting_id",
                             "meeting_time",
-                            "scribe_name",
                         ]}
                         empty={
                             <Box

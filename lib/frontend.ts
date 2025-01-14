@@ -16,7 +16,6 @@ import { execSync } from "child_process";
 import { createManagedRules } from "./utils/rules";
 
 interface FrontendStackProps extends StackProps {
-    loggingBucket: s3.Bucket;
     userPoolId: string;
     userPoolClientId: string;
     graphApiUrl: string;
@@ -26,12 +25,20 @@ export default class FrontendStack extends Stack {
     constructor(scope: Construct, id: string, props: FrontendStackProps) {
         super(scope, id, props);
 
+        const loggingBucket = new s3.Bucket(this, "loggingBucket", {
+            autoDeleteObjects: true,
+            removalPolicy: RemovalPolicy.DESTROY,
+            blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+            enforceSSL: true,
+            objectOwnership: s3.ObjectOwnership.BUCKET_OWNER_PREFERRED,
+        });
+
         const websiteBucket = new s3.Bucket(this, "websiteBucket", {
             autoDeleteObjects: true,
             removalPolicy: RemovalPolicy.DESTROY,
             blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
             enforceSSL: true,
-            serverAccessLogsBucket: props.loggingBucket,
+            serverAccessLogsBucket: loggingBucket,
             serverAccessLogsPrefix: "website/",
         });
 
@@ -77,7 +84,7 @@ export default class FrontendStack extends Stack {
                 },
             ],
             webAclId: distributionWebAcl.attrArn,
-            logBucket: props.loggingBucket,
+            logBucket: loggingBucket,
             logIncludesCookies: true,
             logFilePrefix: "distribution",
         });

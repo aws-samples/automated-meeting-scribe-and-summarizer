@@ -103,48 +103,42 @@ async function sendEmail(
         html = `Your transcript was empty. ${logsMessage}`;
     }
 
-    for (let i = 0; i < details.emailDestinations.length; i++) {
-        const emailDestination = details.emailDestinations[i];
-        const meetingName = details.meetingNames[i];
+    const mailOptions: nodemailer.SendMailOptions = {
+        from: process.env.EMAIL_SOURCE!,
+        to: details.emailDestinations.join(", "),
+        subject: `${details.inviteName} Follow-up`,
+        html: html,
+        attachments: [],
+    };
 
-        const mailOptions: nodemailer.SendMailOptions = {
-            from: process.env.EMAIL_SOURCE!,
-            to: emailDestination,
-            subject: `${meetingName} Follow-up`,
-            html: html,
-            attachments: [],
-        };
+    if (transcript) {
+        mailOptions.attachments?.push({
+            filename: "transcript.txt",
+            content: transcript,
+        });
+    }
+    if (chat) {
+        mailOptions.attachments?.push({
+            filename: "chat.txt",
+            content: chat,
+        });
+    }
+    for (const [fileName, link] of Object.entries(attachments)) {
+        const response = await fetch(link);
+        const buffer = await response.arrayBuffer();
+        mailOptions.attachments?.push({
+            filename: fileName,
+            content: Buffer.from(buffer),
+        });
+    }
 
-        if (transcript) {
-            mailOptions.attachments?.push({
-                filename: "transcript.txt",
-                content: transcript,
-            });
-        }
-        if (chat) {
-            mailOptions.attachments?.push({
-                filename: "chat.txt",
-                content: chat,
-            });
-        }
-        for (const [fileName, link] of Object.entries(attachments)) {
-            const response = await fetch(link);
-            const buffer = await response.arrayBuffer();
-            mailOptions.attachments?.push({
-                filename: fileName,
-                content: Buffer.from(buffer),
-            });
-        }
-
-        try {
-            await transport.sendMail(mailOptions);
-            console.log(`Email sent to ${emailDestination}!`);
-        } catch (error) {
-            console.log(
-                `Error while sending email to ${emailDestination}:`,
-                error
-            );
-        }
+    try {
+        await transport.sendMail(mailOptions);
+        console.log(
+            `Email sent to ${details.emailDestinations.length} recipients!`
+        );
+    } catch (error) {
+        console.log("Error while sending email:", error);
     }
 }
 

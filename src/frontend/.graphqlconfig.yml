@@ -1,14 +1,15 @@
 projects:
   Codegen Project:
-    schemaPath: ../api/schema.graphql
+    schemaPath: schema.json
     includes:
       - src/graphql/**/*.ts
     excludes:
-      - src/details.ts
+      - ./amplify/**
+      - src/api.ts
     extensions:
       amplify:
         codeGenTarget: typescript
-        generatedFileName: src/details.ts
+        generatedFileName: src/api.ts
         docsFilePath: src/graphql
         frontend: javascript
         framework: react

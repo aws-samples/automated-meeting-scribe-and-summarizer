@@ -16,6 +16,7 @@ import {
 } from "@cloudscape-design/components";
 import { generateClient } from "aws-amplify/api";
 import { useContext, useState } from "react";
+import { CreateInviteInput } from "../api";
 import NavigationComponent from "../components/navigation";
 import FlashbarContext, {
     FlashbarComponent,
@@ -28,10 +29,10 @@ const Create = () => {
     const { updateFlashbar } = useContext(FlashbarContext);
     const [checked, setChecked] = useState(false);
 
+    const [inviteName, setInviteName] = useState("");
     const [meetingPlatform, setMeetingPlatform] = useState(meetingPlatforms[0]);
     const [meetingId, setMeetingId] = useState("");
     const [meetingPassword, setMeetingPassword] = useState("");
-    const [meetingName, setMeetingName] = useState("");
     const [meetingDate, setMeetingDate] = useState("");
     const [meetingTime, setMeetingTime] = useState("");
 
@@ -72,38 +73,36 @@ const Create = () => {
             );
         }
 
+        const input: CreateInviteInput = {
+            name: inviteName,
+            meetingPlatform: meetingPlatform.value,
+            meetingId: meetingId.replace(/ /g, ""),
+            meetingTime: Math.floor(
+                new Date(meetingDateTime.toUTCString()).getTime() / 1000
+            ),
+            ...(meetingPassword ? { meetingPassword: meetingPassword } : {}),
+        };
+
+        setInviteName("");
+        setMeetingId("");
+        setMeetingPassword("");
+        setMeetingDate("");
+        setMeetingTime("");
+
         const client = generateClient();
         try {
-            const response = await client.graphql({
+            await client.graphql({
                 query: mutations.createInvite,
                 variables: {
-                    input: {
-                        name: meetingName,
-                        meeting: {
-                            platform: meetingPlatform.value,
-                            id: meetingId.replace(/ /g, ""),
-                            password: meetingPassword,
-                            time: Math.floor(
-                                new Date(
-                                    meetingDateTime.toUTCString()
-                                ).getTime() / 1000
-                            ),
-                        },
-                    },
+                    input: input,
                 },
             });
-            updateFlashbar("success", response.data.createInvite);
+            updateFlashbar("success", `${input.name} invite created!`);
         } catch (error) {
             const errorMessage = "Failed to create invite.";
             console.error(errorMessage, error);
             updateFlashbar("error", errorMessage);
         }
-
-        setMeetingId("");
-        setMeetingPassword("");
-        setMeetingName("");
-        setMeetingDate("");
-        setMeetingTime("");
     };
 
     return (
@@ -118,7 +117,7 @@ const Create = () => {
                     <ul>
                         <li>
                             To invite a scribe to your upcoming meeting, enter
-                            the <strong>Meeting Name</strong>,{" "}
+                            the <strong>Invite Name</strong>,{" "}
                             <strong>Meeting ID</strong>, and, optionally, the{" "}
                             <strong>Meeting Time</strong>.
                         </li>
@@ -153,12 +152,12 @@ const Create = () => {
                     >
                         <Form variant="embedded">
                             <SpaceBetween direction="vertical" size="l">
-                                <FormField label="Meeting Name">
+                                <FormField label="Invite Name">
                                     <Input
                                         onChange={({ detail }) =>
-                                            setMeetingName(detail.value)
+                                            setInviteName(detail.value)
                                         }
-                                        value={meetingName}
+                                        value={inviteName}
                                     />
                                 </FormField>
 
@@ -260,7 +259,7 @@ const Create = () => {
                                             form="meetingForm"
                                             disabled={
                                                 !meetingId ||
-                                                !meetingName ||
+                                                !inviteName ||
                                                 !checked
                                             }
                                         >
@@ -271,7 +270,7 @@ const Create = () => {
                                             form="meetingForm"
                                             disabled={
                                                 !meetingId ||
-                                                !meetingName ||
+                                                !inviteName ||
                                                 !meetingTime ||
                                                 !!meetingTimeError ||
                                                 !checked

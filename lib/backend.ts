@@ -1,8 +1,6 @@
 import {
     StackProps,
     aws_ses as ses,
-    aws_dynamodb as dynamodb,
-    aws_appsync as appsync,
     Stack,
     aws_ec2 as ec2,
     aws_logs as logs,
@@ -15,18 +13,24 @@ import {
     Duration,
     aws_lambda_event_sources as lambda_event_sources,
 } from "aws-cdk-lib";
+import { AmplifyGraphqlApi } from "@aws-amplify/graphql-api-construct";
 import { Construct } from "constructs";
 
 interface BackendStackProps extends StackProps {
     identity: ses.EmailIdentity;
-    table: dynamodb.TableV2;
-    index: string;
-    graphApi: appsync.GraphqlApi;
+    graphApi: AmplifyGraphqlApi;
 }
 
 export default class BackendStack extends Stack {
     constructor(scope: Construct, id: string, props: BackendStackProps) {
         super(scope, id, props);
+
+        const table = props.graphApi.resources.tables.Invite;
+        props.graphApi.resources.cfnResources.cfnTables.Invite.timeToLiveSpecification =
+            {
+                enabled: true,
+                attributeName: "meetingTime",
+            };
 
         const vpc = new ec2.Vpc(this, "vpc", {
             ipAddresses: ec2.IpAddresses.cidr("10.0.0.0/16"),
@@ -90,7 +94,7 @@ export default class BackendStack extends Stack {
         const taskRole = new iam.Role(this, "taskRole", {
             assumedBy: new iam.ServicePrincipal("ecs-tasks.amazonaws.com"),
         });
-        props.table.grantReadWriteData(taskRole);
+        table.grantReadWriteData(taskRole);
         taskRole.addToPolicy(
             new iam.PolicyStatement({
                 effect: iam.Effect.ALLOW,
@@ -192,7 +196,7 @@ export default class BackendStack extends Stack {
                 ),
             ],
         });
-        props.table.grantStreamRead(lambdaSchedulerRole);
+        table.grantStreamRead(lambdaSchedulerRole);
         lambdaSchedulerRole.addToPolicy(
             new iam.PolicyStatement({
                 effect: iam.Effect.ALLOW,
@@ -232,9 +236,16 @@ export default class BackendStack extends Stack {
                 role: lambdaSchedulerRole,
                 timeout: Duration.minutes(2),
                 code: lambda.Code.fromAsset("./src/backend/function"),
+                layers: [
+                    lambda.LayerVersion.fromLayerVersionArn(
+                        this,
+                        "PowerToolsLayer",
+                        `arn:aws:lambda:${this.region}:017000801446:layer:AWSLambdaPowertoolsPythonV2-Arm64:78`
+                    ),
+                ],
                 environment: {
                     TASK_DEFINITION_ARN: taskDefinition.taskDefinitionArn,
-                    ECS_CLUSTER_ARN: cluster.clusterArn,
+                    CLUSTER_ARN: cluster.clusterArn,
                     SECURITY_GROUPS: JSON.stringify([
                         securityGroup.securityGroupId,
                     ]),
@@ -242,9 +253,8 @@ export default class BackendStack extends Stack {
                         vpc.privateSubnets.map((subnet) => subnet.subnetId)
                     ),
                     CONTAINER_ID: containerId,
-                    API_URL: props.graphApi.graphqlUrl,
-                    TABLE_NAME: props.table.tableName,
-                    MEETING_INDEX: props.index,
+                    GRAPH_API_URL: props.graphApi.graphqlUrl,
+                    TABLE_NAME: table.tableName,
                     EMAIL_SOURCE: props.identity.emailIdentityName,
                     // VOCABULARY_NAME: 'lingo',
                     SCHEDULE_GROUP: meetingScheduleGroup.ref,
@@ -255,7 +265,7 @@ export default class BackendStack extends Stack {
         );
 
         schedulerFunction.addEventSource(
-            new lambda_event_sources.DynamoEventSource(props.table, {
+            new lambda_event_sources.DynamoEventSource(table, {
                 startingPosition: lambda.StartingPosition.LATEST,
                 retryAttempts: 3,
             })

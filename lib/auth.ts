@@ -1,25 +1,27 @@
 import {
-    StackProps,
     Stack,
+    aws_ses as ses,
     aws_cognito as cognito,
-    RemovalPolicy,
+    StackProps,
     aws_lambda as lambda,
     Duration,
     aws_iam as iam,
     aws_logs as logs,
+    RemovalPolicy,
 } from "aws-cdk-lib";
 import { Construct } from "constructs";
 
-interface AuthStackProps extends StackProps {
-    email: string;
-}
-
 export default class AuthStack extends Stack {
+    public readonly identity: ses.EmailIdentity;
     public readonly userPool: cognito.UserPool;
     public readonly userPoolClient: cognito.UserPoolClient;
 
-    constructor(scope: Construct, id: string, props: AuthStackProps) {
+    constructor(scope: Construct, id: string, props: StackProps) {
         super(scope, id, props);
+
+        this.identity = new ses.EmailIdentity(this, "identity", {
+            identity: ses.Identity.email(process.env.EMAIL!),
+        });
 
         const postConfirmationLambda = new lambda.Function(
             this,
@@ -80,7 +82,7 @@ export default class AuthStack extends Stack {
 
         new cognito.CfnUserPoolUser(this, "userPoolUser", {
             userPoolId: this.userPool.userPoolId,
-            username: props.email,
+            username: this.identity.emailIdentityName,
         });
     }
 }
