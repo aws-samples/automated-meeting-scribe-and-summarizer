@@ -3,7 +3,7 @@ import {
     StartStreamTranscriptionCommand,
 } from "@aws-sdk/client-transcribe-streaming";
 import { spawn } from "child_process";
-import { details } from "./details";
+import { details } from "./details.js";
 
 export class TranscriptionService {
     private process: any;

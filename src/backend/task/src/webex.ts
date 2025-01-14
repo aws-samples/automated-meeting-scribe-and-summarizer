@@ -1,6 +1,6 @@
 import { Page, Frame } from "playwright";
-import { transcriptionService } from "./scribe";
-import { details } from "./details";
+import { transcriptionService } from "./scribe.js";
+import { details } from "./details.js";
 
 export default class Webex {
     private readonly iframe = 'iframe[name="thinIframe"]';
@@ -26,7 +26,7 @@ export default class Webex {
         const meetingTextElement = await page.waitForSelector(
             "#join-meeting-form"
         );
-        await meetingTextElement?.type(details.meetingId);
+        await meetingTextElement?.type(details.invite.meetingId);
         await meetingTextElement?.press("Enter");
 
         console.log("Launching app.");
@@ -92,6 +92,7 @@ export default class Webex {
 
         await new Promise((resolve) => setTimeout(resolve, 1000));
 
+        details.updateInvite("Joined");
         console.log("Sending introduction messages.");
         await this.sendMessages(frame, details.introMessages);
 

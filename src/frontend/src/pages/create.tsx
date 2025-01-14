@@ -21,7 +21,7 @@ import NavigationComponent from "../components/navigation";
 import FlashbarContext, {
     FlashbarComponent,
 } from "../components/notifications";
-import * as mutations from "../graphql/mutations";
+import { createInvite } from "../graphql/mutations";
 import { MeetingPlatform, meetingPlatforms } from "../platform";
 
 const Create = () => {
@@ -92,7 +92,7 @@ const Create = () => {
         const client = generateClient();
         try {
             await client.graphql({
-                query: mutations.createInvite,
+                query: createInvite,
                 variables: {
                     input: input,
                 },

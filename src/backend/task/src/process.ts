@@ -1,4 +1,4 @@
-import { details } from "./details";
+import { details } from "./details.js";
 import {
     ComprehendClient,
     DetectPiiEntitiesCommand,
@@ -105,8 +105,8 @@ async function sendEmail(
 
     const mailOptions: nodemailer.SendMailOptions = {
         from: process.env.EMAIL_SOURCE!,
-        to: details.emailDestinations.join(", "),
-        subject: `${details.inviteName} Follow-up`,
+        to: details.invite.users.join(", "),
+        subject: `${details.invite.name} Follow-up`,
         html: html,
         attachments: [],
     };
@@ -134,9 +134,7 @@ async function sendEmail(
 
     try {
         await transport.sendMail(mailOptions);
-        console.log(
-            `Email sent to ${details.emailDestinations.length} recipients!`
-        );
+        console.log(`Email sent to ${details.invite.users.length} recipients!`);
     } catch (error) {
         console.log("Error while sending email:", error);
     }

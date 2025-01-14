@@ -12,8 +12,8 @@ import { useEffect, useState } from "react";
 import { Invite } from "../api";
 import NavigationComponent from "../components/navigation";
 import { FlashbarComponent } from "../components/notifications";
-import * as mutations from "../graphql/mutations";
-import * as queries from "../graphql/queries";
+import { deleteInvite } from "../graphql/mutations";
+import { listInvites } from "../graphql/queries";
 import { meetingPlatforms } from "../platform";
 
 const List = () => {
@@ -28,7 +28,7 @@ const List = () => {
         const fetchMeetings = async () => {
             try {
                 const { data } = await client.graphql({
-                    query: queries.listInvites,
+                    query: listInvites,
                 });
                 setInvites(data.listInvites?.items || []);
             } catch (error) {
@@ -68,7 +68,7 @@ const List = () => {
                                                 (invite) => {
                                                     client
                                                         .graphql({
-                                                            query: mutations.deleteInvite,
+                                                            query: deleteInvite,
                                                             variables: {
                                                                 input: {
                                                                     id: invite.id,
@@ -160,7 +160,8 @@ const List = () => {
                                 {
                                     id: "scribe_status",
                                     header: "Scribe Status",
-                                    content: (invite) => invite.status,
+                                    content: (invite) =>
+                                        invite.status ?? "Scheduled",
                                 },
                             ],
                         }}
@@ -176,6 +177,7 @@ const List = () => {
                             "meeting_platform",
                             "meeting_id",
                             "meeting_time",
+                            "scribe_status",
                         ]}
                         empty={
                             <Box

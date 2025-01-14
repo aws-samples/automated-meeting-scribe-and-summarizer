@@ -94,15 +94,9 @@ export default class BackendStack extends Stack {
         const taskRole = new iam.Role(this, "taskRole", {
             assumedBy: new iam.ServicePrincipal("ecs-tasks.amazonaws.com"),
         });
-        table.grantReadWriteData(taskRole);
-        taskRole.addToPolicy(
-            new iam.PolicyStatement({
-                effect: iam.Effect.ALLOW,
-                actions: ["appsync:GraphQL"],
-                resources: [
-                    `arn:aws:appsync:*:*:apis/${props.graphApi.apiId}/*`,
-                ],
-            })
+        props.graphApi.resources.graphqlApi.grantMutation(
+            taskRole,
+            "updateInvite"
         );
         taskRole.addToPolicy(
             new iam.PolicyStatement({
@@ -254,7 +248,6 @@ export default class BackendStack extends Stack {
                     ),
                     CONTAINER_ID: containerId,
                     GRAPH_API_URL: props.graphApi.graphqlUrl,
-                    TABLE_NAME: table.tableName,
                     EMAIL_SOURCE: props.identity.emailIdentityName,
                     // VOCABULARY_NAME: 'lingo',
                     SCHEDULE_GROUP: meetingScheduleGroup.ref,

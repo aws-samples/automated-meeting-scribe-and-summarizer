@@ -1,4 +1,11 @@
-import { DynamoDBClient, QueryCommand } from "@aws-sdk/client-dynamodb";
+import { Invite, UpdateInviteInput } from "./api.js";
+import { GraphQLClient } from "graphql-request";
+import { createSignedFetcher } from "aws-sigv4-fetch";
+import { updateInvite } from "./graphql/mutations.js";
+
+type ModifiedInvite = Omit<Invite, "users"> & {
+    users: string[];
+};
 
 export type Speaker = {
     name: string;
@@ -6,14 +13,10 @@ export type Speaker = {
 };
 
 export class Details {
-    public inviteName!: string;
-    public meetingPlatform!: string;
-    public meetingId!: string;
-    public meetingPassword?: string;
-    public meetingTime!: number;
+    private constructor() {}
 
-    public emailDestinations!: string[];
-    private emailStrings!: string;
+    public invite!: ModifiedInvite;
+    private userStrings!: string;
 
     public scribeName: string = "Scribe";
     public scribeIdentity!: string;
@@ -42,41 +45,48 @@ export class Details {
     public captions: string[] = [];
     public speakers: Speaker[] = [];
 
-    public async queryInvite() {
-        const client = new DynamoDBClient({});
-        const response = await client.send(
-            new QueryCommand({
-                TableName: process.env.TABLE_NAME,
-                KeyConditionExpression: "id = :id",
-                ExpressionAttributeValues: {
-                    ":id": { S: process.env.INVITE_ID! },
-                },
-            })
+    static async initialize(): Promise<Details> {
+        const details = new Details();
+        await details.updateInvite("Initializing");
+        details.updateDetails();
+        return details;
+    }
+
+    public async updateInvite(status: string) {
+        const client = new GraphQLClient(process.env.GRAPH_API_URL!, {
+            fetch: createSignedFetcher({
+                service: "appsync",
+                region: process.env.AWS_REGION,
+            }),
+        });
+        const response: { updateInvite: ModifiedInvite } = await client.request(
+            updateInvite,
+            {
+                input: {
+                    id: process.env.INVITE_ID!,
+                    status: status,
+                } as UpdateInviteInput,
+            }
         );
-        const invite = response.Items![0];
+        this.invite = response.updateInvite;
+    }
 
-        this.inviteName = invite["name"].S!;
-        this.meetingPlatform = invite["meetingPlatform"].S!;
-        this.meetingId = invite["meetingId"].S!;
-        this.meetingTime = parseInt(invite["meetingTime"].N!);
-        this.meetingPassword = invite["meetingPassword"]?.S;
-
-        const emailDestinations = invite["users"].L!.map((user) => user.S!);
-        this.emailDestinations = emailDestinations;
-        if (emailDestinations.length === 1) {
-            this.emailStrings = emailDestinations[0];
-        } else if (emailDestinations.length === 2) {
-            this.emailStrings = `${emailDestinations[0]} and ${emailDestinations[1]}`;
-        } else if (emailDestinations.length > 2) {
-            this.emailStrings = `${emailDestinations
+    private updateDetails() {
+        const users = this.invite.users;
+        if (users.length === 1) {
+            this.userStrings = users[0];
+        } else if (users.length === 2) {
+            this.userStrings = `${users[0]} and ${users[1]}`;
+        } else if (users.length > 2) {
+            this.userStrings = `${users
                 .slice(0, -1)
-                .join(", ")}, and ${emailDestinations.slice(-1)}`;
+                .join(", ")}, and ${users.slice(-1)}`;
         }
 
-        this.scribeIdentity = `${this.scribeName} [${emailDestinations[0]}]`;
+        this.scribeIdentity = `${this.scribeName} [${users[0]}]`;
 
         this.introMessages = [
-            `Hello! I am an AI-assisted scribe. I was invited by ${this.emailStrings}.`,
+            `Hello! I am an AI-assisted scribe. I was invited by ${this.userStrings}.`,
             `If all other participants consent to my use, send "${this.startCommand}" in the chat ` +
                 `to start saving new speakers, messages, and machine-generated captions.`,
             `If you do not consent to my use, send "${this.endCommand}" in the chat ` +
@@ -85,4 +95,4 @@ export class Details {
     }
 }
 
-export const details = new Details();
+export const details = await Details.initialize();
