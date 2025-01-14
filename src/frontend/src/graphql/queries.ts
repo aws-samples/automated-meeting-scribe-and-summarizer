@@ -8,48 +8,37 @@ type GeneratedQuery<InputType, OutputType> = string & {
   __generatedQueryOutput: OutputType;
 };
 
-export const getMeeting = /* GraphQL */ `query GetMeeting($uid: ID!) {
-  getMeeting(uid: $uid) {
-    uid
+export const getInvite = /* GraphQL */ `query GetInvite($id: ID!) {
+  getInvite(id: $id) {
     name
-    id
-    platform
-    password
-    time
+    meetingPlatform
+    meetingId
+    meetingPassword
+    meetingTime
     status
     users
+    id
     createdAt
     updatedAt
     __typename
   }
 }
-` as GeneratedQuery<
-  APITypes.GetMeetingQueryVariables,
-  APITypes.GetMeetingQuery
->;
-export const listMeetings = /* GraphQL */ `query ListMeetings(
-  $uid: ID
-  $filter: ModelMeetingFilterInput
+` as GeneratedQuery<APITypes.GetInviteQueryVariables, APITypes.GetInviteQuery>;
+export const listInvites = /* GraphQL */ `query ListInvites(
+  $filter: ModelInviteFilterInput
   $limit: Int
   $nextToken: String
-  $sortDirection: ModelSortDirection
 ) {
-  listMeetings(
-    uid: $uid
-    filter: $filter
-    limit: $limit
-    nextToken: $nextToken
-    sortDirection: $sortDirection
-  ) {
+  listInvites(filter: $filter, limit: $limit, nextToken: $nextToken) {
     items {
-      uid
       name
-      id
-      platform
-      password
-      time
+      meetingPlatform
+      meetingId
+      meetingPassword
+      meetingTime
       status
       users
+      id
       createdAt
       updatedAt
       __typename
@@ -59,6 +48,6 @@ export const listMeetings = /* GraphQL */ `query ListMeetings(
   }
 }
 ` as GeneratedQuery<
-  APITypes.ListMeetingsQueryVariables,
-  APITypes.ListMeetingsQuery
+  APITypes.ListInvitesQueryVariables,
+  APITypes.ListInvitesQuery
 >;

@@ -25,11 +25,11 @@ export default class BackendStack extends Stack {
     constructor(scope: Construct, id: string, props: BackendStackProps) {
         super(scope, id, props);
 
-        const table = props.graphApi.resources.tables.Meeting;
-        props.graphApi.resources.cfnResources.cfnTables.Meeting.timeToLiveSpecification =
+        const table = props.graphApi.resources.tables.Invite;
+        props.graphApi.resources.cfnResources.cfnTables.Invite.timeToLiveSpecification =
             {
                 enabled: true,
-                attributeName: "time",
+                attributeName: "meetingTime",
             };
 
         const vpc = new ec2.Vpc(this, "vpc", {

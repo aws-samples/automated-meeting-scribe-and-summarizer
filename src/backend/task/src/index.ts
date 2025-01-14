@@ -6,7 +6,8 @@ import Webex from "./webex";
 import { encapsulate } from "./process";
 
 const main = async () => {
-    await details.queryMeeting();
+    await details.queryInvite();
+
     const currentTimestamp = Math.floor(Date.now() / 1000);
     const timestampDiff = Math.max(
         0,

@@ -8,60 +8,60 @@ type GeneratedSubscription<InputType, OutputType> = string & {
   __generatedSubscriptionOutput: OutputType;
 };
 
-export const onCreateMeeting = /* GraphQL */ `subscription OnCreateMeeting($filter: ModelSubscriptionMeetingFilterInput) {
-  onCreateMeeting(filter: $filter) {
-    uid
+export const onCreateInvite = /* GraphQL */ `subscription OnCreateInvite($filter: ModelSubscriptionInviteFilterInput) {
+  onCreateInvite(filter: $filter) {
     name
-    id
-    platform
-    password
-    time
+    meetingPlatform
+    meetingId
+    meetingPassword
+    meetingTime
     status
     users
+    id
     createdAt
     updatedAt
     __typename
   }
 }
 ` as GeneratedSubscription<
-  APITypes.OnCreateMeetingSubscriptionVariables,
-  APITypes.OnCreateMeetingSubscription
+  APITypes.OnCreateInviteSubscriptionVariables,
+  APITypes.OnCreateInviteSubscription
 >;
-export const onUpdateMeeting = /* GraphQL */ `subscription OnUpdateMeeting($filter: ModelSubscriptionMeetingFilterInput) {
-  onUpdateMeeting(filter: $filter) {
-    uid
+export const onUpdateInvite = /* GraphQL */ `subscription OnUpdateInvite($filter: ModelSubscriptionInviteFilterInput) {
+  onUpdateInvite(filter: $filter) {
     name
-    id
-    platform
-    password
-    time
+    meetingPlatform
+    meetingId
+    meetingPassword
+    meetingTime
     status
     users
+    id
     createdAt
     updatedAt
     __typename
   }
 }
 ` as GeneratedSubscription<
-  APITypes.OnUpdateMeetingSubscriptionVariables,
-  APITypes.OnUpdateMeetingSubscription
+  APITypes.OnUpdateInviteSubscriptionVariables,
+  APITypes.OnUpdateInviteSubscription
 >;
-export const onDeleteMeeting = /* GraphQL */ `subscription OnDeleteMeeting($filter: ModelSubscriptionMeetingFilterInput) {
-  onDeleteMeeting(filter: $filter) {
-    uid
+export const onDeleteInvite = /* GraphQL */ `subscription OnDeleteInvite($filter: ModelSubscriptionInviteFilterInput) {
+  onDeleteInvite(filter: $filter) {
     name
-    id
-    platform
-    password
-    time
+    meetingPlatform
+    meetingId
+    meetingPassword
+    meetingTime
     status
     users
+    id
     createdAt
     updatedAt
     __typename
   }
 }
 ` as GeneratedSubscription<
-  APITypes.OnDeleteMeetingSubscriptionVariables,
-  APITypes.OnDeleteMeetingSubscription
+  APITypes.OnDeleteInviteSubscriptionVariables,
+  APITypes.OnDeleteInviteSubscription
 >;

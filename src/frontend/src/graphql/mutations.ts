@@ -8,69 +8,69 @@ type GeneratedMutation<InputType, OutputType> = string & {
   __generatedMutationOutput: OutputType;
 };
 
-export const createMeeting = /* GraphQL */ `mutation CreateMeeting(
-  $input: CreateMeetingInput!
-  $condition: ModelMeetingConditionInput
+export const createInvite = /* GraphQL */ `mutation CreateInvite(
+  $input: CreateInviteInput!
+  $condition: ModelInviteConditionInput
 ) {
-  createMeeting(input: $input, condition: $condition) {
-    uid
+  createInvite(input: $input, condition: $condition) {
     name
-    id
-    platform
-    password
-    time
+    meetingPlatform
+    meetingId
+    meetingPassword
+    meetingTime
     status
     users
+    id
     createdAt
     updatedAt
     __typename
   }
 }
 ` as GeneratedMutation<
-  APITypes.CreateMeetingMutationVariables,
-  APITypes.CreateMeetingMutation
+  APITypes.CreateInviteMutationVariables,
+  APITypes.CreateInviteMutation
 >;
-export const updateMeeting = /* GraphQL */ `mutation UpdateMeeting(
-  $input: UpdateMeetingInput!
-  $condition: ModelMeetingConditionInput
+export const updateInvite = /* GraphQL */ `mutation UpdateInvite(
+  $input: UpdateInviteInput!
+  $condition: ModelInviteConditionInput
 ) {
-  updateMeeting(input: $input, condition: $condition) {
-    uid
+  updateInvite(input: $input, condition: $condition) {
     name
-    id
-    platform
-    password
-    time
+    meetingPlatform
+    meetingId
+    meetingPassword
+    meetingTime
     status
     users
+    id
     createdAt
     updatedAt
     __typename
   }
 }
 ` as GeneratedMutation<
-  APITypes.UpdateMeetingMutationVariables,
-  APITypes.UpdateMeetingMutation
+  APITypes.UpdateInviteMutationVariables,
+  APITypes.UpdateInviteMutation
 >;
-export const deleteMeeting = /* GraphQL */ `mutation DeleteMeeting(
-  $input: DeleteMeetingInput!
-  $condition: ModelMeetingConditionInput
+export const deleteInvite = /* GraphQL */ `mutation DeleteInvite(
+  $input: DeleteInviteInput!
+  $condition: ModelInviteConditionInput
 ) {
-  deleteMeeting(input: $input, condition: $condition) {
-    uid
+  deleteInvite(input: $input, condition: $condition) {
     name
-    id
-    platform
-    password
-    time
+    meetingPlatform
+    meetingId
+    meetingPassword
+    meetingTime
     status
     users
+    id
     createdAt
     updatedAt
     __typename
   }
 }
 ` as GeneratedMutation<
-  APITypes.DeleteMeetingMutationVariables,
-  APITypes.DeleteMeetingMutation
+  APITypes.DeleteInviteMutationVariables,
+  APITypes.DeleteInviteMutation
 >;

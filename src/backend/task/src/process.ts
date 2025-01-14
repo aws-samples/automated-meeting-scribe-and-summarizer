@@ -106,7 +106,7 @@ async function sendEmail(
     const mailOptions: nodemailer.SendMailOptions = {
         from: process.env.EMAIL_SOURCE!,
         to: details.emailDestinations.join(", "),
-        subject: `${details.meetingName} Follow-up`,
+        subject: `${details.inviteName} Follow-up`,
         html: html,
         attachments: [],
     };

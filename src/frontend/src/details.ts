@@ -2,27 +2,28 @@
 /* eslint-disable */
 //  This file was automatically generated and should not be edited.
 
-export type CreateMeetingInput = {
-  uid: string,
+export type CreateInviteInput = {
   name: string,
-  id?: string | null,
-  platform: string,
-  password?: string | null,
-  time: number,
+  meetingPlatform: string,
+  meetingId: string,
+  meetingPassword?: string | null,
+  meetingTime: number,
   status?: string | null,
   users?: Array< string | null > | null,
+  id?: string | null,
 };
 
-export type ModelMeetingConditionInput = {
+export type ModelInviteConditionInput = {
   name?: ModelStringInput | null,
-  platform?: ModelStringInput | null,
-  password?: ModelStringInput | null,
-  time?: ModelIntInput | null,
+  meetingPlatform?: ModelStringInput | null,
+  meetingId?: ModelStringInput | null,
+  meetingPassword?: ModelStringInput | null,
+  meetingTime?: ModelIntInput | null,
   status?: ModelStringInput | null,
   users?: ModelStringInput | null,
-  and?: Array< ModelMeetingConditionInput | null > | null,
-  or?: Array< ModelMeetingConditionInput | null > | null,
-  not?: ModelMeetingConditionInput | null,
+  and?: Array< ModelInviteConditionInput | null > | null,
+  or?: Array< ModelInviteConditionInput | null > | null,
+  not?: ModelInviteConditionInput | null,
   createdAt?: ModelStringInput | null,
   updatedAt?: ModelStringInput | null,
 };
@@ -79,49 +80,49 @@ export type ModelIntInput = {
   attributeType?: ModelAttributeTypes | null,
 };
 
-export type Meeting = {
-  __typename: "Meeting",
-  uid: string,
+export type Invite = {
+  __typename: "Invite",
   name: string,
-  id: string,
-  platform: string,
-  password?: string | null,
-  time: number,
+  meetingPlatform: string,
+  meetingId: string,
+  meetingPassword?: string | null,
+  meetingTime: number,
   status?: string | null,
   users?: Array< string | null > | null,
+  id: string,
   createdAt: string,
   updatedAt: string,
 };
 
-export type UpdateMeetingInput = {
-  uid: string,
+export type UpdateInviteInput = {
   name?: string | null,
-  id?: string | null,
-  platform?: string | null,
-  password?: string | null,
-  time?: number | null,
+  meetingPlatform?: string | null,
+  meetingId?: string | null,
+  meetingPassword?: string | null,
+  meetingTime?: number | null,
   status?: string | null,
   users?: Array< string | null > | null,
+  id: string,
 };
 
-export type DeleteMeetingInput = {
-  uid: string,
+export type DeleteInviteInput = {
+  id: string,
 };
 
-export type ModelMeetingFilterInput = {
-  uid?: ModelIDInput | null,
+export type ModelInviteFilterInput = {
   name?: ModelStringInput | null,
-  id?: ModelStringInput | null,
-  platform?: ModelStringInput | null,
-  password?: ModelStringInput | null,
-  time?: ModelIntInput | null,
+  meetingPlatform?: ModelStringInput | null,
+  meetingId?: ModelStringInput | null,
+  meetingPassword?: ModelStringInput | null,
+  meetingTime?: ModelIntInput | null,
   status?: ModelStringInput | null,
   users?: ModelStringInput | null,
+  id?: ModelIDInput | null,
   createdAt?: ModelStringInput | null,
   updatedAt?: ModelStringInput | null,
-  and?: Array< ModelMeetingFilterInput | null > | null,
-  or?: Array< ModelMeetingFilterInput | null > | null,
-  not?: ModelMeetingFilterInput | null,
+  and?: Array< ModelInviteFilterInput | null > | null,
+  or?: Array< ModelInviteFilterInput | null > | null,
+  not?: ModelInviteFilterInput | null,
 };
 
 export type ModelIDInput = {
@@ -140,46 +141,25 @@ export type ModelIDInput = {
   size?: ModelSizeInput | null,
 };
 
-export enum ModelSortDirection {
-  ASC = "ASC",
-  DESC = "DESC",
-}
-
-
-export type ModelMeetingConnection = {
-  __typename: "ModelMeetingConnection",
-  items:  Array<Meeting | null >,
+export type ModelInviteConnection = {
+  __typename: "ModelInviteConnection",
+  items:  Array<Invite | null >,
   nextToken?: string | null,
 };
 
-export type ModelSubscriptionMeetingFilterInput = {
-  uid?: ModelSubscriptionIDInput | null,
+export type ModelSubscriptionInviteFilterInput = {
   name?: ModelSubscriptionStringInput | null,
-  id?: ModelSubscriptionStringInput | null,
-  platform?: ModelSubscriptionStringInput | null,
-  password?: ModelSubscriptionStringInput | null,
-  time?: ModelSubscriptionIntInput | null,
+  meetingPlatform?: ModelSubscriptionStringInput | null,
+  meetingId?: ModelSubscriptionStringInput | null,
+  meetingPassword?: ModelSubscriptionStringInput | null,
+  meetingTime?: ModelSubscriptionIntInput | null,
   status?: ModelSubscriptionStringInput | null,
+  id?: ModelSubscriptionIDInput | null,
   createdAt?: ModelSubscriptionStringInput | null,
   updatedAt?: ModelSubscriptionStringInput | null,
-  and?: Array< ModelSubscriptionMeetingFilterInput | null > | null,
-  or?: Array< ModelSubscriptionMeetingFilterInput | null > | null,
+  and?: Array< ModelSubscriptionInviteFilterInput | null > | null,
+  or?: Array< ModelSubscriptionInviteFilterInput | null > | null,
   users?: ModelStringInput | null,
-};
-
-export type ModelSubscriptionIDInput = {
-  ne?: string | null,
-  eq?: string | null,
-  le?: string | null,
-  lt?: string | null,
-  ge?: string | null,
-  gt?: string | null,
-  contains?: string | null,
-  notContains?: string | null,
-  between?: Array< string | null > | null,
-  beginsWith?: string | null,
-  in?: Array< string | null > | null,
-  notIn?: Array< string | null > | null,
 };
 
 export type ModelSubscriptionStringInput = {
@@ -209,110 +189,123 @@ export type ModelSubscriptionIntInput = {
   notIn?: Array< number | null > | null,
 };
 
-export type CreateMeetingMutationVariables = {
-  input: CreateMeetingInput,
-  condition?: ModelMeetingConditionInput | null,
+export type ModelSubscriptionIDInput = {
+  ne?: string | null,
+  eq?: string | null,
+  le?: string | null,
+  lt?: string | null,
+  ge?: string | null,
+  gt?: string | null,
+  contains?: string | null,
+  notContains?: string | null,
+  between?: Array< string | null > | null,
+  beginsWith?: string | null,
+  in?: Array< string | null > | null,
+  notIn?: Array< string | null > | null,
 };
 
-export type CreateMeetingMutation = {
-  createMeeting?:  {
-    __typename: "Meeting",
-    uid: string,
+export type CreateInviteMutationVariables = {
+  input: CreateInviteInput,
+  condition?: ModelInviteConditionInput | null,
+};
+
+export type CreateInviteMutation = {
+  createInvite?:  {
+    __typename: "Invite",
     name: string,
-    id: string,
-    platform: string,
-    password?: string | null,
-    time: number,
+    meetingPlatform: string,
+    meetingId: string,
+    meetingPassword?: string | null,
+    meetingTime: number,
     status?: string | null,
     users?: Array< string | null > | null,
+    id: string,
     createdAt: string,
     updatedAt: string,
   } | null,
 };
 
-export type UpdateMeetingMutationVariables = {
-  input: UpdateMeetingInput,
-  condition?: ModelMeetingConditionInput | null,
+export type UpdateInviteMutationVariables = {
+  input: UpdateInviteInput,
+  condition?: ModelInviteConditionInput | null,
 };
 
-export type UpdateMeetingMutation = {
-  updateMeeting?:  {
-    __typename: "Meeting",
-    uid: string,
+export type UpdateInviteMutation = {
+  updateInvite?:  {
+    __typename: "Invite",
     name: string,
-    id: string,
-    platform: string,
-    password?: string | null,
-    time: number,
+    meetingPlatform: string,
+    meetingId: string,
+    meetingPassword?: string | null,
+    meetingTime: number,
     status?: string | null,
     users?: Array< string | null > | null,
+    id: string,
     createdAt: string,
     updatedAt: string,
   } | null,
 };
 
-export type DeleteMeetingMutationVariables = {
-  input: DeleteMeetingInput,
-  condition?: ModelMeetingConditionInput | null,
+export type DeleteInviteMutationVariables = {
+  input: DeleteInviteInput,
+  condition?: ModelInviteConditionInput | null,
 };
 
-export type DeleteMeetingMutation = {
-  deleteMeeting?:  {
-    __typename: "Meeting",
-    uid: string,
+export type DeleteInviteMutation = {
+  deleteInvite?:  {
+    __typename: "Invite",
     name: string,
-    id: string,
-    platform: string,
-    password?: string | null,
-    time: number,
+    meetingPlatform: string,
+    meetingId: string,
+    meetingPassword?: string | null,
+    meetingTime: number,
     status?: string | null,
     users?: Array< string | null > | null,
+    id: string,
     createdAt: string,
     updatedAt: string,
   } | null,
 };
 
-export type GetMeetingQueryVariables = {
-  uid: string,
+export type GetInviteQueryVariables = {
+  id: string,
 };
 
-export type GetMeetingQuery = {
-  getMeeting?:  {
-    __typename: "Meeting",
-    uid: string,
+export type GetInviteQuery = {
+  getInvite?:  {
+    __typename: "Invite",
     name: string,
-    id: string,
-    platform: string,
-    password?: string | null,
-    time: number,
+    meetingPlatform: string,
+    meetingId: string,
+    meetingPassword?: string | null,
+    meetingTime: number,
     status?: string | null,
     users?: Array< string | null > | null,
+    id: string,
     createdAt: string,
     updatedAt: string,
   } | null,
 };
 
-export type ListMeetingsQueryVariables = {
-  uid?: string | null,
-  filter?: ModelMeetingFilterInput | null,
+export type ListInvitesQueryVariables = {
+  filter?: ModelInviteFilterInput | null,
   limit?: number | null,
   nextToken?: string | null,
-  sortDirection?: ModelSortDirection | null,
 };
 
-export type ListMeetingsQuery = {
-  listMeetings?:  {
-    __typename: "ModelMeetingConnection",
+export type ListInvitesQuery = {
+  listInvites?:  {
+    __typename: "ModelInviteConnection",
     items:  Array< {
-      __typename: "Meeting",
-      uid: string,
+      __typename: "Invite",
       name: string,
-      id: string,
-      platform: string,
-      password?: string | null,
-      time: number,
+      meetingPlatform: string,
+      meetingId: string,
+      meetingPassword?: string | null,
+      meetingTime: number,
       status?: string | null,
       users?: Array< string | null > | null,
+      id: string,
       createdAt: string,
       updatedAt: string,
     } | null >,
@@ -320,61 +313,61 @@ export type ListMeetingsQuery = {
   } | null,
 };
 
-export type OnCreateMeetingSubscriptionVariables = {
-  filter?: ModelSubscriptionMeetingFilterInput | null,
+export type OnCreateInviteSubscriptionVariables = {
+  filter?: ModelSubscriptionInviteFilterInput | null,
 };
 
-export type OnCreateMeetingSubscription = {
-  onCreateMeeting?:  {
-    __typename: "Meeting",
-    uid: string,
+export type OnCreateInviteSubscription = {
+  onCreateInvite?:  {
+    __typename: "Invite",
     name: string,
-    id: string,
-    platform: string,
-    password?: string | null,
-    time: number,
+    meetingPlatform: string,
+    meetingId: string,
+    meetingPassword?: string | null,
+    meetingTime: number,
     status?: string | null,
     users?: Array< string | null > | null,
+    id: string,
     createdAt: string,
     updatedAt: string,
   } | null,
 };
 
-export type OnUpdateMeetingSubscriptionVariables = {
-  filter?: ModelSubscriptionMeetingFilterInput | null,
+export type OnUpdateInviteSubscriptionVariables = {
+  filter?: ModelSubscriptionInviteFilterInput | null,
 };
 
-export type OnUpdateMeetingSubscription = {
-  onUpdateMeeting?:  {
-    __typename: "Meeting",
-    uid: string,
+export type OnUpdateInviteSubscription = {
+  onUpdateInvite?:  {
+    __typename: "Invite",
     name: string,
-    id: string,
-    platform: string,
-    password?: string | null,
-    time: number,
+    meetingPlatform: string,
+    meetingId: string,
+    meetingPassword?: string | null,
+    meetingTime: number,
     status?: string | null,
     users?: Array< string | null > | null,
+    id: string,
     createdAt: string,
     updatedAt: string,
   } | null,
 };
 
-export type OnDeleteMeetingSubscriptionVariables = {
-  filter?: ModelSubscriptionMeetingFilterInput | null,
+export type OnDeleteInviteSubscriptionVariables = {
+  filter?: ModelSubscriptionInviteFilterInput | null,
 };
 
-export type OnDeleteMeetingSubscription = {
-  onDeleteMeeting?:  {
-    __typename: "Meeting",
-    uid: string,
+export type OnDeleteInviteSubscription = {
+  onDeleteInvite?:  {
+    __typename: "Invite",
     name: string,
-    id: string,
-    platform: string,
-    password?: string | null,
-    time: number,
+    meetingPlatform: string,
+    meetingId: string,
+    meetingPassword?: string | null,
+    meetingTime: number,
     status?: string | null,
     users?: Array< string | null > | null,
+    id: string,
     createdAt: string,
     updatedAt: string,
   } | null,

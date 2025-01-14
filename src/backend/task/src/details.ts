@@ -6,11 +6,11 @@ export type Speaker = {
 };
 
 export class Details {
-    public meetingName!: string;
+    public inviteName!: string;
     public meetingPlatform!: string;
     public meetingId!: string;
-    public meetingTime!: number;
     public meetingPassword?: string;
+    public meetingTime!: number;
 
     public emailDestinations!: string[];
     private emailStrings!: string;
@@ -42,26 +42,26 @@ export class Details {
     public captions: string[] = [];
     public speakers: Speaker[] = [];
 
-    public async queryMeeting() {
+    public async queryInvite() {
         const client = new DynamoDBClient({});
         const response = await client.send(
             new QueryCommand({
                 TableName: process.env.TABLE_NAME,
-                KeyConditionExpression: "uid = :uid",
+                KeyConditionExpression: "id = :id",
                 ExpressionAttributeValues: {
-                    ":uid": { S: process.env.MEETING_UID! },
+                    ":id": { S: process.env.INVITE_ID! },
                 },
             })
         );
-        const meeting = response.Items![0];
+        const invite = response.Items![0];
 
-        this.meetingName = meeting["name"].S!;
-        this.meetingPlatform = meeting["platform"].S!;
-        this.meetingId = meeting["id"].S!;
-        this.meetingTime = parseInt(meeting["time"].N!);
-        this.meetingPassword = meeting["password"]?.S;
+        this.inviteName = invite["name"].S!;
+        this.meetingPlatform = invite["meetingPlatform"].S!;
+        this.meetingId = invite["meetingId"].S!;
+        this.meetingTime = parseInt(invite["meetingTime"].N!);
+        this.meetingPassword = invite["meetingPassword"]?.S;
 
-        const emailDestinations = meeting["users"].L!.map((item) => item.S!);
+        const emailDestinations = invite["users"].L!.map((user) => user.S!);
         this.emailDestinations = emailDestinations;
         if (emailDestinations.length === 1) {
             this.emailStrings = emailDestinations[0];

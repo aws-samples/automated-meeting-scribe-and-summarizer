@@ -9,7 +9,7 @@ import os
 import json
 from datetime import datetime, timedelta, timezone
 
-logging = Logger(service="meeting-scheduler")
+logging = Logger()
 scheduler_client = boto3.client("scheduler")
 ecs_client = boto3.client("ecs")
 
@@ -30,17 +30,17 @@ def lowercase_dictionary(object):
 def handler(event: DynamoDBStreamEvent, context: LambdaContext):
     for record in event.records:
 
-        uid = record.dynamodb.keys["uid"]
+        invite_id = record.dynamodb.keys["id"]
 
         if record.event_name.INSERT and record.dynamodb.new_image:
             logging.info("schedule")
-            meeting = record.dynamodb.new_image
+            invite = record.dynamodb.new_image
             meeting_datetime = datetime.fromtimestamp(
-                int(meeting["time"]), tz=timezone.utc
+                int(invite["meetingTime"]), tz=timezone.utc
             )
             delay = 2
             ecs_params = {
-                "ClientToken": uid,
+                "ClientToken": invite_id,
                 "TaskDefinition": os.environ["TASK_DEFINITION_ARN"],
                 "Cluster": os.environ["CLUSTER_ARN"],
                 "LaunchType": "FARGATE",
@@ -65,8 +65,8 @@ def handler(event: DynamoDBStreamEvent, context: LambdaContext):
                                     "Value": os.environ["TABLE_NAME"],
                                 },
                                 {
-                                    "Name": "MEETING_UID",
-                                    "Value": uid,
+                                    "Name": "INVITE_ID",
+                                    "Value": invite_id,
                                 },
                                 {
                                     "Name": "EMAIL_SOURCE",
@@ -89,7 +89,7 @@ def handler(event: DynamoDBStreamEvent, context: LambdaContext):
                     ActionAfterCompletion="NONE",
                     FlexibleTimeWindow={"Mode": "OFF"},
                     GroupName=os.environ["SCHEDULE_GROUP"],
-                    Name=uid,
+                    Name=invite_id,
                     ScheduleExpression=f"at({delayed_time.strftime('%Y-%m-%dT%H:%M:%S')})",
                     ScheduleExpressionTimezone="UTC",
                     State="ENABLED",
@@ -107,7 +107,7 @@ def handler(event: DynamoDBStreamEvent, context: LambdaContext):
             logging.info("unschedule")
             scheduler_client.delete_schedule(
                 GroupName=os.environ["SCHEDULE_GROUP"],
-                Name=uid,
+                Name=invite_id,
             )
 
         return {"statusCode": 200, "body": "Success"}

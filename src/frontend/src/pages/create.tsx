@@ -16,7 +16,6 @@ import {
 } from "@cloudscape-design/components";
 import { generateClient } from "aws-amplify/api";
 import { useContext, useState } from "react";
-import { v4 as uuidv4 } from "uuid";
 import NavigationComponent from "../components/navigation";
 import FlashbarContext, {
     FlashbarComponent,
@@ -29,10 +28,10 @@ const Create = () => {
     const { updateFlashbar } = useContext(FlashbarContext);
     const [checked, setChecked] = useState(false);
 
+    const [inviteName, setInviteName] = useState("");
     const [meetingPlatform, setMeetingPlatform] = useState(meetingPlatforms[0]);
     const [meetingId, setMeetingId] = useState("");
     const [meetingPassword, setMeetingPassword] = useState("");
-    const [meetingName, setMeetingName] = useState("");
     const [meetingDate, setMeetingDate] = useState("");
     const [meetingTime, setMeetingTime] = useState("");
 
@@ -74,17 +73,16 @@ const Create = () => {
         }
 
         const input = {
-            uid: uuidv4(),
-            name: meetingName,
-            platform: meetingPlatform.value,
-            id: meetingId.replace(/ /g, ""),
-            time: Math.floor(
+            name: inviteName,
+            meetingPlatform: meetingPlatform.value,
+            meetingId: meetingId.replace(/ /g, ""),
+            meetingTime: Math.floor(
                 new Date(meetingDateTime.toUTCString()).getTime() / 1000
             ),
-            ...(meetingPassword ? { password: meetingPassword } : {}),
+            ...(meetingPassword ? { meetingPassword: meetingPassword } : {}),
         };
 
-        setMeetingName("");
+        setInviteName("");
         setMeetingId("");
         setMeetingPassword("");
         setMeetingDate("");
@@ -93,7 +91,7 @@ const Create = () => {
         const client = generateClient();
         try {
             await client.graphql({
-                query: mutations.createMeeting,
+                query: mutations.createInvite,
                 variables: {
                     input: input,
                 },
@@ -118,7 +116,7 @@ const Create = () => {
                     <ul>
                         <li>
                             To invite a scribe to your upcoming meeting, enter
-                            the <strong>Meeting Name</strong>,{" "}
+                            the <strong>Invite Name</strong>,{" "}
                             <strong>Meeting ID</strong>, and, optionally, the{" "}
                             <strong>Meeting Time</strong>.
                         </li>
@@ -153,12 +151,12 @@ const Create = () => {
                     >
                         <Form variant="embedded">
                             <SpaceBetween direction="vertical" size="l">
-                                <FormField label="Meeting Name">
+                                <FormField label="Invite Name">
                                     <Input
                                         onChange={({ detail }) =>
-                                            setMeetingName(detail.value)
+                                            setInviteName(detail.value)
                                         }
-                                        value={meetingName}
+                                        value={inviteName}
                                     />
                                 </FormField>
 
@@ -260,7 +258,7 @@ const Create = () => {
                                             form="meetingForm"
                                             disabled={
                                                 !meetingId ||
-                                                !meetingName ||
+                                                !inviteName ||
                                                 !checked
                                             }
                                         >
@@ -271,7 +269,7 @@ const Create = () => {
                                             form="meetingForm"
                                             disabled={
                                                 !meetingId ||
-                                                !meetingName ||
+                                                !inviteName ||
                                                 !meetingTime ||
                                                 !!meetingTimeError ||
                                                 !checked
