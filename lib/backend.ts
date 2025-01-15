@@ -94,7 +94,7 @@ export default class BackendStack extends Stack {
         const taskRole = new iam.Role(this, "taskRole", {
             assumedBy: new iam.ServicePrincipal("ecs-tasks.amazonaws.com"),
         });
-        // props.graphApi.resources.graphqlApi.grantMutation(taskRole);
+        props.graphApi.resources.graphqlApi.grantMutation(taskRole);
         taskRole.addToPolicy(
             new iam.PolicyStatement({
                 effect: iam.Effect.ALLOW,
@@ -238,7 +238,6 @@ export default class BackendStack extends Stack {
                     ),
                     CONTAINER_ID: containerId,
                     GRAPH_API_URL: props.graphApi.graphqlUrl,
-                    GRAPH_API_KEY: props.graphApi.apiKey!,
                     EMAIL_SOURCE: props.identity.emailIdentityName,
                     // VOCABULARY_NAME: 'lingo',
                     SCHEDULE_GROUP: meetingScheduleGroup.ref,

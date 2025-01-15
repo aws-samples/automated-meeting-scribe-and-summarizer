@@ -2,7 +2,6 @@ import {
     StackProps,
     aws_cognito as cognito,
     Stack,
-    Duration,
     aws_appsync as appsync,
     aws_wafv2 as waf,
     aws_logs as logs,
@@ -33,8 +32,8 @@ export default class ApiStack extends Stack {
                 userPoolConfig: {
                     userPool: props.userPool,
                 },
-                apiKeyConfig: {
-                    expires: Duration.days(365),
+                iamConfig: {
+                    enableIamAuthorizationMode: true,
                 },
             },
             logging: {

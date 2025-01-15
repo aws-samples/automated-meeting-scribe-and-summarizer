@@ -15,6 +15,7 @@
     "@aws-sdk/client-ses": "^3.721.0",
     "@aws-sdk/client-transcribe-streaming": "^3.721.0",
     "@types/nodemailer": "^6.4.17",
+    "aws-sigv4-fetch": "^3.0.0",
     "graphql-request": "^7.1.2",
     "nodemailer": "^6.9.16",
     "playwright": "^1.49.1"
