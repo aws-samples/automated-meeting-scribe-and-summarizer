@@ -1,7 +1,7 @@
-import { Invite, UpdateInviteInput } from "./API.js";
+import { Invite, UpdateInviteInput, DeleteInviteInput } from "./API.js";
 import { GraphQLClient } from "graphql-request";
 import { createSignedFetcher } from "aws-sigv4-fetch";
-import { updateInvite } from "./graphql/mutations.js";
+import { updateInvite, deleteInvite } from "./graphql/mutations.js";
 
 type ModifiedInvite = Omit<Invite, "users"> & {
     users: string[];
@@ -14,6 +14,7 @@ export type Speaker = {
 
 export class Details {
     private constructor() {}
+    private client!: GraphQLClient;
 
     public invite!: ModifiedInvite;
     private userStrings!: string;
@@ -47,27 +48,25 @@ export class Details {
 
     static async initialize(): Promise<Details> {
         const details = new Details();
+        details.client = new GraphQLClient(process.env.GRAPH_API_URL!, {
+            fetch: createSignedFetcher({
+                service: "appsync",
+                region: process.env.AWS_REGION,
+            }),
+        });
         await details.updateInvite("Initializing");
         details.updateDetails();
         return details;
     }
 
     public async updateInvite(status: string) {
-        const client = new GraphQLClient(process.env.GRAPH_API_URL!, {
-            fetch: createSignedFetcher({
-                service: "appsync",
-                region: process.env.AWS_REGION,
-            }),
-        });
-        const response: { updateInvite: ModifiedInvite } = await client.request(
-            updateInvite,
-            {
+        const response: { updateInvite: ModifiedInvite } =
+            await this.client.request(updateInvite, {
                 input: {
                     id: process.env.INVITE_ID!,
                     status: status,
                 } as UpdateInviteInput,
-            }
-        );
+            });
         if (!this.invite) {
             this.invite = response.updateInvite;
         }
@@ -94,6 +93,14 @@ export class Details {
             `If you do not consent to my use, send "${this.endCommand}" in the chat ` +
                 `to remove me from this meeting.`,
         ];
+    }
+
+    public async deleteInvite() {
+        await this.client.request(deleteInvite, {
+            input: {
+                id: process.env.INVITE_ID!,
+            } as DeleteInviteInput,
+        });
     }
 }
 

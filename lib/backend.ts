@@ -26,11 +26,11 @@ export default class BackendStack extends Stack {
         super(scope, id, props);
 
         const table = props.graphApi.resources.tables.Invite;
-        props.graphApi.resources.cfnResources.cfnTables.Invite.timeToLiveSpecification =
-            {
-                enabled: true,
-                attributeName: "meetingTime",
-            };
+        // props.graphApi.resources.cfnResources.cfnTables.Invite.timeToLiveSpecification =
+        //     {
+        //         enabled: true,
+        //         attributeName: "expirationTime",
+        //     };
 
         const vpc = new ec2.Vpc(this, "vpc", {
             ipAddresses: ec2.IpAddresses.cidr("10.0.0.0/16"),
@@ -94,10 +94,7 @@ export default class BackendStack extends Stack {
         const taskRole = new iam.Role(this, "taskRole", {
             assumedBy: new iam.ServicePrincipal("ecs-tasks.amazonaws.com"),
         });
-        props.graphApi.resources.graphqlApi.grantMutation(
-            taskRole,
-            "updateInvite"
-        );
+        props.graphApi.resources.graphqlApi.grantMutation(taskRole);
         taskRole.addToPolicy(
             new iam.PolicyStatement({
                 effect: iam.Effect.ALLOW,

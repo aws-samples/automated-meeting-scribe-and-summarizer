@@ -48,6 +48,7 @@ const main = async () => {
 
     await encapsulate();
     details.updateInvite("Finished");
+    details.deleteInvite();
     return;
 };
 
