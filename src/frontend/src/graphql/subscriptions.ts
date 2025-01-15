@@ -4,12 +4,11 @@
 
 import * as APITypes from "../API";
 type GeneratedSubscription<InputType, OutputType> = string & {
-    __generatedSubscriptionInput: InputType;
-    __generatedSubscriptionOutput: OutputType;
+  __generatedSubscriptionInput: InputType;
+  __generatedSubscriptionOutput: OutputType;
 };
 
-export const onCreateInvite =
-    /* GraphQL */ `subscription OnCreateInvite($filter: ModelSubscriptionInviteFilterInput) {
+export const onCreateInvite = /* GraphQL */ `subscription OnCreateInvite($filter: ModelSubscriptionInviteFilterInput) {
   onCreateInvite(filter: $filter) {
     name
     meetingPlatform
@@ -25,11 +24,10 @@ export const onCreateInvite =
   }
 }
 ` as GeneratedSubscription<
-        APITypes.OnCreateInviteSubscriptionVariables,
-        APITypes.OnCreateInviteSubscription
-    >;
-export const onUpdateInvite =
-    /* GraphQL */ `subscription OnUpdateInvite($filter: ModelSubscriptionInviteFilterInput) {
+  APITypes.OnCreateInviteSubscriptionVariables,
+  APITypes.OnCreateInviteSubscription
+>;
+export const onUpdateInvite = /* GraphQL */ `subscription OnUpdateInvite($filter: ModelSubscriptionInviteFilterInput) {
   onUpdateInvite(filter: $filter) {
     name
     meetingPlatform
@@ -45,11 +43,10 @@ export const onUpdateInvite =
   }
 }
 ` as GeneratedSubscription<
-        APITypes.OnUpdateInviteSubscriptionVariables,
-        APITypes.OnUpdateInviteSubscription
-    >;
-export const onDeleteInvite =
-    /* GraphQL */ `subscription OnDeleteInvite($filter: ModelSubscriptionInviteFilterInput) {
+  APITypes.OnUpdateInviteSubscriptionVariables,
+  APITypes.OnUpdateInviteSubscription
+>;
+export const onDeleteInvite = /* GraphQL */ `subscription OnDeleteInvite($filter: ModelSubscriptionInviteFilterInput) {
   onDeleteInvite(filter: $filter) {
     name
     meetingPlatform
@@ -65,6 +62,6 @@ export const onDeleteInvite =
   }
 }
 ` as GeneratedSubscription<
-        APITypes.OnDeleteInviteSubscriptionVariables,
-        APITypes.OnDeleteInviteSubscription
-    >;
+  APITypes.OnDeleteInviteSubscriptionVariables,
+  APITypes.OnDeleteInviteSubscription
+>;

@@ -4,8 +4,8 @@
 
 import * as APITypes from "../API";
 type GeneratedMutation<InputType, OutputType> = string & {
-    __generatedMutationInput: InputType;
-    __generatedMutationOutput: OutputType;
+  __generatedMutationInput: InputType;
+  __generatedMutationOutput: OutputType;
 };
 
 export const createInvite = /* GraphQL */ `mutation CreateInvite(
@@ -27,8 +27,8 @@ export const createInvite = /* GraphQL */ `mutation CreateInvite(
   }
 }
 ` as GeneratedMutation<
-    APITypes.CreateInviteMutationVariables,
-    APITypes.CreateInviteMutation
+  APITypes.CreateInviteMutationVariables,
+  APITypes.CreateInviteMutation
 >;
 export const updateInvite = /* GraphQL */ `mutation UpdateInvite(
   $input: UpdateInviteInput!
@@ -49,8 +49,8 @@ export const updateInvite = /* GraphQL */ `mutation UpdateInvite(
   }
 }
 ` as GeneratedMutation<
-    APITypes.UpdateInviteMutationVariables,
-    APITypes.UpdateInviteMutation
+  APITypes.UpdateInviteMutationVariables,
+  APITypes.UpdateInviteMutation
 >;
 export const deleteInvite = /* GraphQL */ `mutation DeleteInvite(
   $input: DeleteInviteInput!
@@ -71,6 +71,6 @@ export const deleteInvite = /* GraphQL */ `mutation DeleteInvite(
   }
 }
 ` as GeneratedMutation<
-    APITypes.DeleteInviteMutationVariables,
-    APITypes.DeleteInviteMutation
+  APITypes.DeleteInviteMutationVariables,
+  APITypes.DeleteInviteMutation
 >;
