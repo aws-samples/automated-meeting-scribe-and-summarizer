@@ -68,7 +68,9 @@ export class Details {
                 } as UpdateInviteInput,
             }
         );
-        this.invite = response.updateInvite;
+        if (!this.invite) {
+            this.invite = response.updateInvite;
+        }
     }
 
     private updateDetails() {
