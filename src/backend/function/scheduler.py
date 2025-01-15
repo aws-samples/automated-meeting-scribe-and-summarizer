@@ -5,9 +5,9 @@ from aws_lambda_powertools.utilities.data_classes import (
     DynamoDBStreamEvent,
 )
 from aws_lambda_powertools.utilities.typing import LambdaContext
+from datetime import datetime, timedelta, timezone
 import os
 import json
-from datetime import datetime, timedelta, timezone
 
 logging = Logger()
 scheduler_client = boto3.client("scheduler")
