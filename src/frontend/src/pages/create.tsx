@@ -16,7 +16,7 @@ import {
 } from "@cloudscape-design/components";
 import { generateClient } from "aws-amplify/api";
 import { useContext, useState } from "react";
-import { CreateInviteInput } from "../api";
+import { CreateInviteInput } from "../API";
 import NavigationComponent from "../components/navigation";
 import FlashbarContext, {
     FlashbarComponent,

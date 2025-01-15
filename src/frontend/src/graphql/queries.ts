@@ -2,10 +2,10 @@
 /* eslint-disable */
 // this is an auto generated file. This will be overwritten
 
-import * as APITypes from "../api";
+import * as APITypes from "../API";
 type GeneratedQuery<InputType, OutputType> = string & {
-  __generatedQueryInput: InputType;
-  __generatedQueryOutput: OutputType;
+    __generatedQueryInput: InputType;
+    __generatedQueryOutput: OutputType;
 };
 
 export const getInvite = /* GraphQL */ `query GetInvite($id: ID!) {
@@ -48,6 +48,6 @@ export const listInvites = /* GraphQL */ `query ListInvites(
   }
 }
 ` as GeneratedQuery<
-  APITypes.ListInvitesQueryVariables,
-  APITypes.ListInvitesQuery
+    APITypes.ListInvitesQueryVariables,
+    APITypes.ListInvitesQuery
 >;

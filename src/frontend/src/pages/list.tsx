@@ -9,7 +9,7 @@ import {
 } from "@cloudscape-design/components";
 import { generateClient } from "aws-amplify/api";
 import { useEffect, useState } from "react";
-import { Invite } from "../api";
+import { Invite } from "../API";
 import NavigationComponent from "../components/navigation";
 import { FlashbarComponent } from "../components/notifications";
 import { deleteInvite } from "../graphql/mutations";
@@ -25,7 +25,7 @@ const List = () => {
     const [selectedInvites, setSelectedInvites] = useState<Invite[]>();
 
     useEffect(() => {
-        const fetchMeetings = async () => {
+        const fetchInvites = async () => {
             try {
                 const { data } = await client.graphql({
                     query: listInvites,
@@ -35,7 +35,7 @@ const List = () => {
                 console.error("Failed to get invites.", error);
             }
         };
-        fetchMeetings();
+        fetchInvites();
     }, []);
 
     return (

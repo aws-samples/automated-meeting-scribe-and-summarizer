@@ -1,4 +1,4 @@
-import { Invite, UpdateInviteInput } from "./api.js";
+import { Invite, UpdateInviteInput } from "./API.js";
 import { GraphQLClient } from "graphql-request";
 import { createSignedFetcher } from "aws-sigv4-fetch";
 import { updateInvite } from "./graphql/mutations.js";
