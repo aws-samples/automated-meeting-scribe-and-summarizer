@@ -134,7 +134,7 @@ async function sendEmail(
 
     try {
         await transport.sendMail(mailOptions);
-        console.log(`Email sent to ${details.invite.users.length} recipients!`);
+        console.log(`Email sent to ${details.invite.users.length} users!`);
     } catch (error) {
         console.log("Error while sending email:", error);
     }

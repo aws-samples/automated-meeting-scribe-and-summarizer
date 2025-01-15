@@ -45,8 +45,8 @@ const main = async () => {
     transcriptionService.stopTranscription();
 
     await encapsulate();
-    details.updateInvite("Completed");
-    details.deleteInvite();
+    await details.updateInvite("Completed");
+    await details.deleteInvite();
     return;
 };
 

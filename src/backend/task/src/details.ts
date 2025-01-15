@@ -14,7 +14,15 @@ export type Speaker = {
 
 export class Details {
     private constructor() {}
-    private client!: GraphQLClient;
+    private client: GraphQLClient = new GraphQLClient(
+        process.env.GRAPH_API_URL!,
+        {
+            fetch: createSignedFetcher({
+                service: "appsync",
+                region: process.env.AWS_REGION,
+            }),
+        }
+    );
 
     public invite!: ModifiedInvite;
     private userStrings!: string;
@@ -48,12 +56,6 @@ export class Details {
 
     static async initialize(): Promise<Details> {
         const details = new Details();
-        details.client = new GraphQLClient(process.env.GRAPH_API_URL!, {
-            fetch: createSignedFetcher({
-                service: "appsync",
-                region: process.env.AWS_REGION,
-            }),
-        });
         await details.updateInvite("Joining");
         details.updateDetails();
         return details;
