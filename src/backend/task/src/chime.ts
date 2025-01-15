@@ -1,6 +1,6 @@
 import { Page } from "playwright";
-import { transcriptionService } from "./scribe";
-import { details } from "./details";
+import { transcriptionService } from "./scribe.js";
+import { details } from "./details.js";
 
 export default class Chime {
     private async sendMessages(page: Page, messages: string[]): Promise<void> {
@@ -17,7 +17,9 @@ export default class Chime {
 
     public async initialize(page: Page): Promise<void> {
         console.log("Getting meeting link.");
-        await page.goto(`https://app.chime.aws/meetings/${details.meetingId}`);
+        await page.goto(
+            `https://app.chime.aws/meetings/${details.invite.meetingId}`
+        );
 
         console.log("Entering name.");
         try {
@@ -58,6 +60,7 @@ export default class Chime {
 
         await new Promise((resolve) => setTimeout(resolve, 1000));
 
+        details.updateInvite("Joined");
         console.log("Sending introduction messages.");
         await this.sendMessages(page, details.introMessages);
 

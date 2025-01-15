@@ -1,0 +1,13 @@
+type Invite
+    @model
+    @auth(
+        rules: [{ allow: owner, ownerField: "users", identityClaim: "email" }]
+    ) {
+    name: String!
+    meetingPlatform: String!
+    meetingId: String!
+    meetingPassword: String
+    meetingTime: AWSTimestamp!
+    status: String
+    users: [AWSEmail]
+}

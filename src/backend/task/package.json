@@ -2,24 +2,27 @@
   "name": "task",
   "private": true,
   "version": "0.0.0",
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "generate": "amplify codegen"
   },
   "dependencies": {
-    "@aws-sdk/client-bedrock-runtime": "^3.721.0",
-    "@aws-sdk/client-comprehend": "^3.721.0",
-    "@aws-sdk/client-dynamodb": "^3.721.0",
-    "@aws-sdk/client-ses": "^3.721.0",
-    "@aws-sdk/client-transcribe-streaming": "^3.721.0",
+    "@aws-sdk/client-bedrock-runtime": "^3.726.1",
+    "@aws-sdk/client-comprehend": "^3.726.1",
+    "@aws-sdk/client-ses": "^3.726.1",
+    "@aws-sdk/client-transcribe-streaming": "^3.726.1",
     "@types/nodemailer": "^6.4.17",
+    "aws-sigv4-fetch": "^4.3.0",
+    "graphql-request": "^7.1.2",
     "nodemailer": "^6.9.16",
     "playwright": "^1.49.1"
   },
   "devDependencies": {
-    "@types/node": "^22.10.5",
+    "@types/node": "^22.10.6",
     "ts-node": "^10.9.2",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.3"
   }
 }

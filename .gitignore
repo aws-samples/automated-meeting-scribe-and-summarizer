@@ -187,6 +187,8 @@ dist-ssr
 .env
 
 config.json
+.graphqlconfig.yml
+schema.json
 
 # CDK asset staging directory
 .cdk.staging

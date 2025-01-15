@@ -3,7 +3,7 @@ import {
     StartStreamTranscriptionCommand,
 } from "@aws-sdk/client-transcribe-streaming";
 import { spawn } from "child_process";
-import { details } from "./details";
+import { details } from "./details.js";
 
 export class TranscriptionService {
     private process: any;
@@ -69,6 +69,7 @@ export class TranscriptionService {
             // IdentifyMultipleLanguages: true,
             // LanguageOptions: 'en-US,es-US',
             ShowSpeakerLabel: true,
+            VocabularyName: process.env.VOCABULARY_NAME,
         });
         const response = await client.send(command);
 

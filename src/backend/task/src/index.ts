@@ -1,15 +1,15 @@
-import { details } from "./details";
-import { transcriptionService } from "./scribe";
+import { details } from "./details.js";
+import { transcriptionService } from "./scribe.js";
 import { chromium, Browser, Page } from "playwright";
-import Chime from "./chime";
-import Webex from "./webex";
-import { encapsulate } from "./process";
+import Chime from "./chime.js";
+import Webex from "./webex.js";
+import { encapsulate } from "./process.js";
 
 const main = async () => {
     const currentTimestamp = Math.floor(Date.now() / 1000);
     const timestampDiff = Math.max(
         0,
-        (details.meetingTime - currentTimestamp - 10) * 1000
+        (details.invite.meetingTime - currentTimestamp - 10) * 1000
     );
     console.log(`Sleeping ${timestampDiff / 1000} seconds.`);
     await new Promise((resolve) => setTimeout(resolve, timestampDiff));
@@ -34,9 +34,9 @@ const main = async () => {
     page.setDefaultTimeout(20000);
 
     let meeting: any;
-    if (details.meetingPlatform === "Chime") {
+    if (details.invite.meetingPlatform === "Chime") {
         meeting = new Chime();
-    } else if (details.meetingPlatform === "Webex") {
+    } else if (details.invite.meetingPlatform === "Webex") {
         meeting = new Webex();
     }
     await meeting.initialize(page);
@@ -45,7 +45,9 @@ const main = async () => {
     transcriptionService.stopTranscription();
 
     await encapsulate();
-    process.exit(0);
+    details.updateInvite("Completed");
+    details.deleteInvite();
+    return;
 };
 
 main();
