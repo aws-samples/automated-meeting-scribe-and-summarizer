@@ -46,7 +46,7 @@ This click-through option will build and deploy the CDK application for you usin
 -   Install [NPM](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm), [Docker](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-docker.html#install-docker-instructions), and the [AWS CDK CLI](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html#getting_started_install) then complete the [prerequisites for CDK deployments](https://docs.aws.amazon.com/cdk/v2/guide/deploy.html#deploy-prerequisites) if you have not previously done so.
 -   Open a terminal and set the working directory to the location where you want to clone this repository. Clone the repository using the command `git clone https://github.com/aws-samples/automated-meeting-scribe-and-summarizer.git`.
 -   Use the command `npm install` to install the CDK [dependencies](https://docs.aws.amazon.com/cdk/v2/guide/work-with-cdk-typescript.html#work-with-cdk-typescript-dependencies).
--   Export the environment variable for the SES [email identity](lib/base.ts) using a command like `export EMAIL=example@domain.com`.
+-   Export the environment variable for the SES [email identity](lib/auth.ts) using a command like `export EMAIL=example@domain.com`.
 -   [Deploy the CDK application](https://docs.aws.amazon.com/cdk/v2/guide/deploy.html#deploy-how-deploy) using a command like [`cdk deploy --all`](https://docs.aws.amazon.com/cdk/v2/guide/ref-cli-cmd-deploy.html).
 
 ### Email Verification
