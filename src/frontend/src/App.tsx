@@ -14,7 +14,7 @@ import {
     Navigate,
     RouterProvider,
 } from "react-router-dom";
-import FlashbarContext, { FlashbarProvider } from "./components/notifications";
+import FlashbarContext from "./components/notifications";
 import { onUpdateInvite } from "./graphql/subscriptions";
 import CreateInvite from "./pages/create";
 import ListInvites from "./pages/list";
@@ -62,7 +62,7 @@ export function App({ signOut, user }: WithAuthenticatorProps) {
                 next: ({ data }) => {
                     updateFlashbar(
                         "info",
-                        `${data.onUpdateInvite.name}'s status updated to ${data.onUpdateInvite.status}.`
+                        `${data.onUpdateInvite.name}'s status updated to "${data.onUpdateInvite.status}".`
                     );
                 },
                 error: (error) => {
@@ -93,7 +93,7 @@ export function App({ signOut, user }: WithAuthenticatorProps) {
     ]);
 
     return (
-        <FlashbarProvider>
+        <>
             <TopNavigation
                 identity={{
                     href: "/",
@@ -108,7 +108,7 @@ export function App({ signOut, user }: WithAuthenticatorProps) {
                 ]}
             />
             <RouterProvider router={router} />
-        </FlashbarProvider>
+        </>
     );
 }
 

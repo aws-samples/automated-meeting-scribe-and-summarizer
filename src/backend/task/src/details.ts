@@ -1,6 +1,5 @@
 import { Invite, UpdateInviteInput, DeleteInviteInput } from "./API.js";
 import { GraphQLClient } from "graphql-request";
-import { createSignedFetcher } from "aws-sigv4-fetch";
 import { updateInvite, deleteInvite } from "./graphql/mutations.js";
 
 type ModifiedInvite = Omit<Invite, "users"> & {
@@ -49,12 +48,11 @@ export class Details {
     static async initialize(): Promise<Details> {
         const details = new Details();
         details.client = new GraphQLClient(process.env.GRAPH_API_URL!, {
-            fetch: createSignedFetcher({
-                service: "appsync",
-                region: process.env.AWS_REGION,
-            }),
+            headers: {
+                "x-api-key": process.env.GRAPH_API_KEY!,
+            },
         });
-        await details.updateInvite("Initializing");
+        await details.updateInvite("Joining");
         details.updateDetails();
         return details;
     }

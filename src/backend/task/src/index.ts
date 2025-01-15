@@ -39,15 +39,13 @@ const main = async () => {
     } else if (details.invite.meetingPlatform === "Webex") {
         meeting = new Webex();
     }
-    details.updateInvite("Joining");
     await meeting.initialize(page);
 
-    details.updateInvite("Finishing");
     await browser.close();
     transcriptionService.stopTranscription();
 
     await encapsulate();
-    details.updateInvite("Finished");
+    details.updateInvite("Completed");
     details.deleteInvite();
     return;
 };

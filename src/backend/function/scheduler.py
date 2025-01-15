@@ -61,6 +61,10 @@ def handler(event: DynamoDBStreamEvent, context: LambdaContext):
                                     "Value": os.environ["GRAPH_API_URL"],
                                 },
                                 {
+                                    "Name": "GRAPH_API_KEY",
+                                    "Value": os.environ["GRAPH_API_KEY"],
+                                },
+                                {
                                     "Name": "INVITE_ID",
                                     "Value": invite_id,
                                 },
