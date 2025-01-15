@@ -62,23 +62,21 @@ export default class BackendStack extends Stack {
                 },
             },
         });
-        vpc.addInterfaceEndpoint("ecrDockerEndpoint", {
+        vpc.addInterfaceEndpoint("ecrDockerInterfaceEndpoint", {
             service: ec2.InterfaceVpcEndpointAwsService.ECR_DOCKER,
         });
-        vpc.addGatewayEndpoint("dynamodbEndpoint", {
-            service: ec2.GatewayVpcEndpointAwsService.DYNAMODB,
+        vpc.addInterfaceEndpoint("appSyncInterfaceEndpoint", {
+            service: ec2.InterfaceVpcEndpointAwsService.APP_SYNC,
+            privateDnsEnabled: false,
         });
-        vpc.addInterfaceEndpoint("transcribeEndpoint", {
+        vpc.addInterfaceEndpoint("transcribeStreamingInterfaceEndpoint", {
             service: ec2.InterfaceVpcEndpointAwsService.TRANSCRIBE_STREAMING,
         });
-        // vpc.addInterfaceEndpoint('comprehendEndpoint', {
+        // vpc.addInterfaceEndpoint('comprehendInterfaceEndpoint', {
         //     service: ec2.InterfaceVpcEndpointAwsService.COMPREHEND,
         // });
-        vpc.addInterfaceEndpoint("bedrockRuntimeEndpoint", {
+        vpc.addInterfaceEndpoint("bedrockRuntimeInterfaceEndpoint", {
             service: ec2.InterfaceVpcEndpointAwsService.BEDROCK_RUNTIME,
-        });
-        vpc.addInterfaceEndpoint("appSyncEndpoint", {
-            service: ec2.InterfaceVpcEndpointAwsService.APP_SYNC,
         });
 
         const securityGroup = new ec2.SecurityGroup(this, "securityGroup", {
