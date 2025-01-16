@@ -11,9 +11,9 @@ Using this application's website, you can invite an AI-assisted scribe to your u
 -   The static website is hosted in Amazon S3 and served using Amazon CloudFront.
 -   Web authentication is handled by Amazon Cognito through AWS Amplify Authentication.
 -   AWS Web Application Firewall (WAF) protects both the Amazon CloudFront distribution and AWS AppSync GraphQL API\*.
--   Amplify's GraphQL Transformer is used to create, list, and delete meeting invites in Amazon DynamoDB.
+-   Amplify's GraphQL Transformer is used to create, list, update, and delete meeting invites in Amazon DynamoDB.
 -   DynamoDB Streams triggers an AWS Lambda that runs an Amazon Elastic Container Service (ECS) task or schedules it through Amazon EventBridge Scheduler based on the meeting time.
--   The ECS application uses Playwright to join the meeting from a Chromium browser then monitor attendees and messages. Amazon Transcribe is used to convert speech to text, generating a transcript. Amazon Comprehend is then used to detect/redact PII before Anthropic Claude on Amazon Bedrock generates summaries from the redacted transcript. The summary and action items, along with the other meeting details, are emailed using Amazon Simple Email Service (SES).
+-   The ECS application uses Playwright to join the meeting from a Chromium browser then monitor attendees and messages. Updates are sent through AppSync. Amazon Transcribe is used to convert speech to text, generating a transcript. Amazon Comprehend is then used to detect/redact PII before Anthropic Claude on Amazon Bedrock generates summaries from the redacted transcript. The summary and action items, along with the other meeting details, are emailed using Amazon Simple Email Service (SES).
 
 <br>\* This application uses the following AWS-managed WAF rules on each Web ACL: AWSManagedRulesAmazonIpReputationList, AWSManagedRulesCommonRuleSet, and AWSManagedRulesKnownBadInputsRuleSet. If you would like to add additional rules, you can do so in the [WAF console](https://console.aws.amazon.com/wafv2/homev2).<br />
 
