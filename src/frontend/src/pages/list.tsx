@@ -49,8 +49,8 @@ const List = () => {
                 <HelpPanel header={<h3>Instructions</h3>}>
                     <ul>
                         <li>
-                            To delete an invite for an upcoming meeting, select
-                            the invite then click <strong>Delete</strong>.
+                            To delete an invite for an upcoming meeting, select the invite then
+                            click <strong>Delete</strong>.
                         </li>
                     </ul>
                 </HelpPanel>
@@ -64,40 +64,32 @@ const List = () => {
                                 <Button
                                     onClick={() => {
                                         if (selectedInvites) {
-                                            selectedInvites.forEach(
-                                                (invite) => {
-                                                    client
-                                                        .graphql({
-                                                            query: deleteInvite,
-                                                            variables: {
-                                                                input: {
-                                                                    id: invite.id,
-                                                                },
+                                            selectedInvites.forEach((invite) => {
+                                                client
+                                                    .graphql({
+                                                        query: deleteInvite,
+                                                        variables: {
+                                                            input: {
+                                                                id: invite.id,
                                                             },
-                                                        })
-                                                        .catch((error) => {
-                                                            console.error(
-                                                                "Failed to delete invite.",
-                                                                error
-                                                            );
-                                                        });
-                                                }
-                                            );
+                                                        },
+                                                    })
+                                                    .catch((error) => {
+                                                        console.error(
+                                                            "Failed to delete invite.",
+                                                            error
+                                                        );
+                                                    });
+                                            });
                                             setInvites(
                                                 invites.filter(
-                                                    (invite) =>
-                                                        !selectedInvites.includes(
-                                                            invite
-                                                        )
+                                                    (invite) => !selectedInvites.includes(invite)
                                                 )
                                             );
                                             setSelectedInvites([]);
                                         }
                                     }}
-                                    disabled={
-                                        !selectedInvites ||
-                                        selectedInvites.length === 0
-                                    }
+                                    disabled={!selectedInvites || selectedInvites.length === 0}
                                 >
                                     Delete
                                 </Button>
@@ -120,9 +112,7 @@ const List = () => {
                                     header: "Meeting Platform",
                                     content: (invite) =>
                                         meetingPlatforms.find(
-                                            (platform) =>
-                                                platform.value ===
-                                                invite.meetingPlatform
+                                            (platform) => platform.value === invite.meetingPlatform
                                         )?.label,
                                 },
                                 {
@@ -139,29 +129,22 @@ const List = () => {
                                     id: "meeting_time",
                                     header: "Meeting Time",
                                     content: (invite) => {
-                                        const meetingDateTime = new Date(
-                                            invite.meetingTime * 1000
-                                        );
-                                        const options: Intl.DateTimeFormatOptions =
-                                            {
-                                                year: "numeric",
-                                                month: "long",
-                                                day: "numeric",
-                                                hour: "2-digit",
-                                                minute: "2-digit",
-                                                timeZoneName: "short",
-                                            };
-                                        return meetingDateTime.toLocaleString(
-                                            "en-US",
-                                            options
-                                        );
+                                        const meetingDateTime = new Date(invite.meetingTime * 1000);
+                                        const options: Intl.DateTimeFormatOptions = {
+                                            year: "numeric",
+                                            month: "long",
+                                            day: "numeric",
+                                            hour: "2-digit",
+                                            minute: "2-digit",
+                                            timeZoneName: "short",
+                                        };
+                                        return meetingDateTime.toLocaleString("en-US", options);
                                     },
                                 },
                                 {
                                     id: "scribe_status",
                                     header: "Scribe Status",
-                                    content: (invite) =>
-                                        invite.status ?? "Scheduled",
+                                    content: (invite) => invite.status ?? "Scheduled",
                                 },
                             ],
                         }}
@@ -180,11 +163,7 @@ const List = () => {
                             "scribe_status",
                         ]}
                         empty={
-                            <Box
-                                margin={{ vertical: "xs" }}
-                                textAlign="center"
-                                color="inherit"
-                            >
+                            <Box margin={{ vertical: "xs" }} textAlign="center" color="inherit">
                                 No invites
                             </Box>
                         }

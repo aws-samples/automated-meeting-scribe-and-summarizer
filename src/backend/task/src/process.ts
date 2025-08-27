@@ -1,21 +1,12 @@
 import { details } from "./details.js";
-import {
-    ComprehendClient,
-    DetectPiiEntitiesCommand,
-} from "@aws-sdk/client-comprehend";
-import {
-    BedrockRuntimeClient,
-    ConverseCommand,
-} from "@aws-sdk/client-bedrock-runtime";
+import { ComprehendClient, DetectPiiEntitiesCommand } from "@aws-sdk/client-comprehend";
+import { BedrockRuntimeClient, ConverseCommand } from "@aws-sdk/client-bedrock-runtime";
 import * as aws from "@aws-sdk/client-ses";
 import * as nodemailer from "nodemailer";
 
 const logsMessage = "Check the CloudWatch logs for more information.";
 
-async function redactPii(
-    text: string,
-    piiExceptions: string[]
-): Promise<string> {
+async function redactPii(text: string, piiExceptions: string[]): Promise<string> {
     if (!text) return text;
 
     const comprehendClient = new ComprehendClient();
@@ -28,11 +19,7 @@ async function redactPii(
     let resultText = text;
     response.Entities?.forEach((entity) => {
         const entityType = entity.Type;
-        if (
-            entityType &&
-            !piiExceptions.includes(entityType) &&
-            (entity.Score || 0) >= 0.999
-        ) {
+        if (entityType && !piiExceptions.includes(entityType) && (entity.Score || 0) >= 0.999) {
             const pii = text.slice(entity.BeginOffset, entity.EndOffset);
             resultText = resultText.replace(pii, `[${entityType}]`);
         }
@@ -158,10 +145,7 @@ export async function encapsulate(): Promise<void> {
     ];
 
     const chat = await redactPii(details.messages.join("\n"), piiExceptions);
-    const transcript = await redactPii(
-        details.captions.join("\n\n"),
-        piiExceptions
-    );
+    const transcript = await redactPii(details.captions.join("\n\n"), piiExceptions);
 
     // console.log("Chat:", chat);
     // console.log("Transcript:", transcript);

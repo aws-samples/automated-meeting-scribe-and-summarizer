@@ -7,10 +7,7 @@ import { encapsulate } from "./process.js";
 
 const main = async () => {
     const currentTimestamp = Math.floor(Date.now() / 1000);
-    const timestampDiff = Math.max(
-        0,
-        (details.invite.meetingTime - currentTimestamp - 10) * 1000
-    );
+    const timestampDiff = Math.max(0, (details.invite.meetingTime - currentTimestamp - 10) * 1000);
     console.log(`Sleeping ${timestampDiff / 1000} seconds.`);
     await new Promise((resolve) => setTimeout(resolve, timestampDiff));
 

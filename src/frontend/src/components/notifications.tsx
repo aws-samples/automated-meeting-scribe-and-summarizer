@@ -18,11 +18,7 @@ const FlashbarContext = createContext<{
     handleDismiss: () => {},
 });
 
-export const FlashbarProvider = ({
-    children,
-}: {
-    children: React.ReactNode;
-}) => {
+export const FlashbarProvider = ({ children }: { children: React.ReactNode }) => {
     const [flashbarItems, setFlashbarItems] = useState<FlashbarItem[]>([]);
 
     const updateFlashbar = (type: FlashbarType, content: string) => {
@@ -30,9 +26,7 @@ export const FlashbarProvider = ({
     };
 
     const handleDismiss = (index: number) => {
-        setFlashbarItems((prevItems) =>
-            prevItems.filter((_, i) => i !== index)
-        );
+        setFlashbarItems((prevItems) => prevItems.filter((_, i) => i !== index));
     };
 
     const contextValue = {
@@ -41,11 +35,7 @@ export const FlashbarProvider = ({
         handleDismiss,
     };
 
-    return (
-        <FlashbarContext.Provider value={contextValue}>
-            {children}
-        </FlashbarContext.Provider>
-    );
+    return <FlashbarContext.Provider value={contextValue}>{children}</FlashbarContext.Provider>;
 };
 
 export const FlashbarComponent = () => {

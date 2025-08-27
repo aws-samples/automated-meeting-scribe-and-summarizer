@@ -17,9 +17,7 @@ export default class Chime {
 
     public async initialize(page: Page): Promise<void> {
         console.log("Getting meeting link.");
-        await page.goto(
-            `https://app.chime.aws/meetings/${details.invite.meetingId}`
-        );
+        await page.goto(`https://app.chime.aws/meetings/${details.invite.meetingId}`);
 
         console.log("Entering name.");
         try {
@@ -35,9 +33,7 @@ export default class Chime {
         }
 
         console.log("Clicking mute button.");
-        const muteCheckboxElement = await page.waitForSelector(
-            'text="Join muted"'
-        );
+        const muteCheckboxElement = await page.waitForSelector('text="Join muted"');
         await muteCheckboxElement?.click();
 
         console.log("Clicking join button.");
@@ -85,8 +81,7 @@ export default class Chime {
 
             const callback = (mutationList: MutationRecord[]) => {
                 const number = parseInt(
-                    mutationList[mutationList.length - 1].target.textContent ||
-                        "0"
+                    mutationList[mutationList.length - 1].target.textContent || "0"
                 );
                 (window as any).attendeeChange(number);
             };
@@ -95,10 +90,7 @@ export default class Chime {
             if (targetNode) observer.observe(targetNode, config);
         });
 
-        await page.exposeFunction(
-            "speakerChange",
-            transcriptionService.speakerChange
-        );
+        await page.exposeFunction("speakerChange", transcriptionService.speakerChange);
         console.log("Listening for speaker changes.");
         await page.evaluate(() => {
             const targetNode = document.querySelector(
@@ -141,9 +133,7 @@ export default class Chime {
                 this.prevSender = sender;
 
                 if (text === details.endCommand) {
-                    console.log(
-                        "Your scribe has been removed from the meeting."
-                    );
+                    console.log("Your scribe has been removed from the meeting.");
                     await page.goto("about:blank");
                 } else if (details.start && text === details.pauseCommand) {
                     details.start = false;
@@ -167,9 +157,7 @@ export default class Chime {
 
                     if (attachmentTitle && attachmentHref) {
                         details.attachments[attachmentTitle] = attachmentHref;
-                        message += text
-                            ? `${text} | ${attachmentTitle}`
-                            : attachmentTitle;
+                        message += text ? `${text} | ${attachmentTitle}` : attachmentTitle;
                     } else if (text) {
                         message += text;
                     }
@@ -180,9 +168,7 @@ export default class Chime {
         );
         console.log("Listening for message changes.");
         await page.evaluate(() => {
-            const targetNode = document.querySelector(
-                "._2B9DdDvc2PdUbvEGXfOU20"
-            );
+            const targetNode = document.querySelector("._2B9DdDvc2PdUbvEGXfOU20");
             const config = { childList: true, subtree: true };
 
             const callback = (mutationList: MutationRecord[]) => {
@@ -192,8 +178,7 @@ export default class Chime {
                         const sender = addedNode.querySelector(
                             'h3[data-testid="chat-bubble-sender-name"]'
                         )?.textContent;
-                        const text =
-                            addedNode.querySelector(".Linkify")?.textContent;
+                        const text = addedNode.querySelector(".Linkify")?.textContent;
                         const attachmentElement = addedNode.querySelector(
                             ".SLFfm3Dwo5MfFzks4uM11"
                         ) as HTMLAnchorElement;

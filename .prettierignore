@@ -1,0 +1,4 @@
+**/dist
+**/cdk.out
+**/graphql/**/*.ts
+**/API.ts
