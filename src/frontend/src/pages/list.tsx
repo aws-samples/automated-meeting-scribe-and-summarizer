@@ -9,11 +9,11 @@ import {
 } from "@cloudscape-design/components";
 import { generateClient } from "aws-amplify/api";
 import { useEffect, useState } from "react";
-import { Invite } from "../API";
 import NavigationComponent from "../components/navigation";
 import { FlashbarComponent } from "../components/notifications";
 import { deleteInvite } from "../graphql/mutations";
 import { listInvites } from "../graphql/queries";
+import { Invite } from "../graphql/types";
 import { meetingPlatforms } from "../platform";
 
 const List = () => {

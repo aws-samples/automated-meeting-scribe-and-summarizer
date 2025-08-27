@@ -1,6 +1,7 @@
-import { Page, Frame } from "playwright";
-import { transcriptionService } from "./scribe.js";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { Frame, Page } from "playwright";
 import { details } from "./details.js";
+import { transcriptionService } from "./scribe.js";
 
 export default class Webex {
     private readonly iframe = 'iframe[name="thinIframe"]';
@@ -168,7 +169,7 @@ export default class Webex {
                 timeout: details.meetingTimeout,
             });
             console.log("Meeting ended.");
-        } catch (error) {
+        } catch {
             console.log("Meeting timed out.");
         } finally {
             details.start = false;

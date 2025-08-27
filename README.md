@@ -60,7 +60,7 @@ This click-through option will build and deploy the CDK application for you usin
 
 ### Accessing the Website
 
-- Open the [us-east-1 CloudFormation console](https://console.aws.amazon.com/cloudformation/home?region=us-east-1) then click the **Frontend** stack followed by **Outputs**.
+- Open the [CloudFormation console](https://console.aws.amazon.com/cloudformation/home) then click the **Frontend** stack followed by **Outputs**.
 - Open the CloudFront URL in your browser to access the website.
 - Enter your username and password or create a new account.
     - Change your password and/or verify your email as needed.

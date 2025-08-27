@@ -1,8 +1,8 @@
-import { details } from "./details.js";
-import { ComprehendClient, DetectPiiEntitiesCommand } from "@aws-sdk/client-comprehend";
 import { BedrockRuntimeClient, ConverseCommand } from "@aws-sdk/client-bedrock-runtime";
+import { ComprehendClient, DetectPiiEntitiesCommand } from "@aws-sdk/client-comprehend";
 import * as aws from "@aws-sdk/client-ses";
 import * as nodemailer from "nodemailer";
+import { details } from "./details.js";
 
 const logsMessage = "Check the CloudWatch logs for more information.";
 
@@ -52,17 +52,18 @@ async function summarize(transcript: string): Promise<string> {
 
     try {
         const bedrockClient = new BedrockRuntimeClient();
-        const command = new ConverseCommand({
-            modelId: "anthropic.claude-3-sonnet-20240229-v1:0",
-            system: [{ text: systemPrompt }],
-            messages: [{ role: "user", content: [{ text: prompt }] }],
-            inferenceConfig: {
-                maxTokens: 4096,
-                temperature: 0.9,
-                topP: 0.2,
-            },
-        });
-        const response = await bedrockClient.send(command);
+        const response = await bedrockClient.send(
+            new ConverseCommand({
+                modelId: process.env.MODEL_ID!,
+                system: [{ text: systemPrompt }],
+                messages: [{ role: "user", content: [{ text: prompt }] }],
+                inferenceConfig: {
+                    maxTokens: 4096,
+                    temperature: 0.9,
+                    topP: 0.2,
+                },
+            })
+        );
         const responseText = response.output?.message?.content?.[0]?.text ?? "";
         const html = responseText.match(/<html>(.*?)<\/html>/s)?.[1] ?? "";
         // console.log(html)

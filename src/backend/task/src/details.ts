@@ -1,7 +1,7 @@
-import { Invite, UpdateInviteInput, DeleteInviteInput } from "./API.js";
-import { GraphQLClient } from "graphql-request";
 import { createSignedFetcher } from "aws-sigv4-fetch";
-import { updateInvite, deleteInvite } from "./graphql/mutations.js";
+import { GraphQLClient } from "graphql-request";
+import { deleteInvite, updateInvite } from "./graphql/mutations.js";
+import { DeleteInviteInput, Invite, UpdateInviteInput } from "./graphql/types.js";
 
 type ModifiedInvite = Omit<Invite, "users"> & {
     users: string[];

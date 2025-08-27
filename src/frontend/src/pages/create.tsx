@@ -16,10 +16,10 @@ import {
 } from "@cloudscape-design/components";
 import { generateClient } from "aws-amplify/api";
 import { useContext, useState } from "react";
-import { CreateInviteInput } from "../API";
 import NavigationComponent from "../components/navigation";
 import FlashbarContext, { FlashbarComponent } from "../components/notifications";
 import { createInvite } from "../graphql/mutations";
+import { CreateInviteInput } from "../graphql/types";
 import { MeetingPlatform, meetingPlatforms } from "../platform";
 
 const Create = () => {

@@ -9,18 +9,16 @@ import { DynamoDBStreamEvent } from "aws-lambda";
 const schedulerClient = new SchedulerClient();
 const ecsClient = new ECSClient();
 
-function lowercaseDictionary(obj: any): any {
-    if (obj && typeof obj === "object" && !Array.isArray(obj)) {
-        const result: any = {};
-        for (const [key, value] of Object.entries(obj)) {
-            const newKey = key.charAt(0).toLowerCase() + key.slice(1);
-            result[newKey] = lowercaseDictionary(value);
-        }
-        return result;
-    } else if (Array.isArray(obj)) {
-        return obj.map((item) => lowercaseDictionary(item));
-    }
-    return obj;
+function lowercaseDictionary(object: any): any {
+    if (Array.isArray(object)) return object.map(lowercaseDictionary);
+    else if (object !== null && typeof object === "object") {
+        return Object.fromEntries(
+            Object.entries(object).map(([key, value]) => [
+                key.charAt(0).toLowerCase() + key.slice(1),
+                lowercaseDictionary(value),
+            ])
+        );
+    } else return object;
 }
 
 export const handler = async (event: DynamoDBStreamEvent) => {
@@ -61,6 +59,10 @@ export const handler = async (event: DynamoDBStreamEvent) => {
                                 {
                                     Name: "EMAIL_SOURCE",
                                     Value: process.env.EMAIL_SOURCE!,
+                                },
+                                {
+                                    Name: "MODEL_ID",
+                                    Value: process.env.MODEL_ID!,
                                 },
                                 // {
                                 //     Name: "VOCABULARY_NAME",

@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Page } from "playwright";
-import { transcriptionService } from "./scribe.js";
 import { details } from "./details.js";
+import { transcriptionService } from "./scribe.js";
 
 export default class Chime {
     private async sendMessages(page: Page, messages: string[]): Promise<void> {
@@ -49,7 +50,7 @@ export default class Chime {
                 { timeout: details.waitingTimeout }
             );
             await chatPanelElement?.click();
-        } catch (error) {
+        } catch {
             console.log("Your scribe was not admitted into the meeting.");
             return;
         }
@@ -205,7 +206,7 @@ export default class Chime {
                 timeout: details.meetingTimeout,
             });
             console.log("Meeting ended.");
-        } catch (error) {
+        } catch {
             console.log("Meeting timed out.");
         } finally {
             details.start = false;

@@ -1,9 +1,9 @@
-import { details } from "./details.js";
-import { transcriptionService } from "./scribe.js";
-import { chromium, Browser, Page } from "playwright";
+import { Browser, chromium, Page } from "playwright";
 import Chime from "./chime.js";
-import Webex from "./webex.js";
+import { details } from "./details.js";
 import { encapsulate } from "./process.js";
+import { transcriptionService } from "./scribe.js";
+import Webex from "./webex.js";
 
 const main = async () => {
     const currentTimestamp = Math.floor(Date.now() / 1000);

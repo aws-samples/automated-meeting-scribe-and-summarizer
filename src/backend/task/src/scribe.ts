@@ -1,6 +1,6 @@
 import {
-    TranscribeStreamingClient,
     StartStreamTranscriptionCommand,
+    TranscribeStreamingClient,
 } from "@aws-sdk/client-transcribe-streaming";
 import { spawn } from "child_process";
 import { details } from "./details.js";
@@ -81,7 +81,7 @@ export class TranscriptionService {
                         const wordType = item.Type;
                         if (wordType === "pronunciation") {
                             const timestamp = this.startTime! + item.StartTime! * 1000;
-                            const label = `(${item.Speaker})`;
+                            // const label = `(${item.Speaker})`;
                             const speaker =
                                 details.speakers.find((s) => s.timestamp <= timestamp)?.name ??
                                 "Unknown";

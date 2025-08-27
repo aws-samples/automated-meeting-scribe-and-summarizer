@@ -186,6 +186,7 @@ export default class Backend extends Stack {
                 SUBNETS: JSON.stringify(vpc.privateSubnets.map((subnet) => subnet.subnetId)),
                 CONTAINER_ID: containerId,
                 GRAPH_API_URL: amplifiedGraphApi.graphqlUrl,
+                MODEL_ID: profile.inferenceProfileId,
                 EMAIL_SOURCE: identity.emailIdentityName,
                 // VOCABULARY_NAME: 'lingo',
                 SCHEDULE_GROUP: meetingScheduleGroup.scheduleGroupName,
@@ -196,7 +197,7 @@ export default class Backend extends Stack {
         meetingScheduleGroup.grantWriteSchedules(schedulerFunction);
         meetingScheduleGroup.grantReadSchedules(schedulerFunction);
         meetingScheduleGroup.grantDeleteSchedules(schedulerFunction);
-        schedulerFunction.role?.grantPassRole(eventbridgeSchedulerRole);
+        eventbridgeSchedulerRole.grantPassRole(schedulerFunction.role!);
         taskDefinition.grantRun(schedulerFunction);
 
         schedulerFunction.addEventSource(
