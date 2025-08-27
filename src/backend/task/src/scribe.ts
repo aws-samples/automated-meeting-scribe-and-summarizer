@@ -15,6 +15,7 @@ export class TranscriptionService {
         this.process = spawn("ffmpeg", [
             "-f",
             "pulse",
+            // "avfoundation",
             "-i",
             "default",
             "-ac",

@@ -7,8 +7,8 @@ import { generateClient } from "aws-amplify/api";
 import { fetchAuthSession } from "aws-amplify/auth";
 import { useContext, useEffect } from "react";
 import { createBrowserRouter, Navigate, RouterProvider } from "react-router-dom";
-import FlashbarContext from "./components/notifications";
-import { onUpdateInvite } from "./graphql/subscriptions";
+import FlashbarContext from "./common/components/notifications";
+import { onUpdateInvite } from "./common/graphql/subscriptions";
 import CreateInvite from "./pages/create";
 import ListInvites from "./pages/list";
 

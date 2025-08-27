@@ -16,11 +16,11 @@ import {
 } from "@cloudscape-design/components";
 import { generateClient } from "aws-amplify/api";
 import { useContext, useState } from "react";
-import NavigationComponent from "../components/navigation";
-import FlashbarContext, { FlashbarComponent } from "../components/notifications";
-import { createInvite } from "../graphql/mutations";
-import { CreateInviteInput } from "../graphql/types";
-import { MeetingPlatform, meetingPlatforms } from "../platform";
+import NavigationComponent from "../common/components/navigation";
+import FlashbarContext, { FlashbarComponent } from "../common/components/notifications";
+import { createInvite } from "../common/graphql/mutations";
+import { CreateInviteInput } from "../common/graphql/types";
+import { MeetingPlatform, meetingPlatforms } from "../common/platform";
 
 const Create = () => {
     const [navigationOpen, setNavigationOpen] = useState<boolean>(true);

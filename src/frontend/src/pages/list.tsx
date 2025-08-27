@@ -9,12 +9,12 @@ import {
 } from "@cloudscape-design/components";
 import { generateClient } from "aws-amplify/api";
 import { useEffect, useState } from "react";
-import NavigationComponent from "../components/navigation";
-import { FlashbarComponent } from "../components/notifications";
-import { deleteInvite } from "../graphql/mutations";
-import { listInvites } from "../graphql/queries";
-import { Invite } from "../graphql/types";
-import { meetingPlatforms } from "../platform";
+import NavigationComponent from "../common/components/navigation";
+import { FlashbarComponent } from "../common/components/notifications";
+import { deleteInvite } from "../common/graphql/mutations";
+import { listInvites } from "../common/graphql/queries";
+import { Invite } from "../common/graphql/types";
+import { meetingPlatforms } from "../common/platform";
 
 const List = () => {
     const [navigationOpen, setNavigationOpen] = useState<boolean>(true);
