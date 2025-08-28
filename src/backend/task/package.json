@@ -18,7 +18,7 @@
         "aws-sigv4-fetch": "^4.3.0",
         "graphql-request": "^7.1.2",
         "nodemailer": "^6.9.16",
-        "playwright": "^1.49.1"
+        "puppeteer": "^24.17.1"
     },
     "devDependencies": {
         "@types/node": "^22.10.6",

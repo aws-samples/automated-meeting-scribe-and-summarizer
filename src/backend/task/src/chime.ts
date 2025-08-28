@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Page } from "playwright";
+import { Page } from "puppeteer";
 import { details } from "./details.js";
 import { transcriptionService } from "./scribe.js";
 
@@ -9,7 +9,7 @@ export default class Chime {
             'textarea[placeholder="Message all attendees"]'
         );
         for (const message of messages) {
-            await messageElement?.fill(message);
+            await messageElement?.type(message);
             await messageElement?.press("Enter");
         }
     }
@@ -23,18 +23,16 @@ export default class Chime {
         console.log("Entering name.");
         try {
             const nameTextElement = await page.waitForSelector("#name");
-            if (nameTextElement) {
-                await nameTextElement.type(details.scribeIdentity);
-                await nameTextElement.press("Tab");
-                await page.keyboard.press("Enter");
-            }
+            await nameTextElement?.type(details.scribeIdentity);
+            await nameTextElement?.press("Tab");
+            await page.keyboard.press("Enter");
         } catch {
             console.log("Your scribe was unable to join the meeting.");
             return;
         }
 
         console.log("Clicking mute button.");
-        const muteCheckboxElement = await page.waitForSelector('text="Join muted"');
+        const muteCheckboxElement = await page.waitForSelector("::-p-text(Join muted)");
         await muteCheckboxElement?.click();
 
         console.log("Clicking join button.");
@@ -202,7 +200,7 @@ export default class Chime {
         console.log("Waiting for meeting end.");
         try {
             await page.waitForSelector('button[id="endMeeting"]', {
-                state: "detached",
+                hidden: true,
                 timeout: details.meetingTimeout,
             });
             console.log("Meeting ended.");

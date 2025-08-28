@@ -1,4 +1,4 @@
-import { Browser, chromium, Page } from "playwright";
+import puppeteer from "puppeteer";
 import Chime from "./chime.js";
 import { details } from "./details.js";
 import { encapsulate } from "./process.js";
@@ -13,11 +13,11 @@ const main = async () => {
 
     transcriptionService.startTranscription();
 
-    const browser: Browser = await chromium.launch({
+    const browser = await puppeteer.launch({
         // headless: false,
         ignoreDefaultArgs: ["--mute-audio"],
         args: [
-            "--window-size=1920,1080",
+            "--window-size=2560,1440",
             "--use-fake-ui-for-media-stream",
             "--use-fake-device-for-media-stream",
             "--disable-notifications",
@@ -27,24 +27,30 @@ const main = async () => {
             "--no-sandbox",
         ],
     });
-    const page: Page = await browser.newPage();
+    const page = await browser.newPage();
+    await page.setViewport(null);
     page.setDefaultTimeout(20000);
 
-    let meeting: any;
-    if (details.invite.meetingPlatform === "Chime") {
-        meeting = new Chime();
-    } else if (details.invite.meetingPlatform === "Webex") {
-        meeting = new Webex();
+    let meeting;
+    try {
+        if (details.invite.meetingPlatform === "Chime") {
+            meeting = new Chime();
+        } else if (details.invite.meetingPlatform === "Webex") {
+            meeting = new Webex();
+        } else {
+            throw new Error("Meeting platform is unsupported.");
+        }
+        await meeting.initialize(page);
+
+        await encapsulate();
+        await details.updateInvite("Completed");
+    } catch {
+        await details.updateInvite("Failed");
+    } finally {
+        await browser.close();
+        transcriptionService.stopTranscription();
+        await details.deleteInvite();
     }
-    await meeting.initialize(page);
-
-    await browser.close();
-    transcriptionService.stopTranscription();
-
-    await encapsulate();
-    await details.updateInvite("Completed");
-    await details.deleteInvite();
-    return;
 };
 
 main();

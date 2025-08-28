@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Frame, Page } from "playwright";
+import { Frame, Page } from "puppeteer";
 import { details } from "./details.js";
 import { transcriptionService } from "./scribe.js";
 
@@ -58,20 +58,20 @@ export default class Webex {
         await cookieButtonElement?.click();
 
         console.log("Clicking mute button.");
-        const muteButtonElement = await frame.waitForSelector('text="Mute"');
+        const muteButtonElement = await frame.waitForSelector("::-p-text(Mute)");
         await muteButtonElement?.click();
 
         console.log("Clicking video button.");
-        const videoButtonElement = await frame.waitForSelector('text="Stop video"');
+        const videoButtonElement = await frame.waitForSelector("::-p-text(Stop video)");
         await videoButtonElement?.click();
 
         console.log("Clicking join button.");
-        const joinButtonElement = await frame.waitForSelector('text="Join meeting"');
+        const joinButtonElement = await frame.waitForSelector('button[title="Join meeting"]');
         await joinButtonElement?.click();
 
         console.log("Opening chat panel.");
         try {
-            const chatPanelElement = await frame.waitForSelector('text="Chat"', {
+            const chatPanelElement = await frame.waitForSelector("::-p-text(Chat)", {
                 timeout: details.waitingTimeout,
             });
             await chatPanelElement?.click();
