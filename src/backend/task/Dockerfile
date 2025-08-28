@@ -6,7 +6,7 @@ COPY . /srv
 
 RUN npm install && \
     npm run build
-RUN npx playwright install --with-deps chromium
+RUN npx playwright install --with-deps --only-shell
 
 RUN apt-get update && \
     apt-get install -y \
