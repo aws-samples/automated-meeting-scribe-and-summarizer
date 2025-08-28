@@ -48,6 +48,11 @@ export default class Webex {
         await emailTextElement?.type("bot@scribe.tools.aws.dev");
         await emailTextElement?.press("Enter");
 
+        console.log("Entering password.");
+        const passwordTextElement = await frame.waitForSelector('input[type="password"]');
+        await passwordTextElement?.type(details.invite.meetingPassword!);
+        await passwordTextElement?.press("Enter");
+
         console.log("Clicking cookie button.");
         const cookieButtonElement = await page.waitForSelector(".cookie-manage-close-handler");
         await cookieButtonElement?.click();

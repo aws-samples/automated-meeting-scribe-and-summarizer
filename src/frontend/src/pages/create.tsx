@@ -36,6 +36,12 @@ const Create = () => {
 
     const [meetingTimeError, setMeetingTimeError] = useState("");
 
+    const isDisabled =
+        !meetingId ||
+        !inviteName ||
+        !checked ||
+        (meetingPlatform.value === "Webex" && !meetingPassword);
+
     const validateMeetingTime = (time: string) => {
         if (!time) {
             setMeetingTimeError("");
@@ -163,13 +169,17 @@ const Create = () => {
                                     />
                                 </FormField>
 
-                                {/* <FormField label="Meeting Password">
-                                    <Input
-                                        onChange={({ detail }) => setMeetingPassword(detail.value)}
-                                        value={meetingPassword}
-                                        type="password"
-                                    />
-                                </FormField> */}
+                                {meetingPlatform.value === "Webex" && (
+                                    <FormField label="Meeting Password">
+                                        <Input
+                                            onChange={({ detail }) =>
+                                                setMeetingPassword(detail.value)
+                                            }
+                                            value={meetingPassword}
+                                            type="password"
+                                        />
+                                    </FormField>
+                                )}
 
                                 <FormField
                                     label="Meeting Time"
@@ -216,7 +226,7 @@ const Create = () => {
                                         <Button
                                             variant="normal"
                                             form="meetingForm"
-                                            disabled={!meetingId || !inviteName || !checked}
+                                            disabled={isDisabled}
                                         >
                                             Invite Now
                                         </Button>
@@ -224,11 +234,7 @@ const Create = () => {
                                             variant="primary"
                                             form="meetingForm"
                                             disabled={
-                                                !meetingId ||
-                                                !inviteName ||
-                                                !meetingTime ||
-                                                !!meetingTimeError ||
-                                                !checked
+                                                isDisabled || !meetingTime || !!meetingTimeError
                                             }
                                         >
                                             Invite Later
