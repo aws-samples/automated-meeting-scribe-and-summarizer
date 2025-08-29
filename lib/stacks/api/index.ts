@@ -1,11 +1,14 @@
-import { AmplifyData, AmplifyDataDefinition, FieldLogLevel, RetentionDays } from "@aws-amplify/data-construct";
 import {
-    Stack,
-    StackProps,
-} from "aws-cdk-lib";
+    AmplifyData,
+    AmplifyDataDefinition,
+    FieldLogLevel,
+    RetentionDays,
+} from "@aws-amplify/data-construct";
+import { Stack, StackProps } from "aws-cdk-lib";
 import { UserPool } from "aws-cdk-lib/aws-cognito";
 import { CfnWebACLAssociation } from "aws-cdk-lib/aws-wafv2";
 import { Construct } from "constructs";
+import * as path from "path";
 
 interface ApiProps extends StackProps {
     userPool: UserPool;
@@ -18,10 +21,10 @@ export default class Api extends Stack {
     constructor(scope: Construct, id: string, props: ApiProps) {
         super(scope, id, props);
 
-        const {userPool, regionalWebAclArn } = props;
+        const { userPool, regionalWebAclArn } = props;
 
         const amplifiedGraphApi = new AmplifyData(this, "amplifiedGraphApi", {
-            definition: AmplifyDataDefinition.fromFiles("src/api/schema.graphql"),
+            definition: AmplifyDataDefinition.fromFiles(path.join(__dirname, "schema.graphql")),
             authorizationModes: {
                 defaultAuthorizationMode: "AMAZON_COGNITO_USER_POOLS",
                 userPoolConfig: {
@@ -36,7 +39,6 @@ export default class Api extends Stack {
                 retention: RetentionDays.ONE_MONTH,
                 excludeVerboseContent: false,
             },
-
         });
         amplifiedGraphApi.resources.cfnResources.cfnGraphqlApi.xrayEnabled = true;
         Object.values(amplifiedGraphApi.resources.cfnResources.cfnTables).forEach((table) => {

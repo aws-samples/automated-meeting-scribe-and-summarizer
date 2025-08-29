@@ -37,7 +37,8 @@ import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
 import { ScheduleGroup } from "aws-cdk-lib/aws-scheduler";
 import { EmailIdentity } from "aws-cdk-lib/aws-ses";
 import { Construct } from "constructs";
-import { CommonNodejsFunction } from "../common/constructs/lambda";
+import * as path from "path";
+import { CommonNodejsFunction } from "../../common/constructs/lambda";
 
 interface BackendProps extends StackProps {
     identity: EmailIdentity;
@@ -143,7 +144,7 @@ export default class Backend extends Stack {
         taskDefinition.addContainer(containerId, {
             image: ContainerImage.fromDockerImageAsset(
                 new DockerImageAsset(this, "dockerImageAsset", {
-                    directory: "src/backend/task",
+                    directory: path.join(__dirname, "app"),
                     exclude: ["node_modules", "dist"],
                     platform: Platform.LINUX_ARM64,
                 })
@@ -179,7 +180,7 @@ export default class Backend extends Stack {
 
         const schedulerFunction = new CommonNodejsFunction(this, "schedulerFunction", {
             timeout: Duration.minutes(2),
-            entry: "src/backend/function/scheduler.ts",
+            entry: path.join(__dirname, "scheduler.ts"),
             environment: {
                 TASK_DEFINITION_ARN: taskDefinition.taskDefinitionArn,
                 CLUSTER_ARN: cluster.clusterArn,

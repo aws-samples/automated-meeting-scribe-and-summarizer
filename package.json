@@ -6,8 +6,8 @@
         "app": "bin/app.js"
     },
     "workspaces": [
-        "src/frontend",
-        "src/backend/task"
+        "lib/stacks/backend/app",
+        "lib/stacks/frontend/app"
     ],
     "scripts": {
         "prepare": "husky",

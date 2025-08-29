@@ -14,7 +14,8 @@ import { BucketDeployment, Source } from "aws-cdk-lib/aws-s3-deployment";
 import { StringParameter } from "aws-cdk-lib/aws-ssm";
 import { execSync } from "child_process";
 import { Construct } from "constructs";
-import { CommonBucket } from "../common/constructs/s3";
+import * as path from "path";
+import { CommonBucket } from "../../common/constructs/s3";
 
 interface FrontendProps extends StackProps {
     userPoolId: string;
@@ -77,7 +78,7 @@ export default class Frontend extends Stack {
             logFilePrefix: "distribution",
         });
 
-        const websitePath = "./src/frontend";
+        const websitePath = path.join(__dirname, "app");
         const websiteBundle = Source.asset(websitePath, {
             bundling: {
                 image: Runtime.NODEJS_20_X.bundlingImage,
