@@ -1,6 +1,6 @@
 import {
-    TranscribeStreamingClient,
     StartStreamTranscriptionCommand,
+    TranscribeStreamingClient,
 } from "@aws-sdk/client-transcribe-streaming";
 import { spawn } from "child_process";
 import { details } from "./details.js";
@@ -15,6 +15,7 @@ export class TranscriptionService {
         this.process = spawn("ffmpeg", [
             "-f",
             "pulse",
+            // "avfoundation",
             "-i",
             "default",
             "-ac",
@@ -74,20 +75,17 @@ export class TranscriptionService {
         const response = await client.send(command);
 
         for await (const event of response.TranscriptResultStream ?? []) {
-            for (const result of event.TranscriptEvent?.Transcript?.Results ??
-                []) {
+            for (const result of event.TranscriptEvent?.Transcript?.Results ?? []) {
                 if (result.IsPartial === false) {
                     for (const item of result.Alternatives?.[0]?.Items ?? []) {
                         const word = item.Content;
                         const wordType = item.Type;
                         if (wordType === "pronunciation") {
-                            const timestamp =
-                                this.startTime! + item.StartTime! * 1000;
-                            const label = `(${item.Speaker})`;
+                            const timestamp = this.startTime! + item.StartTime! * 1000;
+                            // const label = `(${item.Speaker})`;
                             const speaker =
-                                details.speakers.find(
-                                    (s) => s.timestamp <= timestamp
-                                )?.name ?? "Unknown";
+                                details.speakers.find((s) => s.timestamp <= timestamp)?.name ??
+                                "Unknown";
                             // console.log(`[${this.formatTimestamp(timestamp)}] ${speaker}: ${word}`)
                             if (
                                 details.captions.length === 0 ||
@@ -96,18 +94,13 @@ export class TranscriptionService {
                                     .includes(speaker)
                             ) {
                                 details.captions.push(
-                                    `[${this.formatTimestamp(
-                                        timestamp
-                                    )}] ${speaker}: ${word}`
+                                    `[${this.formatTimestamp(timestamp)}] ${speaker}: ${word}`
                                 );
                             } else {
-                                details.captions[
-                                    details.captions.length - 1
-                                ] += ` ${word}`;
+                                details.captions[details.captions.length - 1] += ` ${word}`;
                             }
                         } else if (wordType === "punctuation") {
-                            details.captions[details.captions.length - 1] +=
-                                word;
+                            details.captions[details.captions.length - 1] += word;
                         }
                     }
                 }

@@ -1,7 +1,4 @@
-import {
-    withAuthenticator,
-    WithAuthenticatorProps,
-} from "@aws-amplify/ui-react";
+import { withAuthenticator, WithAuthenticatorProps } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
 import TopNavigation from "@cloudscape-design/components/top-navigation";
 import "@cloudscape-design/global-styles/index.css";
@@ -9,13 +6,9 @@ import { Amplify } from "aws-amplify";
 import { generateClient } from "aws-amplify/api";
 import { fetchAuthSession } from "aws-amplify/auth";
 import { useContext, useEffect } from "react";
-import {
-    createBrowserRouter,
-    Navigate,
-    RouterProvider,
-} from "react-router-dom";
-import FlashbarContext from "./components/notifications";
-import { onUpdateInvite } from "./graphql/subscriptions";
+import { createBrowserRouter, Navigate, RouterProvider } from "react-router-dom";
+import FlashbarContext from "./common/components/notifications";
+import { onUpdateInvite } from "./common/graphql/subscriptions";
 import CreateInvite from "./pages/create";
 import ListInvites from "./pages/list";
 
@@ -40,9 +33,7 @@ Amplify.configure(
             GraphQL: {
                 headers: async () => {
                     return {
-                        Authorization: `Bearer ${
-                            (await fetchAuthSession()).tokens?.idToken
-                        }`,
+                        Authorization: `Bearer ${(await fetchAuthSession()).tokens?.idToken}`,
                     };
                 },
             },

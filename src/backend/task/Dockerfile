@@ -4,14 +4,17 @@ USER root
 WORKDIR /srv
 COPY . /srv
 
-RUN npm install && \
-    npm run build
-RUN npx playwright install --with-deps chromium
-
 RUN apt-get update && \
     apt-get install -y \
+    chromium \
     ffmpeg \
     pulseaudio
+
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+
+RUN npm install && \
+    npm run build
 
 RUN chmod +x /srv/entry.sh
 ENTRYPOINT ["/srv/entry.sh"]

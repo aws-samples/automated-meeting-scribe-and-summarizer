@@ -1,7 +1,7 @@
-import { Invite, UpdateInviteInput, DeleteInviteInput } from "./API.js";
-import { GraphQLClient } from "graphql-request";
 import { createSignedFetcher } from "aws-sigv4-fetch";
-import { updateInvite, deleteInvite } from "./graphql/mutations.js";
+import { GraphQLClient } from "graphql-request";
+import { deleteInvite, updateInvite } from "./graphql/mutations.js";
+import { DeleteInviteInput, Invite, UpdateInviteInput } from "./graphql/types.js";
 
 type ModifiedInvite = Omit<Invite, "users"> & {
     users: string[];
@@ -14,15 +14,12 @@ export type Speaker = {
 
 export class Details {
     private constructor() {}
-    private client: GraphQLClient = new GraphQLClient(
-        process.env.GRAPH_API_URL!,
-        {
-            fetch: createSignedFetcher({
-                service: "appsync",
-                region: process.env.AWS_REGION,
-            }),
-        }
-    );
+    private client: GraphQLClient = new GraphQLClient(process.env.GRAPH_API_URL!, {
+        fetch: createSignedFetcher({
+            service: "appsync",
+            region: process.env.AWS_REGION,
+        }),
+    });
 
     public invite!: ModifiedInvite;
     private userStrings!: string;
@@ -62,13 +59,12 @@ export class Details {
     }
 
     public async updateInvite(status: string) {
-        const response: { updateInvite: ModifiedInvite } =
-            await this.client.request(updateInvite, {
-                input: {
-                    id: process.env.INVITE_ID!,
-                    status: status,
-                } as UpdateInviteInput,
-            });
+        const response: { updateInvite: ModifiedInvite } = await this.client.request(updateInvite, {
+            input: {
+                id: process.env.INVITE_ID!,
+                status: status,
+            } as UpdateInviteInput,
+        });
         if (!this.invite) {
             this.invite = response.updateInvite;
         }
@@ -81,9 +77,7 @@ export class Details {
         } else if (users.length === 2) {
             this.userStrings = `${users[0]} and ${users[1]}`;
         } else if (users.length > 2) {
-            this.userStrings = `${users
-                .slice(0, -1)
-                .join(", ")}, and ${users.slice(-1)}`;
+            this.userStrings = `${users.slice(0, -1).join(", ")}, and ${users.slice(-1)}`;
         }
 
         this.scribeIdentity = `${this.scribeName} [${users[0]}]`;

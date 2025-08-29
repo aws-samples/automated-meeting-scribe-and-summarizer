@@ -1,6 +1,7 @@
-import { Page } from "playwright";
-import { transcriptionService } from "./scribe.js";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { Page } from "puppeteer";
 import { details } from "./details.js";
+import { transcriptionService } from "./scribe.js";
 
 export default class Chime {
     private async sendMessages(page: Page, messages: string[]): Promise<void> {
@@ -8,7 +9,7 @@ export default class Chime {
             'textarea[placeholder="Message all attendees"]'
         );
         for (const message of messages) {
-            await messageElement?.fill(message);
+            await messageElement?.type(message);
             await messageElement?.press("Enter");
         }
     }
@@ -17,27 +18,21 @@ export default class Chime {
 
     public async initialize(page: Page): Promise<void> {
         console.log("Getting meeting link.");
-        await page.goto(
-            `https://app.chime.aws/meetings/${details.invite.meetingId}`
-        );
+        await page.goto(`https://app.chime.aws/meetings/${details.invite.meetingId}`);
 
         console.log("Entering name.");
         try {
             const nameTextElement = await page.waitForSelector("#name");
-            if (nameTextElement) {
-                await nameTextElement.type(details.scribeIdentity);
-                await nameTextElement.press("Tab");
-                await page.keyboard.press("Enter");
-            }
+            await nameTextElement?.type(details.scribeIdentity);
+            await nameTextElement?.press("Tab");
+            await page.keyboard.press("Enter");
         } catch {
             console.log("Your scribe was unable to join the meeting.");
             return;
         }
 
         console.log("Clicking mute button.");
-        const muteCheckboxElement = await page.waitForSelector(
-            'text="Join muted"'
-        );
+        const muteCheckboxElement = await page.waitForSelector("::-p-text(Join muted)");
         await muteCheckboxElement?.click();
 
         console.log("Clicking join button.");
@@ -53,7 +48,7 @@ export default class Chime {
                 { timeout: details.waitingTimeout }
             );
             await chatPanelElement?.click();
-        } catch (error) {
+        } catch {
             console.log("Your scribe was not admitted into the meeting.");
             return;
         }
@@ -85,8 +80,7 @@ export default class Chime {
 
             const callback = (mutationList: MutationRecord[]) => {
                 const number = parseInt(
-                    mutationList[mutationList.length - 1].target.textContent ||
-                        "0"
+                    mutationList[mutationList.length - 1].target.textContent || "0"
                 );
                 (window as any).attendeeChange(number);
             };
@@ -95,10 +89,7 @@ export default class Chime {
             if (targetNode) observer.observe(targetNode, config);
         });
 
-        await page.exposeFunction(
-            "speakerChange",
-            transcriptionService.speakerChange
-        );
+        await page.exposeFunction("speakerChange", transcriptionService.speakerChange);
         console.log("Listening for speaker changes.");
         await page.evaluate(() => {
             const targetNode = document.querySelector(
@@ -141,9 +132,7 @@ export default class Chime {
                 this.prevSender = sender;
 
                 if (text === details.endCommand) {
-                    console.log(
-                        "Your scribe has been removed from the meeting."
-                    );
+                    console.log("Your scribe has been removed from the meeting.");
                     await page.goto("about:blank");
                 } else if (details.start && text === details.pauseCommand) {
                     details.start = false;
@@ -167,9 +156,7 @@ export default class Chime {
 
                     if (attachmentTitle && attachmentHref) {
                         details.attachments[attachmentTitle] = attachmentHref;
-                        message += text
-                            ? `${text} | ${attachmentTitle}`
-                            : attachmentTitle;
+                        message += text ? `${text} | ${attachmentTitle}` : attachmentTitle;
                     } else if (text) {
                         message += text;
                     }
@@ -180,9 +167,7 @@ export default class Chime {
         );
         console.log("Listening for message changes.");
         await page.evaluate(() => {
-            const targetNode = document.querySelector(
-                "._2B9DdDvc2PdUbvEGXfOU20"
-            );
+            const targetNode = document.querySelector("._2B9DdDvc2PdUbvEGXfOU20");
             const config = { childList: true, subtree: true };
 
             const callback = (mutationList: MutationRecord[]) => {
@@ -192,8 +177,7 @@ export default class Chime {
                         const sender = addedNode.querySelector(
                             'h3[data-testid="chat-bubble-sender-name"]'
                         )?.textContent;
-                        const text =
-                            addedNode.querySelector(".Linkify")?.textContent;
+                        const text = addedNode.querySelector(".Linkify")?.textContent;
                         const attachmentElement = addedNode.querySelector(
                             ".SLFfm3Dwo5MfFzks4uM11"
                         ) as HTMLAnchorElement;
@@ -216,11 +200,11 @@ export default class Chime {
         console.log("Waiting for meeting end.");
         try {
             await page.waitForSelector('button[id="endMeeting"]', {
-                state: "detached",
+                hidden: true,
                 timeout: details.meetingTimeout,
             });
             console.log("Meeting ended.");
-        } catch (error) {
+        } catch {
             console.log("Meeting timed out.");
         } finally {
             details.start = false;

@@ -1,14 +1,12 @@
-import { Page, Frame } from "playwright";
-import { transcriptionService } from "./scribe.js";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { Frame, Page } from "puppeteer";
 import { details } from "./details.js";
+import { transcriptionService } from "./scribe.js";
 
 export default class Webex {
     private readonly iframe = 'iframe[name="thinIframe"]';
 
-    private async sendMessages(
-        frame: Frame,
-        messages: string[]
-    ): Promise<void> {
+    private async sendMessages(frame: Frame, messages: string[]): Promise<void> {
         const messageElement = await frame.waitForSelector(
             'textarea[placeholder="Type your message here"]'
         );
@@ -23,9 +21,7 @@ export default class Webex {
         await page.goto("https://signin.webex.com/join");
 
         console.log("Entering meeting ID.");
-        const meetingTextElement = await page.waitForSelector(
-            "#join-meeting-form"
-        );
+        const meetingTextElement = await page.waitForSelector("#join-meeting-form");
         await meetingTextElement?.type(details.invite.meetingId);
         await meetingTextElement?.press("Enter");
 
@@ -43,47 +39,41 @@ export default class Webex {
         if (!frame) return;
 
         console.log("Entering name.");
-        const nameTextElement = await frame.waitForSelector(
-            'input[aria-labelledby="nameLabel"]'
-        );
+        const nameTextElement = await frame.waitForSelector('input[aria-labelledby="nameLabel"]');
         await nameTextElement?.type(details.scribeIdentity);
 
         console.log("Entering email.");
-        const emailTextElement = await frame.waitForSelector(
-            'input[aria-labelledby="emailLabel"]'
-        );
+        const emailTextElement = await frame.waitForSelector('input[aria-labelledby="emailLabel"]');
         // await emailTextElement?.type(process.env.EMAIL_SOURCE!);
         await emailTextElement?.type("bot@scribe.tools.aws.dev");
         await emailTextElement?.press("Enter");
 
+        console.log("Entering password.");
+        const passwordTextElement = await frame.waitForSelector('input[type="password"]');
+        await passwordTextElement?.type(details.invite.meetingPassword!);
+        await passwordTextElement?.press("Enter");
+
         console.log("Clicking cookie button.");
-        const cookieButtonElement = await page.waitForSelector(
-            ".cookie-manage-close-handler"
-        );
+        const cookieButtonElement = await page.waitForSelector(".cookie-manage-close-handler");
         await cookieButtonElement?.click();
 
         console.log("Clicking mute button.");
-        const muteButtonElement = await frame.waitForSelector('text="Mute"');
+        const muteButtonElement = await frame.waitForSelector("::-p-text(Mute)");
         await muteButtonElement?.click();
 
         console.log("Clicking video button.");
-        const videoButtonElement = await frame.waitForSelector(
-            'text="Stop video"'
-        );
+        const videoButtonElement = await frame.waitForSelector("::-p-text(Stop video)");
         await videoButtonElement?.click();
 
         console.log("Clicking join button.");
-        const joinButtonElement = await frame.waitForSelector(
-            'text="Join meeting"'
-        );
+        const joinButtonElement = await frame.waitForSelector('button[title="Join meeting"]');
         await joinButtonElement?.click();
 
         console.log("Opening chat panel.");
         try {
-            const chatPanelElement = await frame.waitForSelector(
-                'text="Chat"',
-                { timeout: details.waitingTimeout }
-            );
+            const chatPanelElement = await frame.waitForSelector("::-p-text(Chat)", {
+                timeout: details.waitingTimeout,
+            });
             await chatPanelElement?.click();
         } catch {
             console.log("Your scribe was not admitted into the meeting.");
@@ -96,16 +86,11 @@ export default class Webex {
         console.log("Sending introduction messages.");
         await this.sendMessages(frame, details.introMessages);
 
-        await page.exposeFunction(
-            "speakerChange",
-            transcriptionService.speakerChange
-        );
+        await page.exposeFunction("speakerChange", transcriptionService.speakerChange);
         console.log("Listening for speaker changes.");
         await page.evaluate(
             ({ iframe }) => {
-                const iFrame = document.querySelector(
-                    iframe
-                ) as HTMLIFrameElement;
+                const iFrame = document.querySelector(iframe) as HTMLIFrameElement;
                 const iFrameDocument = iFrame?.contentDocument;
                 const targetNode = iFrameDocument?.querySelector(
                     'div[class*="layout-layout-content-left"]'
@@ -123,9 +108,7 @@ export default class Webex {
                                     '[class^="videoitem-full-name-content"]'
                                 );
                                 if (nameElement) {
-                                    (window as any).speakerChange(
-                                        nameElement.textContent
-                                    );
+                                    (window as any).speakerChange(nameElement.textContent);
                                 }
                             }
                         }
@@ -141,18 +124,12 @@ export default class Webex {
         await page.exposeFunction("messageChange", async (message: string) => {
             if (message.includes(details.endCommand)) {
                 console.log("Your scribe has been removed from the meeting.");
-                await page.goto("about:blank");
-            } else if (
-                details.start &&
-                message.includes(details.pauseCommand)
-            ) {
+                await page.browser().close();
+            } else if (details.start && message.includes(details.pauseCommand)) {
                 details.start = false;
                 console.log(details.pauseMessages[0]);
                 await this.sendMessages(frame, details.pauseMessages);
-            } else if (
-                !details.start &&
-                message.includes(details.startCommand)
-            ) {
+            } else if (!details.start && message.includes(details.startCommand)) {
                 details.start = true;
                 console.log(details.startMessages[0]);
                 await this.sendMessages(frame, details.startMessages);
@@ -163,13 +140,9 @@ export default class Webex {
         console.log("Listening for message changes.");
         await page.evaluate(
             ({ iframe }) => {
-                const iFrame = document.querySelector(
-                    iframe
-                ) as HTMLIFrameElement;
+                const iFrame = document.querySelector(iframe) as HTMLIFrameElement;
                 const iFrameDocument = iFrame?.contentDocument;
-                const targetNode = iFrameDocument?.querySelector(
-                    'div[class^="style-chat-box"]'
-                );
+                const targetNode = iFrameDocument?.querySelector('div[class^="style-chat-box"]');
 
                 const config = { childList: true, subtree: true };
 
@@ -201,7 +174,7 @@ export default class Webex {
                 timeout: details.meetingTimeout,
             });
             console.log("Meeting ended.");
-        } catch (error) {
+        } catch {
             console.log("Meeting timed out.");
         } finally {
             details.start = false;

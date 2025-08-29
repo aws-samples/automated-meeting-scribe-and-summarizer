@@ -1,21 +1,12 @@
-import { details } from "./details.js";
-import {
-    ComprehendClient,
-    DetectPiiEntitiesCommand,
-} from "@aws-sdk/client-comprehend";
-import {
-    BedrockRuntimeClient,
-    ConverseCommand,
-} from "@aws-sdk/client-bedrock-runtime";
+import { BedrockRuntimeClient, ConverseCommand } from "@aws-sdk/client-bedrock-runtime";
+import { ComprehendClient, DetectPiiEntitiesCommand } from "@aws-sdk/client-comprehend";
 import * as aws from "@aws-sdk/client-ses";
 import * as nodemailer from "nodemailer";
+import { details } from "./details.js";
 
 const logsMessage = "Check the CloudWatch logs for more information.";
 
-async function redactPii(
-    text: string,
-    piiExceptions: string[]
-): Promise<string> {
+async function redactPii(text: string, piiExceptions: string[]): Promise<string> {
     if (!text) return text;
 
     const comprehendClient = new ComprehendClient();
@@ -28,11 +19,7 @@ async function redactPii(
     let resultText = text;
     response.Entities?.forEach((entity) => {
         const entityType = entity.Type;
-        if (
-            entityType &&
-            !piiExceptions.includes(entityType) &&
-            (entity.Score || 0) >= 0.999
-        ) {
+        if (entityType && !piiExceptions.includes(entityType) && (entity.Score || 0) >= 0.999) {
             const pii = text.slice(entity.BeginOffset, entity.EndOffset);
             resultText = resultText.replace(pii, `[${entityType}]`);
         }
@@ -65,17 +52,18 @@ async function summarize(transcript: string): Promise<string> {
 
     try {
         const bedrockClient = new BedrockRuntimeClient();
-        const command = new ConverseCommand({
-            modelId: "anthropic.claude-3-sonnet-20240229-v1:0",
-            system: [{ text: systemPrompt }],
-            messages: [{ role: "user", content: [{ text: prompt }] }],
-            inferenceConfig: {
-                maxTokens: 4096,
-                temperature: 0.9,
-                topP: 0.2,
-            },
-        });
-        const response = await bedrockClient.send(command);
+        const response = await bedrockClient.send(
+            new ConverseCommand({
+                modelId: process.env.MODEL_ID!,
+                system: [{ text: systemPrompt }],
+                messages: [{ role: "user", content: [{ text: prompt }] }],
+                inferenceConfig: {
+                    maxTokens: 4096,
+                    temperature: 0.9,
+                    topP: 0.2,
+                },
+            })
+        );
         const responseText = response.output?.message?.content?.[0]?.text ?? "";
         const html = responseText.match(/<html>(.*?)<\/html>/s)?.[1] ?? "";
         // console.log(html)
@@ -158,10 +146,7 @@ export async function encapsulate(): Promise<void> {
     ];
 
     const chat = await redactPii(details.messages.join("\n"), piiExceptions);
-    const transcript = await redactPii(
-        details.captions.join("\n\n"),
-        piiExceptions
-    );
+    const transcript = await redactPii(details.captions.join("\n\n"), piiExceptions);
 
     // console.log("Chat:", chat);
     // console.log("Transcript:", transcript);

@@ -1,39 +1,26 @@
 import { App } from "aws-cdk-lib";
-import AuthStack from "../lib/auth";
-import ApiStack from "../lib/api";
-import FrontendStack from "../lib/frontend";
-import BackendStack from "../lib/backend";
+import Api from "../lib/stacks/api";
+import Auth from "../lib/stacks/auth";
+import Backend from "../lib/stacks/backend";
+import Frontend from "../lib/stacks/frontend";
 
 const app = new App();
 const name = process.env.STACK_NAME || "Scribe";
-const regionConfig = {
-    env: {
-        region: process.env.AWS_REGION || "us-east-1",
-    },
-    crossRegionReferences: true,
-};
 
-const authStack = new AuthStack(app, `${name}-Auth`, {
-    ...regionConfig,
+const auth = new Auth(app, `${name}-Auth`);
+
+const api = new Api(app, `${name}-Api`, {
+    userPool: auth.userPool,
+    regionalWebAclArn: auth.regionalWebAclArn,
 });
 
-const apiStack = new ApiStack(app, `${name}-Api`, {
-    userPool: authStack.userPool,
-    ...regionConfig,
+new Frontend(app, `${name}-Frontend`, {
+    userPoolId: auth.userPool.userPoolId,
+    userPoolClientId: auth.userPoolClient.userPoolClientId,
+    graphApiUrl: api.amplifiedGraphApi.graphqlUrl,
 });
 
-new FrontendStack(app, `${name}-Frontend`, {
-    userPoolId: authStack.userPool.userPoolId,
-    userPoolClientId: authStack.userPoolClient.userPoolClientId,
-    graphApiUrl: apiStack.graphApi.graphqlUrl,
-    env: {
-        region: "us-east-1",
-    },
-    crossRegionReferences: true,
-});
-
-new BackendStack(app, `${name}-Backend`, {
-    identity: authStack.identity,
-    graphApi: apiStack.graphApi,
-    ...regionConfig,
+new Backend(app, `${name}-Backend`, {
+    identity: auth.identity,
+    amplifiedGraphApi: api.amplifiedGraphApi,
 });
