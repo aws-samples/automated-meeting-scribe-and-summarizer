@@ -24,7 +24,7 @@ export class CommonNodejsFunction extends NodejsFunction {
     constructor(
         scope: Construct,
         id: string,
-        props: Omit<NodejsFunctionProps, "architecture" | "runtime" | "logRetention">
+        props: Omit<NodejsFunctionProps, "architecture" | "runtime">
     ) {
         super(scope, id, {
             architecture,

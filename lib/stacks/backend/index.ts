@@ -151,7 +151,7 @@ export default class Backend extends Stack {
             ),
             logging: new AwsLogDriver({
                 streamPrefix: "scribe",
-                logRetention: RetentionDays.FIVE_DAYS,
+                logRetention: RetentionDays.ONE_MONTH,
                 mode: AwsLogDriverMode.NON_BLOCKING,
             }),
         });
