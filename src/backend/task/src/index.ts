@@ -4,6 +4,7 @@ import { details } from "./details.js";
 import { encapsulate } from "./process.js";
 import { transcriptionService } from "./scribe.js";
 import Webex from "./webex.js";
+import Zoom from "./zoom.js";
 
 const main = async () => {
     const currentTimestamp = Math.floor(Date.now() / 1000);
@@ -37,6 +38,8 @@ const main = async () => {
             meeting = new Chime();
         } else if (details.invite.meetingPlatform === "Webex") {
             meeting = new Webex();
+        } else if (details.invite.meetingPlatform === "Zoom") {
+            meeting = new Zoom();
         } else {
             throw new Error("Meeting platform is unsupported.");
         }
@@ -44,7 +47,8 @@ const main = async () => {
 
         await encapsulate();
         await details.updateInvite("Completed");
-    } catch {
+    } catch (error) {
+        console.log("Scribe failed:", error);
         await details.updateInvite("Failed");
     } finally {
         await browser.close();

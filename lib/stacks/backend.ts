@@ -120,7 +120,7 @@ export default class Backend extends Stack {
         });
 
         const taskDefinition = new FargateTaskDefinition(this, "taskDefinition", {
-            cpu: 1024,
+            cpu: 2048,
             memoryLimitMiB: 4096,
             runtimePlatform: {
                 cpuArchitecture: CpuArchitecture.ARM64,
@@ -144,6 +144,7 @@ export default class Backend extends Stack {
             image: ContainerImage.fromDockerImageAsset(
                 new DockerImageAsset(this, "dockerImageAsset", {
                     directory: "src/backend/task",
+                    exclude: ["node_modules", "dist"],
                     platform: Platform.LINUX_ARM64,
                 })
             ),

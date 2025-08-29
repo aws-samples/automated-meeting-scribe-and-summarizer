@@ -124,7 +124,7 @@ export default class Webex {
         await page.exposeFunction("messageChange", async (message: string) => {
             if (message.includes(details.endCommand)) {
                 console.log("Your scribe has been removed from the meeting.");
-                await page.goto("about:blank");
+                await page.browser().close();
             } else if (details.start && message.includes(details.pauseCommand)) {
                 details.start = false;
                 console.log(details.pauseMessages[0]);

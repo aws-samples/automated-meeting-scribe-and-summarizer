@@ -169,7 +169,7 @@ const Create = () => {
                                     />
                                 </FormField>
 
-                                {meetingPlatform.value === "Webex" && (
+                                {meetingPlatform.value !== "Chime" && (
                                     <FormField label="Meeting Password">
                                         <Input
                                             onChange={({ detail }) =>
