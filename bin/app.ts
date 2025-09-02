@@ -1,4 +1,6 @@
-import { App } from "aws-cdk-lib";
+import { App, Aspects } from "aws-cdk-lib";
+import { RetentionDays } from "aws-cdk-lib/aws-logs";
+import { LogsRetentionAspect } from "../lib/common/aspects";
 import Api from "../lib/stacks/api";
 import Auth from "../lib/stacks/auth";
 import Backend from "../lib/stacks/backend";
@@ -24,3 +26,5 @@ new Backend(app, `${name}-Backend`, {
     identity: auth.identity,
     amplifiedGraphApi: api.amplifiedGraphApi,
 });
+
+Aspects.of(app).add(new LogsRetentionAspect(RetentionDays.ONE_MONTH));

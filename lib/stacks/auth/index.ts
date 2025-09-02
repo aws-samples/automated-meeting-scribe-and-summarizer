@@ -10,8 +10,9 @@ import { Effect, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { EmailIdentity, Identity } from "aws-cdk-lib/aws-ses";
 import { CfnWebACL, CfnWebACLAssociation } from "aws-cdk-lib/aws-wafv2";
 import { Construct } from "constructs";
-import { CommonNodejsFunction } from "../common/constructs/lambda";
-import { createManagedRules } from "../common/utilities";
+import * as path from "path";
+import { CommonNodejsFunction } from "../../common/constructs/lambda";
+import { createManagedRules } from "../../common/utilities";
 
 export default class Auth extends Stack {
     public readonly identity: EmailIdentity;
@@ -27,7 +28,7 @@ export default class Auth extends Stack {
         });
 
         const postConfirmationLambda = new CommonNodejsFunction(this, "postConfirmationLambda", {
-            entry: "src/auth/confirm.ts",
+            entry: path.join(__dirname, "confirm.ts"),
             initialPolicy: [
                 new PolicyStatement({
                     effect: Effect.ALLOW,

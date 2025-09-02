@@ -6,6 +6,9 @@ npx lint-staged --allow-empty
 echo "\nSynthesizing stacks...\n"
 npm run cdk synth -- --quiet
 
+echo "\nBuilding backend...\n"
+npm run -w backend build
+
 echo "\nBuilding frontend...\n"
 npm run -w frontend build
 
