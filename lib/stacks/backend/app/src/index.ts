@@ -3,6 +3,7 @@ import Chime from "./chime.js";
 import { details } from "./details.js";
 import { encapsulate } from "./process.js";
 import { transcriptionService } from "./scribe.js";
+import Teams from "./teams.js";
 import Webex from "./webex.js";
 import Zoom from "./zoom.js";
 
@@ -40,6 +41,8 @@ const main = async () => {
             meeting = new Webex();
         } else if (details.invite.meetingPlatform === "Zoom") {
             meeting = new Zoom();
+        } else if (details.invite.meetingPlatform === "Teams") {
+            meeting = new Teams();
         } else {
             throw new Error("Meeting platform is unsupported.");
         }
