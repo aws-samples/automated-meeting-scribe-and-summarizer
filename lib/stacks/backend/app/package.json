@@ -17,7 +17,7 @@
         "@types/nodemailer": "^6.4.17",
         "aws-sigv4-fetch": "^4.3.0",
         "graphql-request": "^7.1.2",
-        "nodemailer": "^6.9.16",
+        "nodemailer": "^7.0.7",
         "puppeteer": "^24.17.1"
     },
     "devDependencies": {
