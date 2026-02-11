@@ -12,7 +12,7 @@
     "dependencies": {
         "@aws-sdk/client-bedrock-runtime": "^3.726.1",
         "@aws-sdk/client-comprehend": "^3.726.1",
-        "@aws-sdk/client-ses": "^3.726.1",
+        "@aws-sdk/client-ses": "^3.987.0",
         "@aws-sdk/client-transcribe-streaming": "^3.726.1",
         "@types/nodemailer": "^6.4.17",
         "aws-sigv4-fetch": "^4.3.0",
