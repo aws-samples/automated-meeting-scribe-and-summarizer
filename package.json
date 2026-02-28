@@ -59,7 +59,7 @@
         "@aws-sdk/client-sesv2": "^3.857.0",
         "@aws/pdk": "^0.26.14",
         "@cdklabs/generative-ai-cdk-constructs": "^0.1.309",
-        "aws-cdk-lib": "^2.208.0",
+        "aws-cdk-lib": "^2.240.0",
         "cdk-nag": "^2.36.48",
         "constructs": "^10.4.2"
     }
